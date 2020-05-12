@@ -1,2 +1,2 @@
 # PyOTCodec
-Python library for parsing OpenType font files
+Python library for parsing font files
