@@ -7,11 +7,11 @@ from OTFont import *
 
 
 class OTFile(object):
-    def __init__(self, fileName: str =None):
+
+    def __init__(self, fileName:str = None):
         self.path: Path = None
-        self.fileName = fileName #file pathname
         self.fileBytes: bytearray = None
-        self.sfntVersion: Tag = Tag()
+        self.sfntVersion: Tag = None
         self.ttcHeader = None
         self.numFonts = 0
         self.fonts = []
@@ -23,22 +23,22 @@ class OTFile(object):
         if not self.path.is_file(): # catches items that don't exist
             raise OTCodecError("Error:", fileName, "is not a file")
 
-        with open(fileName, "rb") as f:
+        with open(fileName, "rb") as f: # file will be closed after with
             self.fileBytes = bytearray(f.read())
         self.sfntVersion = Tag(self.fileBytes[:4])
 
         if not OTFile.IsSupportedSfntVersion(self.sfntVersion):
             raise OTCodecError("File is not a supported sfntVersion")
 
-        if self.sfntVersion.toString() == "ttcf":
-            #create ttc header from file
+        if self.sfntVersion == "ttcf":
+            #create TTCHeader from file
             self.ttcHeader = TTCHeader(self.fileBytes)
             self.numFonts = self.ttcHeader.numFonts
         else:
             self.numFonts = 1
 
         # Now know how many font resources; intialize font objects -- OTFont constructor will get the offset table
-        if self.sfntVersion.toString() == "ttcf":
+        if self.sfntVersion == "ttcf":
             #loop over ttcHeader.numFonts
             offsets = self.ttcHeader.offsetTableOffsets
             for i in range(self.numFonts):
@@ -50,11 +50,11 @@ class OTFile(object):
 
 
     def IsCollection(self):
-        return self.sfntVersion.toString() == "ttcf"
+        return self.sfntVersion == "ttcf"
 
     @staticmethod
     def IsSupportedSfntVersion(tag:Tag):
-        if tag.toString() not in ('\x00\x01\x00\x00', "OTTO", "ttcf", "true"):
+        if tag not in (b'\x00\x01\x00\x00', "OTTO", "ttcf", "true"):
             return False
         else:
             return True
@@ -87,6 +87,7 @@ class TTCHeader:
     """
     _ttcHeaderVersion2FieldsSize = struct.calcsize(_ttcHeaderVersion2FieldsFormat)
 
+
     def __init__(self, fileBytes:bytearray):
         self.offsetTableOffsets = []
 
@@ -100,7 +101,7 @@ class TTCHeader:
         if self.majorVersion != 1 and self.majorVersion != 2:
             raise OTCodecError("TTCHeader version is not supported")
 
-        # get the offsetTables offsets array -- we'll wrap BytesIO around fileBytes to provide sequential reading
+        # get the offsetTables offsets array -- wrapping BytesIO around fileBytes to provide sequential reading
         filebio = BytesIO(fileBytes)
         filebio.seek(TTCHeader.offsetInFile + OffsetTable._offsetTableHeaderSize)
         for i in range(self.numFonts):
@@ -110,13 +111,13 @@ class TTCHeader:
             self.offsetTableOffsets.append(offset)
 
         # if version 2, get additional fields
-        v2fieldBytes = filebio.read(TTCHeader._ttcHeaderVersion2FieldsSize)
-        tmp = struct.unpack(TTCHeader._ttcHeaderVersion2FieldsFormat, v2fieldBytes)
-        self.dsigTag = Tag(tmp[0])
-        self.dsigLength, self.dsigOffset = tmp[1:3]
+        if self.majorVersion == 2:
+            v2fieldBytes = filebio.read(TTCHeader._ttcHeaderVersion2FieldsSize)
+            tmp = struct.unpack(TTCHeader._ttcHeaderVersion2FieldsFormat, v2fieldBytes)
+            self.dsigTag = Tag(tmp[0])
+            self.dsigLength, self.dsigOffset = tmp[1:3]
 
 # End of class TTCHeader
 
 
 
-class OTCodecError(Exception): pass

@@ -13,7 +13,6 @@ class OTFont:
         self.ttcIndex = ttcIndex
         self.isInTtc = False if ttcIndex is None else True
         self.offsetTable = OffsetTable(otFile.fileBytes, offsetInFile)
-        #self.offsetTable = OffsetTable(fileBytes, offsetInFile)
         self.tables: list = []
         self.defaultLabel = otFile.path.name if ttcIndex is None else otFile.path.name + ":" + str(ttcIndex)
 
@@ -54,6 +53,7 @@ class OffsetTable:
         rangeShift: uint16      H
     """
     _offsetTableHeaderSize = struct.calcsize(_offsetTableHeaderFormat)
+
 
     def __init__(self, fileBytes:bytearray, offsetInFile: int):
         self.offsetInFile = offsetInFile
