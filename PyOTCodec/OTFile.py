@@ -41,14 +41,15 @@ class OTFile(object):
         else:
             self.numFonts = 1
 
-        # Now know how many font resources; intialize font objects -- OTFont constructor will get the offset table
+        # Now know how many font resources; intialize font objects -- OTFont.tryReadFromFile
+        # will get the offset table for each font
         if self.sfntVersion == "ttcf":
             #loop over ttcHeader.numFonts
             offsets = self.ttcHeader.offsetTableOffsets
             for i in range(self.numFonts):
-                self.fonts.append(OTFont(self, offsets[i], i))
+                self.fonts.append(OTFont.tryReadFromFile(self, offsets[i], i))
         else:
-            self.fonts.append(OTFont(self))
+            self.fonts.append(OTFont.tryReadFromFile(self))
 
     # end of __init__
 

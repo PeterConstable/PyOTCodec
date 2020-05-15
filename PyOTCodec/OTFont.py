@@ -5,28 +5,59 @@ from OTTypes import *
 from OTFile import *
 
 class OTFont:
-    """Represents a font resource: one font within a TTC, or the font of the entire file if not a TTC."""
+    """Represents a font resource: one font within a TTC, or the font of an entire file if not a TTC."""
 
-    def __init__(self, otFile, offsetInFile: int = 0, ttcIndex: int = None):
-        self.otFile = otFile
+    def __init__(self):
+        self.offsetTable = None
+        self.tables:dict = {}
+
+
+    @staticmethod
+    def createNewFont(offsetTable):
+        """Returns a new OTFont instance with the specified OffsetTable.
+        
+        The OffsetTable must have a supported sfntVersion tag: 0x0100, "OTTO" or "true".
+
+        No other OffsetTable values are validated, and the OffsetTable does not need
+        to be populated with TableRecords: these can be added or updated later.
+        """
+        if not isSupportedSfntVersion(offsetTable.sfntVersion):
+            raise OTCodecError("The offsetTable argument has an unsupported sfntVersion tag.")
+        font = OTFont()
+        font.offsetTable = offsetTable
+        return font
+    # End of createNewFont
+
+
+    @staticmethod
+    def tryReadFromFile(otFile, offsetInFile: int = 0, ttcIndex: int = None):
+        """Returns an OffsetTable constructed from data in fileBytes. 
+        
+        Exceptions may be raised if fileBytes is not long enough."""
+        font = OTFont()
+        font.otFile = otFile
         if offsetInFile > len(otFile.fileBytes):
             raise OTCodecError("The file offset for the font is greater than the length of the file")
-        self.offsetInFile = offsetInFile
+        font.offsetInFile = offsetInFile
         if ttcIndex is not None and ttcIndex >= otFile.numFonts:
             raise OTCodecError("The ttcIndex argument is greater than the last font index (numFonts - 1)")
-        self.ttcIndex = ttcIndex
-        self.isWithinTtc = False if ttcIndex is None else True
-#        self.offsetTable = OffsetTable(otFile.fileBytes, offsetInFile)
-        self.offsetTable = OffsetTable.tryReadFromFile(otFile.fileBytes, offsetInFile)
-        self.tables: dict = {}
-        self.defaultLabel = otFile.path.name if ttcIndex is None \
+        font.ttcIndex = ttcIndex
+        font.isWithinTtc = False if ttcIndex is None else True
+        font.offsetTable = OffsetTable.tryReadFromFile(otFile.fileBytes, offsetInFile)
+        font.tables: dict = {}
+        font.defaultLabel = otFile.path.name if ttcIndex is None \
                             else otFile.path.name + ":" + str(ttcIndex)
+        return font
+    # End of tryReadFromFile
+
 
     def sfntVersionTag(self):
         return self.offsetTable.sfntVersion
 
+
     def containsTable(self, tag:Tag):
         return (tag in self.offsetTable.tableRecords)
+
 
     def tryGetTableOffset(self, tag:Tag):
         """If the specified table is present in the font, gets the offset from the start of the font. 
@@ -39,12 +70,14 @@ class OTFont:
         else:
             return tableRecord.offset
 
+
     @staticmethod
     def isSupportedSfntVersion(tag:Tag):
         if tag not in (b'\x00\x01\x00\x00', "OTTO", "true"):
             return False
         else:
             return True
+
 
     @staticmethod
     def isKnownTableType(tag:Tag):
@@ -73,6 +106,7 @@ class OTFont:
         else:
             return False
 
+
     @staticmethod
     def isSupportedTableType(tag:Tag):
         if tag in ("hhea"):
@@ -80,6 +114,14 @@ class OTFont:
         else:
             return False
 
+
+    def addTable(self, table):
+        # TO DO: implement
+        pass
+
+    def removeTable(self, tableTag:Tag):
+        # TO DO: implement
+        pass
 
 # End of class OTFont
 
@@ -104,6 +146,7 @@ class TableRecord:
         self.tableTag = None
         self.checkSum, self.offset, self.length = 0, 0, 0
 
+
     @staticmethod
     def createNewTableRecord(tableTag:Tag, checkSum = 0, offset = 0, length = 0):
         """Returns a new TableRecord using specified values.
@@ -112,9 +155,12 @@ class TableRecord:
         these are only meaningful when a complete table has been created, and can
         be set later.
         """
+        if tableTag is None:
+            raise OTCodecError("A Tag for tableTag is required to create a new TableRecord.")
         tr = TableRecord()
         tr.tableTag, tr.checkSum, tr.offset, tr.length = tableTag, checkSum, offset, length
         return tr
+
 
     @staticmethod
     def tryReadFromBuffer(buffer:bytearray):
@@ -155,11 +201,17 @@ class OffsetTable:
     def createNewOffsetTable(sfntVersion:Tag, searchRange = 0, entrySelector = 0, rangeShift = 0):
         """Returns a new OffsetTable using the specified values.
 
-        An sfntVersion tag is required. The searchRange, entrySelector and
-        rangeShift arguments are optional: these are only meaningful when a
-        complete font has been assembled, and can be set later.
+        A supported sfntVersion tag is required: 0x0100, "OTTO" or "true". The 
+        searchRange, entrySelector and rangeShift arguments are optional:
+        these are only meaningful when a complete font has been assembled, and
+        can be set later.
 
         TableRecords can be added later using AddTableRecord."""
+
+        if sfntVersion is None:
+            raise OTCodecError("A Tag for sfntVersion is required to create a new OffsetTable.")
+        if not OTFont.isSupportedSfntVersion(sfntVersion):
+            raise OTCodecError("The sfntVersion argument is not a supported sfntVersion tag.")
         ot = OffsetTable()
         ot.sfntVersion, ot.searchRange, ot.entrySelector, ot.rangeShift \
             = sfntVersion, searchRange, entrySelector, rangeShift
@@ -205,10 +257,13 @@ class OffsetTable:
         else:
             return self.tableRecords[tag]
 
+
     def addTableRecord(self, tableRecord:TableRecord):
         """Adds a TableRecord to the OffsetTable.
 
-        The tableRecord.tableTag member must not be None.
+        The tableRecord.tableTag member must not be None. If a TableRecord is
+        already present with the same tableTag, the existing TableRecord is
+        replaced.
         
         This can only be used with an OffsetTable instance created anew
         in memory. If called on an instance that was read from a file,
@@ -221,6 +276,28 @@ class OffsetTable:
         if tableRecord.tableTag is None:
             raise OTCodecError("Cannot add a TableRecord that doesn't have a tableTag.")
         self.tableRecords[tableRecord.tableTag] = tableRecord
+    # End of addTableRecord
+
+
+    def removeTableRecord(self, tableTag:Tag):
+        """Removes the TableRecord with the specified table Tag, if present.
+
+        If no TableRecord with that tag is present, no change is made.
+
+        This can only be used with an OffsetTable instance created anew
+        in memory. If called on an instance that was read from a file,
+        an exception is raised.
+        """
+        if tableTag is None:
+            # No-op
+            return
+        if hasattr(self, "offsetInFile"):
+            raise OTCodecError("Cannot remove a TableRecord from an OffsetTable that was read from a file.")
+        try:
+            del self.tableRecords[tableTag]
+        except:
+            pass # Don't care that it wasn't present
+    # End of removeTableRecord
 
 # End of class OffsetTable
 

@@ -5,7 +5,7 @@ import re
 class Tag(str):
     
     # Use __new__, not __init__, so we can modify the value being constructed
-    def __new__(self, tagContent):
+    def __new__(cls, tagContent):
         """ Accept bytes, bytearray or string."""
 
         if isinstance(tagContent, bytes) or isinstance(tagContent, bytearray):
@@ -22,7 +22,7 @@ class Tag(str):
         else:
             raise OTCodecError("Tag can only be constructed from str, bytearray or bytes")
 
-        return super().__new__(self, self._decodeIfBytes(tmp))
+        return super().__new__(cls, cls._decodeIfBytes(tmp))
 
     @staticmethod
     def _decodeIfBytes(content):

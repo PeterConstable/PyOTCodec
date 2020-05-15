@@ -42,6 +42,7 @@ testResults["ReadUint32"] = ReadUint32(testbio) == 0xB20F37DC
 testResults["ReadInt64"] = ReadInt64(testbio) == -7349294909316519972 # \x9A\x02\x0F\x37\xDC\x9A\x27\xDC
 testResults["ReadUint64"] = ReadUint64(testbio) == 0x27DC9AB20F37DC9A
 
+# reading with insufficient data left from current position
 try:
     ReadInt16(testbio)
 except OTCodecError:
@@ -49,6 +50,8 @@ except OTCodecError:
 else:
     result = False
 testResults["Insufficient data test 1"] = result
+
+# reading with insufficient data left from current position
 testbio.seek(-1, 2)
 try:
     ReadRawBytes(testbio, 2)
@@ -60,14 +63,16 @@ testResults["Insufficient data test 2"] = result
 
 
 # tests for Tag
-x = Tag(b'\x00\x01')
+x = Tag(b'\x00\x01') # pad with 0x00
 testResults["Tag constructor test 1"] = (x == b'\x00\x01\x00\x00')
 x = Tag(b'\x61\x62\x63\x64')
 testResults["Tag constructor test 2"] = (x == "abcd")
-x = Tag("ab")
+x = Tag("ab") # pad with space
 testResults["Tag constructor test 3"] = (x == "ab  ")
 x = Tag("abcd")
 testResults["Tag constructor test 4"] = (x == "abcd")
+
+# pass argument other than str, bytes or bytearray
 try:
     Tag([0,1,0,0])
 except OTCodecError:
@@ -75,6 +80,8 @@ except OTCodecError:
 else:
     result = False
 testResults["Tag invalid argument test 1"] = result
+
+# Tag validations
 testResults["Tag validation test 1"] = Tag.validateTag("abcd") == 0
 testResults["Tag validation test 2"] = Tag.validateTag("abc") == 0x01
 testResults["Tag validation test 3"] = Tag.validateTag("abcde") == 0x01
@@ -91,6 +98,7 @@ except OTCodecError:
 else:
     result = False
 testResults["OTFile path test 1"] = result
+
 try:
     x = OTFile("")
 except OTCodecError:
@@ -98,15 +106,17 @@ except OTCodecError:
 else:
     result = False
 testResults["OTFile path test 2"] = result
+
 try:
-    x = OTFile("foo")
+    x = OTFile("foo") # doesn't exist
 except OTCodecError:
     result = True
 else:
     result = False
 testResults["OTFile path test 3"] = result
+
 try:
-    x = OTFile("TestData")
+    x = OTFile("TestData") # not a file
 except OTCodecError:
     result = True
 else:
@@ -150,19 +160,27 @@ testResults["TableRecord() test 4"] = (tr.offset == 0)
 testResults["TableRecord() test 5"] = (tr.length == 0)
 
 # tests for TableRecord.createNewTableRecord
+try:
+    tr = TableRecord.createNewTableRecord(None) # table Tag required
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["TableRecord.createNewTableRecord test 1"] = result
+
 tr = TableRecord.createNewTableRecord("abcd")
-testResults["TableRecord.createNewTableRecord test 1"] = (type(tr) == TableRecord)
-testResults["TableRecord.createNewTableRecord test 2"] = (tr.tableTag == "abcd")
-testResults["TableRecord.createNewTableRecord test 3"] = (tr.checkSum == 0)
+testResults["TableRecord.createNewTableRecord test 2"] = (type(tr) == TableRecord)
+testResults["TableRecord.createNewTableRecord test 3"] = (tr.tableTag == "abcd")
+testResults["TableRecord.createNewTableRecord test 4"] = (tr.checkSum == 0)
 tr = TableRecord.createNewTableRecord("bcde", 42)
-testResults["TableRecord.createNewTableRecord test 4"] = (tr.tableTag == "bcde")
-testResults["TableRecord.createNewTableRecord test 5"] = (tr.checkSum == 42)
-testResults["TableRecord.createNewTableRecord test 6"] = (tr.offset == 0)
+testResults["TableRecord.createNewTableRecord test 5"] = (tr.tableTag == "bcde")
+testResults["TableRecord.createNewTableRecord test 6"] = (tr.checkSum == 42)
+testResults["TableRecord.createNewTableRecord test 7"] = (tr.offset == 0)
 tr = TableRecord.createNewTableRecord("cdef", 42, 43, 44)
-testResults["TableRecord.createNewTableRecord test 7"] = (tr.tableTag == "cdef")
-testResults["TableRecord.createNewTableRecord test 8"] = (tr.checkSum == 42)
-testResults["TableRecord.createNewTableRecord test 9"] = (tr.offset == 43)
-testResults["TableRecord.createNewTableRecord test 10"] = (tr.length == 44)
+testResults["TableRecord.createNewTableRecord test 8"] = (tr.tableTag == "cdef")
+testResults["TableRecord.createNewTableRecord test 9"] = (tr.checkSum == 42)
+testResults["TableRecord.createNewTableRecord test 10"] = (tr.offset == 43)
+testResults["TableRecord.createNewTableRecord test 11"] = (tr.length == 44)
 
 
 # tests for OffsetTable constructor
@@ -174,43 +192,65 @@ testResults["OffsetTable() test 4"] = (ot.entrySelector == 0)
 testResults["OffsetTable() test 5"] = (ot.rangeShift == 0)
 
 # tests for OffsetTable.createNewOffsetTable
-ot = OffsetTable.createNewOffsetTable("abcd")
-testResults["OffsetTable.createNewOffsetTable test 1"] = (type(ot) == OffsetTable)
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.sfntVersion == "abcd")
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.searchRange == 0)
-ot = OffsetTable.createNewOffsetTable("abcd", 42)
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.sfntVersion == "abcd")
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.searchRange == 42)
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.entrySelector == 0)
-ot = OffsetTable.createNewOffsetTable("abcd", 42, 42, 44)
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.sfntVersion == "abcd")
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.searchRange == 42)
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.entrySelector == 43)
-testResults["OffsetTable.createNewOffsetTable test 1"] = (ot.rangeShift == 44)
+try:
+    ot = OffsetTable.createNewOffsetTable(None) # sfntVersion tag required
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["OffsetTable.createNewOffsetTable test 1"] = result
+
+try:
+    ot = OffsetTable.createNewOffsetTable("cmap") # valid sfntVersion tag required
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["OffsetTable.createNewOffsetTable test 2"] = result
+
+ot = OffsetTable.createNewOffsetTable("true")
+testResults["OffsetTable.createNewOffsetTable test 3"] = (type(ot) == OffsetTable)
+testResults["OffsetTable.createNewOffsetTable test 4"] = (ot.sfntVersion == "true")
+testResults["OffsetTable.createNewOffsetTable test 5"] = (ot.searchRange == 0)
+ot = OffsetTable.createNewOffsetTable("true", 42)
+testResults["OffsetTable.createNewOffsetTable test 6"] = (ot.sfntVersion == "true")
+testResults["OffsetTable.createNewOffsetTable test 7"] = (ot.searchRange == 42)
+testResults["OffsetTable.createNewOffsetTable test 8"] = (ot.entrySelector == 0)
+ot = OffsetTable.createNewOffsetTable("true", 42, 43, 44)
+testResults["OffsetTable.createNewOffsetTable test 9"] = (ot.sfntVersion == "true")
+testResults["OffsetTable.createNewOffsetTable test 10"] = (ot.searchRange == 42)
+testResults["OffsetTable.createNewOffsetTable test 11"] = (ot.entrySelector == 43)
+testResults["OffsetTable.createNewOffsetTable test 12"] = (ot.rangeShift == 44)
 
 # tests for OffsetTable.AddTableRecord
 try:
-    ot.addTableRecord(None)
+    ot.addTableRecord(None) # TableRecord object required
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["OffsetTable.AddTableRecord test 1"] = result
+testResults["OffsetTable.addTableRecord test 1"] = result
 
 tr = TableRecord()
 try:
-    ot.addTableRecord(tr)
+    ot.addTableRecord(tr) # TableRecord with table record Tag required
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["OffsetTable.AddTableRecord test 2"] = result
+testResults["OffsetTable.addTableRecord test 2"] = result
 
 tr = TableRecord.createNewTableRecord("abcd", 42)
+assert(len(ot.tableRecords) == 0)
 ot.addTableRecord(tr)
-testResults["OffsetTable.AddTableRecord test 3"] = (len(ot.tableRecords) == 1)
-testResults["OffsetTable.AddTableRecord test 4"] = (ot.tableRecords["abcd"].checkSum == 42)
+testResults["OffsetTable.addTableRecord test 3"] = (len(ot.tableRecords) == 1)
+testResults["OffsetTable.addTableRecord test 4"] = (ot.tableRecords["abcd"].checkSum == 42)
+tr = TableRecord.createNewTableRecord("abcd", 43)
+ot.addTableRecord(tr) # duplicate table tag: replaces existing TableRecord
+testResults["OffsetTable.addTableRecord test 5"] = (len(ot.tableRecords) == 1)
+testResults["OffsetTable.addTableRecord test 6"] = (ot.tableRecords["abcd"].checkSum == 43)
 
+# can't add table record to OffsetTable read from file
 font = OTFile(r"TestData\selawk.ttf").fonts[0]
 try:
     font.offsetTable.addTableRecord(tr)
@@ -218,11 +258,75 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["OffsetTable.AddTableRecord test 5"] = result
+testResults["OffsetTable.AddTableRecord test 7"] = result
+
+# TableRecord read from file can be added to a new OffsetTable
 tr = font.offsetTable.tableRecords["cmap"]
 ot.addTableRecord(tr)
-testResults["OffsetTable.AddTableRecord test 6"] = (len(ot.tableRecords) == 2)
-testResults["OffsetTable.AddTableRecord test 7"] = (ot.tableRecords["cmap"].checkSum == 0x22F2_F74C)
+testResults["OffsetTable.AddTableRecord test 8"] = (len(ot.tableRecords) == 2)
+testResults["OffsetTable.AddTableRecord test 9"] = (ot.tableRecords["cmap"].checkSum == 0x22F2_F74C)
+
+# tests for OffsetTable.removeTableRecord
+ot = OffsetTable.createNewOffsetTable("OTTO")
+tr = TableRecord.createNewTableRecord("cmap")
+ot.addTableRecord(tr)
+tr = TableRecord.createNewTableRecord("glyf", 42)
+ot.addTableRecord(tr)
+assert(len(ot.tableRecords) == 2)
+assert(ot.tryGetTableRecord("cmap") is not None)
+
+# specified TableRecord is removed, other TableRecord not affected
+ot.removeTableRecord("cmap")
+testResults["OffsetTable.removeTableRecord test 1"] = (len(ot.tableRecords) == 1)
+testResults["OffsetTable.removeTableRecord test 2"] = (ot.tryGetTableRecord("cmap") == None)
+testResults["OffsetTable.removeTableRecord test 3"] = (ot.tryGetTableRecord("glyf").checkSum == 42)
+
+# None is no-op
+try:
+    ot.removeTableRecord(None)
+except Exception:
+    result = False
+else:
+    result = True
+testResults["OffsetTable.removeTableRecord test 4"] = result
+
+# request to remove TableRecord that's not present is no-op
+try:
+    ot.removeTableRecord("GPOS")
+except Exception:
+    result = False
+else:
+    result = True
+testResults["OffsetTable.removeTableRecord test 5"] = result
+
+# None is no-op, even for OffsetTable read from file
+font = OTFile(r"TestData\selawk.ttf").fonts[0]
+try:
+    font.offsetTable.removeTableRecord(None)
+except Exception:
+    result = False
+else:
+    result = True
+testResults["OffsetTable.removeTableRecord test 6"] = result
+
+# can't remove TableRecord from OffsetTable read from file
+try:
+    font.offsetTable.removeTableRecord("cmap")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["OffsetTable.removeTableRecord test 7"] = result
+
+# even if not present, can't try to remove TableRecord from OffsetTable read from file
+try:
+    font.offsetTable.removeTableRecord("zzzz")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["OffsetTable.removeTableRecord test 8"] = result
+
 
 
 # tests for OTFile, OTFont, OffsetTable, TableRecord using selawk.ttf
@@ -321,6 +425,9 @@ testResults["OffsetTable test 17"] = (offtbl.entrySelector == 0x04)
 testResults["OffsetTable test 18"] = (offtbl.rangeShift == 0x00)
 
 
+
+
+# Tests completed; report results.
 
 print()
 print("{:<45} {:<}".format("Test", "result"))
