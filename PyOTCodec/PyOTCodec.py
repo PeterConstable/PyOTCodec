@@ -103,43 +103,32 @@ testResults["OTFont read test 2"] = x.ttcIndex == None
 testResults["OTFont read test 3"] = x.isInTtc == False
 testResults["OTFont read test 4"] = x.defaultLabel == "selawk.ttf"
 
-x = OTFile(r"TestData\CAMBRIA.TTC")
+x = OTFile(r"TestData\SourceHanSans-Regular.TTC")
 testResults["OTFile read test 4"] = (x.sfntVersion == "ttcf")
-testResults["OTFile read test 5"] = (x.numFonts == 2)
+testResults["OTFile read test 5"] = (x.numFonts == 10)
 testResults["OTFile read test 6"] = (x.IsCollection() == True)
 
 y = x.ttcHeader
 testResults["TTCHeader read test 1"] = (y.ttcTag == "ttcf")
-testResults["TTCHeader read test 2"] = (y.majorVersion == 2)
+testResults["TTCHeader read test 2"] = (y.majorVersion == 1)
 testResults["TTCHeader read test 3"] = (y.minorVersion == 0)
-testResults["TTCHeader read test 4"] = (y.numFonts == 2)
-testResults["TTCHeader read test 5"] = (y.dsigTag == "DSIG")
-testResults["TTCHeader read test 6"] = (y.dsigLength == 0x1778)
-testResults["TTCHeader read test 7"] = (y.dsigOffset == 0x18AB54)
+testResults["TTCHeader read test 4"] = (y.numFonts == 10)
 
 y = x.fonts[0]
-testResults["OTFont read test 5"] = y.offsetInFile == 0x20
+testResults["OTFont read test 5"] = y.offsetInFile == 0x34
 testResults["OTFont read test 6"] = y.ttcIndex == 0
 testResults["OTFont read test 7"] = y.isInTtc == True
-testResults["OTFont read test 8"] = y.defaultLabel == "CAMBRIA.TTC:0"
+testResults["OTFont read test 8"] = y.defaultLabel == "SourceHanSans-Regular.TTC:0"
 
 y = x.fonts[1]
-testResults["OTFont read test 9"] = y.offsetInFile == 0x016C
+testResults["OTFont read test 9"] = y.offsetInFile == 0x0140
 testResults["OTFont read test 10"] = y.ttcIndex == 1
 testResults["OTFont read test 11"] = y.isInTtc == True
-testResults["OTFont read test 12"] = y.defaultLabel == "CAMBRIA.TTC:1"
+testResults["OTFont read test 12"] = y.defaultLabel == "SourceHanSans-Regular.TTC:1"
 
 
+print("{:<35} {:<}".format("Test", "result"))
+print("===========================================")
+for k, v in testResults.items():
+    print("{:<35} {!r}".format(k, v))
 
-
-print(x.sfntVersion)
-print("file exists?", x.path.exists())
-print("name:", x.path.name, x.path.is_file())
-print("x.numFonts:", x.numFonts)
-print("number of tables:", len(x.fonts[0].offsetTable.tableRecords))
-print(x.fonts[0].defaultLabel)
-print(x.fonts[0].ttcIndex)
-x = OTFile(r"TestData\CAMBRIA.TTC")
-print("x.numFonts:", x.numFonts)
-print(x.fonts[0].defaultLabel)
-print(x.fonts[0].ttcIndex)
