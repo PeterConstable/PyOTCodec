@@ -44,9 +44,12 @@ class Tag(str):
         tmp = self._decodeIfBytes(other)
         return str.__eq__(self, self._decodeIfBytes(other))
 
+    # Implementation of __hash__ is needed so that a Tag can be used as a dict key
+    def __hash__(self):
+        return str.__hash__(self)
 
     @staticmethod
-    def validateTagString(tagString:str):
+    def validateTag(tag):
         """Check if a tag string is a valid OpenType tag. Returns an error code.
 
         OpenType tags must be 4 characters long. They can only include 
@@ -61,25 +64,25 @@ class Tag(str):
             0x04: non-trailing spaces
         """
 
-        if tagString == None:
+        if tag == None:
             raise OTCodecError("Invalid argument: None")
 
         # Recognize exceptional sfntVersion tag:
-        if tagString == b'\x00\x01\x00\x00':
+        if tag == b'\x00\x01\x00\x00':
             return 0
 
         errors = 0
 
         # Test against normal rules
 
-        if len(tagString) != 4:
+        if len(tag) != 4:
             errors += 0x01
-        for c in tagString:
+        for c in tag:
             if ord(c) < 0x20 or ord(c) > 0x7E:
                 errors += 0x02
 
         # check for non-trailing spaces: remove all spaces and compare with rstrip
-        if re.sub(" ", "", tagString) != tagString.rstrip():
+        if re.sub(" ", "", tag) != tag.rstrip():
             errors += 0x04
         
         return errors

@@ -110,7 +110,8 @@ class TTCHeader:
         if self.majorVersion != 1 and self.majorVersion != 2:
             raise OTCodecError("TTCHeader version is not supported")
 
-        # get the offsetTables offsets array -- wrapping BytesIO around fileBytes to provide sequential reading
+        # get the offsetTables offsets array -- wrapping BytesIO around fileBytes 
+        # to provide sequential reading
         filebio = BytesIO(fileBytes)
         filebio.seek(TTCHeader.offsetInFile + OffsetTable._offsetTableHeaderSize)
         for i in range(self.numFonts):
