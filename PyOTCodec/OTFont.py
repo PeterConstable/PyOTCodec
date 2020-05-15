@@ -61,6 +61,8 @@ class OffsetTable:
 
         # get the header
         headerBytes = fileBytes[offsetInFile : offsetInFile + OffsetTable._offsetTableHeaderSize]
+        if len(headerBytes) < OffsetTable._offsetTableHeaderSize:
+            raise OTCodecError("Unable to read OffsetTable from file at 0x{0:0=8x}".format(offsetInFile))
         tmp = struct.unpack(OffsetTable._offsetTableHeaderFormat, headerBytes)
         self.sfntVersion = Tag(tmp[0])
         self.numTables, self.searchRange, self.entrySelector, self.rangeShift = tmp[1:5]
@@ -70,6 +72,8 @@ class OffsetTable:
         filebio.seek(offsetInFile + OffsetTable._offsetTableHeaderSize)
         for i in range(self.numTables):
             recData = filebio.read(TableRecord.size)
+            if len(recData) < TableRecord.size:
+                raise OTCodecError("Unable to read TableRecord from file")
             record = TableRecord(recData)
             self.tableRecords.append(record)
 

@@ -25,8 +25,12 @@ class OTFile(object):
 
         with open(fileName, "rb") as f: # file will be closed after with
             self.fileBytes = bytearray(f.read())
-        self.sfntVersion = Tag(self.fileBytes[:4])
 
+        # get sfntVersion
+        rawbytes = self.fileBytes[:4]
+        if len(rawbytes) < 4:
+            raise OTCodecError("Unable to read sfntVersion")
+        self.sfntVersion = Tag(rawbytes)
         if not OTFile.IsSupportedSfntVersion(self.sfntVersion):
             raise OTCodecError("File is not a supported sfntVersion")
 
@@ -89,10 +93,15 @@ class TTCHeader:
 
 
     def __init__(self, fileBytes:bytearray):
+        self.ttcTag: Tag = None
+        self.majorVersion, self.minorVersion, self.numFonts = 0, 0, 0
         self.offsetTableOffsets = []
+        # v2 only: self.dsigTag, self.dsigLength, self.dsigOffset
 
         # get the version 1 header fields
         headerBytes = fileBytes[: TTCHeader._ttcHeaderVersion1HeaderSize]
+        if len(headerBytes) < TTCHeader._ttcHeaderVersion1HeaderSize:
+            raise OTCodecError("Unable to read TTC header from file")
         tmp = struct.unpack(TTCHeader._ttcHeaderVersion1HeaderFormat, headerBytes)
         self.ttcTag = Tag(tmp[0])
         self.majorVersion, self.minorVersion, self.numFonts = tmp[1:4]
@@ -107,12 +116,14 @@ class TTCHeader:
         for i in range(self.numFonts):
             # unpack returns a tuple with one element; the comma after named var 
             # offset is syntax quirk needed to get that element, not the tuple
-            offset, = struct.unpack(">L", filebio.read(4))
+            offset = ReadUint32(filebio)
             self.offsetTableOffsets.append(offset)
 
         # if version 2, get additional fields
         if self.majorVersion == 2:
             v2fieldBytes = filebio.read(TTCHeader._ttcHeaderVersion2FieldsSize)
+            if len(v2fieldBytes) < TTCHeader._ttcHeaderVersion2FieldsSize:
+                raise OTCodecError("Unable to read version 2 TTC header from file")
             tmp = struct.unpack(TTCHeader._ttcHeaderVersion2FieldsFormat, v2fieldBytes)
             self.dsigTag = Tag(tmp[0])
             self.dsigLength, self.dsigOffset = tmp[1:3]
@@ -120,4 +131,65 @@ class TTCHeader:
 # End of class TTCHeader
 
 
+def ReadRawBytes(fileBytesIO:BytesIO, length):
+        rawbytes = fileBytesIO.read(length)
+        if len(rawbytes) < length:
+            raise OTCodecError("Unable to read expected number of bytes from file")
+        return rawbytes
+
+def ReadInt8(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">b"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadUint8(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">B"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadInt16(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">h"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadUint16(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">H"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadInt32(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">l"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadUint32(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">L"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadInt64(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">q"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
+
+def ReadUint64(fileBytesIO:BytesIO):
+    """ Reads an unsigned long (uint32) from the current position. """
+    format = ">Q"
+    rawbytes = ReadRawBytes(fileBytesIO, struct.calcsize(format))
+    val, = struct.unpack(format, rawbytes)
+    return val
 
