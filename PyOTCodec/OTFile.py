@@ -31,7 +31,7 @@ class OTFile(object):
         if len(rawbytes) < 4:
             raise OTCodecError("Unable to read sfntVersion")
         self.sfntVersion = Tag(rawbytes)
-        if not OTFile.IsSupportedSfntVersion(self.sfntVersion):
+        if not OTFile.isSupportedSfntVersion(self.sfntVersion):
             raise OTCodecError("File is not a supported sfntVersion")
 
         if self.sfntVersion == "ttcf":
@@ -53,11 +53,11 @@ class OTFile(object):
     # end of __init__
 
 
-    def IsCollection(self):
+    def isCollection(self):
         return self.sfntVersion == "ttcf"
 
     @staticmethod
-    def IsSupportedSfntVersion(tag:Tag):
+    def isSupportedSfntVersion(tag:Tag):
         if tag not in (b'\x00\x01\x00\x00', "OTTO", "ttcf", "true"):
             return False
         else:
