@@ -57,6 +57,8 @@ class OffsetTable:
 
     def __init__(self, fileBytes:bytearray, offsetInFile: int):
         self.offsetInFile = offsetInFile
+        self.sfntVersion: Tag = None
+        self.numTables, self.searchRange, self.entrySelector, self.rangeShift = 0, 0, 0, 0
         self.tableRecords: list = []
 
         # get the header

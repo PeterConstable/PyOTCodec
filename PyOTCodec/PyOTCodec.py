@@ -91,40 +91,84 @@ else:
     result = False
 testResults["OTFile path test 4"] = result
 
-x = OTFile(r"TestData\selawk.ttf")
-testResults["OTFile path test 5"] = (x.path.name == r"selawk.ttf")
-testResults["OTFile read test 1"] = (x.sfntVersion == b'\x00\x01\x00\x00')
-testResults["OTFile read test 2"] = (x.numFonts == 1)
-testResults["OTFile read test 3"] = (x.IsCollection() == False)
+file = OTFile(r"TestData\selawk.ttf")
+testResults["OTFile path test 5"] = (file.path.name == r"selawk.ttf")
+testResults["OTFile read test 1"] = (file.sfntVersion == b'\x00\x01\x00\x00')
+testResults["OTFile read test 2"] = (file.numFonts == 1)
+testResults["OTFile read test 3"] = (file.IsCollection() == False)
 
-x = x.fonts[0]
-testResults["OTFont read test 1"] = x.offsetInFile == 0
-testResults["OTFont read test 2"] = x.ttcIndex == None
-testResults["OTFont read test 3"] = x.isInTtc == False
-testResults["OTFont read test 4"] = x.defaultLabel == "selawk.ttf"
+font = file.fonts[0]
+testResults["OTFont read test 1"] = font.offsetInFile == 0
+testResults["OTFont read test 2"] = font.ttcIndex == None
+testResults["OTFont read test 3"] = font.isInTtc == False
+testResults["OTFont read test 4"] = font.defaultLabel == "selawk.ttf"
 
-x = OTFile(r"TestData\SourceHanSans-Regular.TTC")
-testResults["OTFile read test 4"] = (x.sfntVersion == "ttcf")
-testResults["OTFile read test 5"] = (x.numFonts == 10)
-testResults["OTFile read test 6"] = (x.IsCollection() == True)
+offtbl = font.offsetTable
+testResults["OffsetTable test 1"] = (offtbl.offsetInFile == 0)
+testResults["OffsetTable test 2"] = (offtbl.sfntVersion == b'\x00\x01\x00\x00')
+testResults["OffsetTable test 3"] = (offtbl.numTables == 15)
+testResults["OffsetTable test 4"] = (offtbl.searchRange == 0x80)
+testResults["OffsetTable test 5"] = (offtbl.entrySelector == 0x03)
+testResults["OffsetTable test 6"] = (offtbl.rangeShift == 0x70)
 
-y = x.ttcHeader
-testResults["TTCHeader read test 1"] = (y.ttcTag == "ttcf")
-testResults["TTCHeader read test 2"] = (y.majorVersion == 1)
-testResults["TTCHeader read test 3"] = (y.minorVersion == 0)
-testResults["TTCHeader read test 4"] = (y.numFonts == 10)
+tblrec = offtbl.tableRecords[0]
+testResults["TableRecord test 1"] = (tblrec.tableTag == "DSIG")
+testResults["TableRecord test 2"] = (tblrec.checkSum == 0xF054_3E26)
+testResults["TableRecord test 3"] = (tblrec.offset == 0x0000_91E4)
+testResults["TableRecord test 4"] = (tblrec.length == 0x0000_1ADC)
 
-y = x.fonts[0]
-testResults["OTFont read test 5"] = y.offsetInFile == 0x34
-testResults["OTFont read test 6"] = y.ttcIndex == 0
-testResults["OTFont read test 7"] = y.isInTtc == True
-testResults["OTFont read test 8"] = y.defaultLabel == "SourceHanSans-Regular.TTC:0"
+tblrec = offtbl.tableRecords[5]
+testResults["TableRecord test 5"] = (tblrec.tableTag == "cmap")
+testResults["TableRecord test 6"] = (tblrec.checkSum == 0x22F2_F74C)
+testResults["TableRecord test 7"] = (tblrec.offset == 0x0000_0758)
+testResults["TableRecord test 8"] = (tblrec.length == 0x0000_0606)
 
-y = x.fonts[1]
-testResults["OTFont read test 9"] = y.offsetInFile == 0x0140
-testResults["OTFont read test 10"] = y.ttcIndex == 1
-testResults["OTFont read test 11"] = y.isInTtc == True
-testResults["OTFont read test 12"] = y.defaultLabel == "SourceHanSans-Regular.TTC:1"
+
+file = OTFile(r"TestData\SourceHanSans-Regular.TTC")
+testResults["OTFile read test 4"] = (file.sfntVersion == "ttcf")
+testResults["OTFile read test 5"] = (file.numFonts == 10)
+testResults["OTFile read test 6"] = (file.IsCollection() == True)
+
+ttchdr = file.ttcHeader
+testResults["TTCHeader read test 1"] = (ttchdr.ttcTag == "ttcf")
+testResults["TTCHeader read test 2"] = (ttchdr.majorVersion == 1)
+testResults["TTCHeader read test 3"] = (ttchdr.minorVersion == 0)
+testResults["TTCHeader read test 4"] = (ttchdr.numFonts == 10)
+
+font = file.fonts[0]
+testResults["OTFont read test 5"] = font.offsetInFile == 0x34
+testResults["OTFont read test 6"] = font.ttcIndex == 0
+testResults["OTFont read test 7"] = font.isInTtc == True
+testResults["OTFont read test 8"] = font.defaultLabel == "SourceHanSans-Regular.TTC:0"
+
+offtbl = font.offsetTable
+testResults["OffsetTable test 7"] = (offtbl.offsetInFile == 0x34)
+testResults["OffsetTable test 8"] = (offtbl.sfntVersion == "OTTO")
+testResults["OffsetTable test 9"] = (offtbl.numTables == 16)
+testResults["OffsetTable test 10"] = (offtbl.searchRange == 0x0100)
+testResults["OffsetTable test 11"] = (offtbl.entrySelector == 0x0004)
+testResults["OffsetTable test 12"] = (offtbl.rangeShift == 0x0000)
+
+tblrec = offtbl.tableRecords[3]
+testResults["TableRecord test 9"] = (tblrec.tableTag == "GPOS")
+testResults["TableRecord test 10"] = (tblrec.checkSum == 0x0D16_AD78)
+testResults["TableRecord test 11"] = (tblrec.offset == 0x00F8_CB20)
+testResults["TableRecord test 12"] = (tblrec.length == 0x0000_B91A)
+
+font = file.fonts[1]
+testResults["OTFont read test 9"] = font.offsetInFile == 0x0140
+testResults["OTFont read test 10"] = font.ttcIndex == 1
+testResults["OTFont read test 11"] = font.isInTtc == True
+testResults["OTFont read test 12"] = font.defaultLabel == "SourceHanSans-Regular.TTC:1"
+
+offtbl = font.offsetTable
+testResults["OffsetTable test 13"] = (offtbl.offsetInFile == 0x140)
+testResults["OffsetTable test 14"] = (offtbl.sfntVersion == "OTTO")
+testResults["OffsetTable test 15"] = (offtbl.numTables == 16)
+testResults["OffsetTable test 16"] = (offtbl.searchRange == 0x100)
+testResults["OffsetTable test 17"] = (offtbl.entrySelector == 0x04)
+testResults["OffsetTable test 18"] = (offtbl.rangeShift == 0x00)
+
 
 
 print("{:<35} {:<}".format("Test", "result"))
