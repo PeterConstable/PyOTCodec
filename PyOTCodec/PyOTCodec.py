@@ -16,7 +16,7 @@ from ot_file import * # imports are transitive
 
 
 testResults = dict({})
-
+skippedTests = []
 
 # test methods to read specific data types from file
 from io import BytesIO
@@ -136,17 +136,50 @@ except OTCodecError:
 else:
     result = False
 testResults["Fixed.createNewFixedFromUint32 test 2"] = result
+
 f = Fixed.createNewFixedFromUint32(0x0001_8000)
 testResults["Fixed.createNewFixedFromUint32 test 3"] = (f == 1.5)
 f = Fixed.createNewFixedFromUint32(0xF000_8000)
 testResults["Fixed.createNewFixedFromUint32 test 4"] = (f == -4095.5)
+f = Fixed.createNewFixedFromUint32(0x0001_5000)
+testResults["Fixed.createNewFixedFromUint32 test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
 
+# Fixed.createNewFixedFromFloat
+try:
+    Fixed.createNewFixedFromFloat(-40000)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.createNewFixedFromFloat test 1"] = result
+try:
+    Fixed.createNewFixedFromFloat(40000)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.createNewFixedFromFloat test 2"] = result
 
+f = Fixed.createNewFixedFromFloat(1.5)
+testResults["Fixed.createNewFixedFromFloat test 3"] = (f._rawBytes == bytes(b'\x00\x01\x80\x00'))
+f = Fixed.createNewFixedFromFloat(-4095.5)
+testResults["Fixed.createNewFixedFromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00\x80\x00'))
+f = Fixed.createNewFixedFromFloat(1.3125)
+testResults["Fixed.createNewFixedFromFloat test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+
+# Fixed ==
 f = Fixed(b'\xF0\x00\x80\x00')
 testResults["Fixed __eq__ test 1"] = (Fixed(b'\xF0\x00\x80\x00') == f)
 testResults["Fixed __eq__ test 2"] = (f == Fixed(b'\xF0\x00\x80\x00'))
-testResults["Fixed __eq__ test 2"] = (f != Fixed(b'\x00\x00\x00\x00'))
+testResults["Fixed __eq__ test 3"] = (f != Fixed(b'\x00\x00\x00\x00'))
+testResults["Fixed __eq__ test 4"] = (f == bytearray(b'\xF0\x00\x80\x00'))
+testResults["Fixed __eq__ test 5"] = (f == bytes(b'\xF0\x00\x80\x00'))
+testResults["Fixed __eq__ test 6"] = (f == -4095.5)
+f = Fixed(b'\xF0\x00\x00\x00')
+testResults["Fixed __eq__ test 7"] = (f == -4096)
+testResults["Fixed __eq__ test 8"] = (f == 0xF000_0000)
 
+# Fixed misc
 f = Fixed(b'\xF0\x00\x80\x00')
 testResults["Fixed members test 1"] = (f.value == -4095.5)
 testResults["Fixed members test 2"] = (f.mantissa == -4096)
@@ -553,7 +586,7 @@ for k, v in expected:
         break
 testResults["Table_hhea.createNew_hhea test 2"] = result
 
-# test tryReadFromFile using selawk.ttf
+# test Table_hhea.tryReadFromFile using selawk.ttf
 font = OTFile(r"TestData\selawk.ttf").fonts[0]
 try:
     hhea = font.tables["hhea"]
@@ -667,6 +700,68 @@ for k, v in expected:
         break
 testResults["Table_maxp.createNew_maxp test 6"] = result
 
+# test Table_maxp.tryReadFromFile using selawk.ttf
+font = OTFile(r"TestData\selawk.ttf").fonts[0]
+try:
+    maxp = font.tables["maxp"]
+except Exception:
+    result = False
+else:
+    result = True
+testResults["Table_maxp.tryReadFromFile test 1"] = result
+testResults["Table_maxp.tryReadFromFile test 2"] = (type(maxp) == Table_maxp)
+selawk_maxp_values = [1, 0x0160, 0x64, 7, 0x4d, 4, 0, 0, 0, 1, 0, 0, 0, 3, 1]
+result = True
+expected = zip(Table_maxp._maxp_1_0_all_fields, selawk_maxp_values)
+for k, v in expected:
+    val = getattr(maxp, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_maxp.tryReadFromFile test 3"] = result
+
+
+# tests for table_fmtx
+fmtx = Table_fmtx()
+testResults["Table_fmtx constructor test 1"] = (type(fmtx) == Table_fmtx)
+testResults["Table_fmtx constructor test 2"] = (fmtx.tableTag == "fmtx")
+testResults["Table_fmtx constructor test 3"] = (not hasattr(fmtx, "version"))
+
+# createNew_fmtx: check default values
+fmtx = Table_fmtx.createNew_fmtx()
+testResults["Table_fmtx.createNew_fmtx test 1"] = (type(fmtx) == Table_fmtx)
+result = True
+expected = zip(Table_fmtx._fmtx_2_0_fields, Table_fmtx._fmtx_2_0_defaults)
+for k, v in expected:
+    val = getattr(fmtx, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_maxp.createNew_fmtx test 2"] = result
+
+# test Table_fmtx.tryReadFromFile using skia.ttf -- if present
+try:
+    font = OTFile(r"TestData\skia.ttf").fonts[0]
+except Exception:
+    skippedTests.append("Table_fmtx.tryReadFromFile using skia.ttf")
+else:
+    try:
+        fmtx = font.tables["fmtx"]
+    except Exception:
+        result = False
+    else:
+        result = True
+    testResults["Table_fmtx.tryReadFromFile test 1"] = result
+    testResults["Table_fmtx.tryReadFromFile test 2"] = (type(fmtx) == Table_fmtx)
+    skia_fmtx_values = [b'\x00\x02\x00\x00', 0x0238, 0, 1, 3, 2, 4, 5, 7, 6]
+    result = True
+    expected = zip(Table_fmtx._fmtx_2_0_fields, skia_fmtx_values)
+    for k, v in expected:
+        val = getattr(fmtx, k)
+        if val != v:
+            result = False
+            break
+    testResults["Table_fmtx.tryReadFromFile test 3"] = result
 
 
 
@@ -682,3 +777,8 @@ print()
 print(f"Number of test cases: {len(testResults)}")
 print(f"Number of tests failing: {list(testResults.values()).count(False)}")
 print()
+if len(skippedTests) > 0:
+    print("Tests skipped:")
+    for x in skippedTests:
+        print(f"    {x}")
+    print()

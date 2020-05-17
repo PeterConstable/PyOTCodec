@@ -49,6 +49,8 @@ class Table_maxp:
         "maxComponentDepth"
         )
 
+    _maxp_1_0_all_fields = _maxp_0_5_fields + _maxp_1_0_addl_fields
+
     _maxp_1_0_addl_defaults = (
         0, # maxPoints
         0, # maxContours
@@ -125,6 +127,9 @@ class Table_maxp:
         vals = struct.unpack(maxp._maxp_0_5_format, tableBytes[:maxp._maxp_0_5_size])
         maxp.version = Fixed(vals[0])
         maxp.numGlyphs = vals[1]
+
+        if maxp.version.fixedTableVersion != 0.5 and maxp.version.mantissa != 1:
+            raise OTCodecError(f"Unsupported maxp version: {maxp.version}")
 
         if maxp.version.fixedTableVersion == 0.5:
             assert(tableRecord.length == maxp._maxp_0_5_size)

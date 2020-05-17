@@ -1,3 +1,4 @@
+import math
 import re
 import struct
 from io import BytesIO
@@ -94,6 +95,38 @@ class Tag(str):
 
 class Fixed:
 
+    """
+    Fixed is described in the OT spec as "32-bit signed fixed-point number (16.16)". 
+         
+    In practice, prior to OT version 1.8.x, Fixed was used inconsistently as the specified type
+    for fields in several tables. In particular, the fractional portion of OT Fixed values
+    had been treated in two different ways. 
+         
+    As defined, the fractional portion should represent fractional units of 1/65536. Fixed is
+    used in this way in several tables; for example, in VariationAxisRecords in the 'fvar'
+    table, and the italicAngle field in the 'post' table.
+         
+    But Fixed has also been used for the version field of several tables with the fractional
+    portion interpreted as as though the hex value is read as a literal with an implicit ".".
+    This has occurred for the 'maxp', 'post' and 'vhea' tables, all of which include a non-
+    integer version. For instance, there is a version "0.5" 'maxp' table, and the "Fixed" data
+    representation for that is 0x00005000.
+    
+    (Some Apple-specific tables have only integer versions but are documented as using Fixed
+    as the type for the version field.)
+         
+    (In this alternate usage, Only the first (high-order) nibble of the fractional portion is 
+    ever used. Thus, the fractional portion could be shifted right by 12 bits and interpreted 
+    as 10ths. When a minor version of the GDEF table -- version 1.2 -- was added in OT 1.6, the 
+    value 0x00010002 was used and the type was changed from FIXED to ULONG, apparently in
+    recognition of the confusion from prior use of "Fixed" in relation to minor versions.)
+         
+    Note: This usage in version fields with minor versions has led to some incorrect usage in 
+    other non-version fields. For instance, in the fontRevision field of the 'head' table, a 
+    value of "5.01" would normally be stored as 0x0005028F (0x28F = 655 decimal, = 65536 / 100).
+    However, in some fonts such a fontRevision value would be represented as 0x00050100.
+    """
+
     def __init__(self, fixedBytes):
         """Construct a 16.16 Fixed value from bytearray or bytes.
 
@@ -123,6 +156,21 @@ class Fixed:
         return Fixed(bytes_)
 
 
+    @staticmethod
+    def createNewFixedFromFloat(val:float):
+        """Takes a float between -32,768 and 32,767 and returns a fixed. 
+
+        Fractional values will be rounded to the nearest 1/65,536. If val is out
+        of range (< -32,768 or > 32,767), an exception is raised.
+        """
+        if val < -32738 or val > 32767:
+            raise OTCodecError("The val argument is out of range.")
+        mant = math.floor(val)
+        frac = int(math.fabs(math.modf(val)[0]) * 65536) # num of 1/65536ths
+        bytes_ = struct.pack(">hH", mant, frac)
+        return Fixed(bytes_)
+
+
     def getFixedAsUint32(self):
         val, = struct.unpack(">L", self._rawBytes)
         return val
@@ -137,8 +185,15 @@ class Fixed:
     def __eq__(self, other):
         if isinstance(other, Fixed):
             return self.value == other.value
-        elif isinstance(other, (int, float)):
+        elif isinstance(other, (bytearray, bytes)):
+            return self._rawBytes == other
+        elif isinstance(other, float):
             return self.value == other
+        elif isinstance(other, int):
+            if other < 0x7FFF_FFFF:
+                return self.value == other
+            else:
+                return self.getFixedAsUint32() == other
         else:
             return False
 

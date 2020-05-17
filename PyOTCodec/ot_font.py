@@ -2,6 +2,7 @@ import struct
 from pathlib import Path
 from io import BytesIO
 from ot_types import *
+from table_fmtx import *
 from table_hhea import *
 from table_maxp import *
 from ot_file import *
@@ -117,16 +118,17 @@ class OTFont:
 
     @staticmethod
     def isSupportedTableType(tag:Tag):
-        if tag in ("hhea", "maxp"):
+        if tag in ("fmtx", "hhea", "maxp"):
             return True
         else:
             return False
 
-    # simple tables that get read from a file as soon as the 
+    # short, simple tables that get read from a file as soon as the 
     # font's OffsetTable is parsed:
     _earlyReadTables = ("fmtx", "head", "hhea", "maxp", "OS/2")
 
     _tryReadFromFileSwitch = {
+        "fmtx": Table_fmtx.tryReadFromFile,
         "hhea": Table_hhea.tryReadFromFile,
         "maxp": Table_maxp.tryReadFromFile
         }
