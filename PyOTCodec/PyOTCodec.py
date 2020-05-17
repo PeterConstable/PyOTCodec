@@ -1,6 +1,5 @@
-from OTTypes import *
-from OTFile import *
-from OTFont import *
+from ot_file import * # imports are transitive
+
 
 
 
@@ -16,8 +15,8 @@ from OTFont import *
 #-------------------------------------------------------------
 
 
-
 testResults = dict({})
+
 
 # test methods to read specific data types from file
 from io import BytesIO
@@ -88,6 +87,116 @@ testResults["Tag validation test 3"] = Tag.validateTag("abcde") == 0x01
 testResults["Tag validation test 4"] = Tag.validateTag("ab€c") == 0x02
 testResults["Tag validation test 5"] = Tag.validateTag("ab c") == 0x04
 testResults["Tag validation test 6"] = Tag.validateTag(" €c") == 0x07
+
+
+# tests for Fixed
+
+# arg must be bytearray or bytes
+try:
+    Fixed(None)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed constructor test 1"] = result
+try:
+    Fixed(123)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed constructor test 2"] = result
+
+# arg length must be 4 bytes
+try:
+    Fixed(b'\x00\x01')
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed constructor test 3"] = result
+
+# good args
+testResults["Fixed constructor test 4"] = (type(Fixed(bytearray([0,1,0,0]))) == Fixed)
+testResults["Fixed constructor test 5"] = (type(Fixed(bytes(b'\xF0\x00\x80\x00'))) == Fixed)
+testResults["Fixed constructor test 6"] = (Fixed(b'\xF0\x00\x80\x00') == -4095.5)
+
+# Fixed.createNewFixedFromUint32: arg must be between 0 and 0xffff_ffff
+try:
+    Fixed.createNewFixedFromUint32(-1)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.createNewFixedFromUint32 test 1"] = result
+try:
+    Fixed.createNewFixedFromUint32(0x1_FFFF_FFFF)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.createNewFixedFromUint32 test 2"] = result
+f = Fixed.createNewFixedFromUint32(0x0001_8000)
+testResults["Fixed.createNewFixedFromUint32 test 3"] = (f == 1.5)
+f = Fixed.createNewFixedFromUint32(0xF000_8000)
+testResults["Fixed.createNewFixedFromUint32 test 4"] = (f == -4095.5)
+
+
+f = Fixed(b'\xF0\x00\x80\x00')
+testResults["Fixed __eq__ test 1"] = (Fixed(b'\xF0\x00\x80\x00') == f)
+testResults["Fixed __eq__ test 2"] = (f == Fixed(b'\xF0\x00\x80\x00'))
+testResults["Fixed __eq__ test 2"] = (f != Fixed(b'\x00\x00\x00\x00'))
+
+f = Fixed(b'\xF0\x00\x80\x00')
+testResults["Fixed members test 1"] = (f.value == -4095.5)
+testResults["Fixed members test 2"] = (f.mantissa == -4096)
+testResults["Fixed members test 3"] = (f.fraction == 0x8000)
+testResults["Fixed members test 4"] = (f.getFixedAsUint32() == 0xF0008000)
+testResults["Fixed members test 5"] = (f.value == -4095.5)
+testResults["Fixed members test 6"] = (f.__str__() == "-4095.5")
+testResults["Fixed members test 7"] = (f.__repr__() == "-4095.5")
+f = Fixed(b'\x00\x02\x50\x00')
+testResults["Fixed members test 8"] = (f.fixedTableVersion == 2.5)
+
+# Fixed.tryReadFromBuffer: arg type must be bytearray or bytes
+try:
+    Fixed.tryReadFromBuffer(None)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.tryReadFromBuffer test 1"] = result
+try:
+    Fixed.tryReadFromBuffer(123)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.tryReadFromBuffer test 2"] = result
+
+# Fixed.tryReadFromBuffer: returns None if buffer length != 4 bytes
+testResults["Fixed.tryReadFromBuffer test 3"] = (Fixed.tryReadFromBuffer(b'\xF0\x00') == None)
+
+# Fixed.tryReadFromBuffer: good arg
+testResults["Fixed.tryReadFromBuffer test 3"] = (Fixed.tryReadFromBuffer(b'\xF0\x00\x80\x00') == -4095.5)
+
+
+# tests for Fixed.tryReadFromFile
+testbio = BytesIO(testBytes1)
+f = Fixed.tryReadFromFile(testbio)
+testResults["Fixed.tryReadFromFile test 1"] = (type(f) == Fixed)
+testResults["Fixed.tryReadFromFile test 2"] = (f.getFixedAsUint32() == 0x020F37DC)
+f = Fixed.tryReadFromFile(testbio)
+testResults["Fixed.tryReadFromFile test 3"] = (f.getFixedAsUint32() == 0x9AA20FE7)
+testbio.seek(-1, 2) #from end of stream
+try:
+    f = Fixed.tryReadFromFile(testbio)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.tryReadFromFile test 4"] = result
+
 
 
 # tests for OTFile constructor path validations
@@ -423,6 +532,141 @@ testResults["OffsetTable test 15"] = (offtbl.numTables == 16)
 testResults["OffsetTable test 16"] = (offtbl.searchRange == 0x100)
 testResults["OffsetTable test 17"] = (offtbl.entrySelector == 0x04)
 testResults["OffsetTable test 18"] = (offtbl.rangeShift == 0x00)
+
+
+# tests for table_hhea
+hhea = Table_hhea()
+testResults["Table_hhea constructor test 1"] = (type(hhea) == Table_hhea)
+testResults["Table_hhea constructor test 2"] = (hhea.tableTag == "hhea")
+testResults["Table_hhea constructor test 3"] = (not hasattr(hhea, "ascender"))
+
+hhea = Table_hhea.createNew_hhea()
+testResults["Table_hhea.createNew_hhea test 1"] = (type(hhea) == Table_hhea)
+
+# check default values
+result = True
+expected = zip(Table_hhea._hhea_1_0_fields, Table_hhea._hhea_1_0_defaults)
+for k, v in expected:
+    val = getattr(hhea, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_hhea.createNew_hhea test 2"] = result
+
+# test tryReadFromFile using selawk.ttf
+font = OTFile(r"TestData\selawk.ttf").fonts[0]
+try:
+    hhea = font.tables["hhea"]
+except Exception:
+    result = False
+else:
+    result = True
+testResults["Table_hhea.tryReadFromFile test 1"] = result
+testResults["Table_hhea.tryReadFromFile test 2"] = (type(hhea) == Table_hhea)
+selawk_hhea_values = [1, 0, 2027, -431, 0, 2478, -800, -1426, 2402, 1, 0, 0, 0, 0, 0, 0, 0, 352]
+result = True
+expected = zip(Table_hhea._hhea_1_0_fields, selawk_hhea_values)
+for k, v in expected:
+    val = getattr(hhea, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_hhea.tryReadFromFile test 3"] = result
+
+# test tryReadFromFile using SourceHanSans-Regular.TTC
+font = OTFile(r"TestData\SourceHanSans-Regular.TTC").fonts[0]
+try:
+    hhea = font.tables["hhea"]
+except Exception:
+    result = False
+else:
+    result = True
+testResults["Table_hhea.tryReadFromFile test 4"] = result
+testResults["Table_hhea.tryReadFromFile test 5"] = (type(hhea) == Table_hhea)
+sourcehansans_0_hhea_values = [1, 0, 0x0488, -288, 0, 3000, -1002, -551, 2928, 1, 0, 0, 0, 0, 0, 0, 0, 0xFFFB]
+result = True
+expected = zip(Table_hhea._hhea_1_0_fields, sourcehansans_0_hhea_values)
+for k, v in expected:
+    val = getattr(hhea, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_hhea.tryReadFromFile test 6"] = result
+
+
+# test tryReadFromFile offset/length checks
+tr_s = font.offsetTable.tryGetTableRecord("hhea")
+
+# offset out of bounds:
+tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, 0x7FFF_FFFF, tr_s.length)
+try:
+    hhea = Table_hhea.tryReadFromFile(font, tr)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_hhea.tryReadFromFile test 4"] = result
+
+# length out of bounds:
+tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, 0x7FFF_FFFF)
+try:
+    hhea = Table_hhea.tryReadFromFile(font, tr)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_hhea.tryReadFromFile test 5"] = result
+
+# wrong length:
+tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, tr_s.length + 1)
+try:
+    hhea = Table_hhea.tryReadFromFile(font, tr)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_hhea.tryReadFromFile test 5"] = result
+
+
+# tests for table_maxp
+maxp = Table_maxp()
+testResults["Table_maxp constructor test 1"] = (type(maxp) == Table_maxp)
+testResults["Table_maxp constructor test 2"] = (maxp.tableTag == "maxp")
+testResults["Table_maxp constructor test 3"] = (not hasattr(maxp, "version"))
+
+# createNew_maxp: check default values for v0.5
+maxp = Table_maxp.createNew_maxp(0.5)
+testResults["Table_maxp.createNew_maxp test 1"] = (type(maxp) == Table_maxp)
+result = True
+expected = zip(Table_maxp._maxp_0_5_fields, [Fixed.createNewFixedFromUint32(0x0000_5000), 0])
+for k, v in expected:
+    val = getattr(maxp, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_maxp.createNew_maxp test 2"] = result
+testResults["Table_maxp.createNew_maxp test 3"] = (not hasattr(maxp, "maxPoints"))
+
+# createNew_maxp: check default values for v1.0
+maxp = Table_maxp.createNew_maxp(1.0)
+testResults["Table_maxp.createNew_maxp test 4"] = (type(maxp) == Table_maxp)
+result = True
+expected = zip(Table_maxp._maxp_0_5_fields, [Fixed.createNewFixedFromUint32(0x0001_0000), 0])
+for k, v in expected:
+    val = getattr(maxp, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_maxp.createNew_maxp test 5"] = result
+result = True
+expected = zip(Table_maxp._maxp_1_0_addl_fields, Table_maxp._maxp_1_0_addl_defaults)
+for k, v in expected:
+    val = getattr(maxp, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_maxp.createNew_maxp test 6"] = result
+
 
 
 

@@ -1,8 +1,8 @@
 import struct
 from pathlib import Path
 from io import BytesIO
-from OTTypes import *
-from OTFont import *
+from ot_types import *
+from ot_font import *
 
 
 

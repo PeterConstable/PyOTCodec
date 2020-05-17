@@ -1,8 +1,10 @@
 import struct
 from pathlib import Path
 from io import BytesIO
-from OTTypes import *
-from OTFile import *
+from ot_types import *
+from table_hhea import *
+from table_maxp import *
+from ot_file import *
 
 class OTFont:
     """Represents a font resource: one font within a TTC, or the font of an entire file if not a TTC."""
@@ -44,9 +46,15 @@ class OTFont:
         font.ttcIndex = ttcIndex
         font.isWithinTtc = False if ttcIndex is None else True
         font.offsetTable = OffsetTable.tryReadFromFile(otFile.fileBytes, offsetInFile)
-        font.tables: dict = {}
         font.defaultLabel = otFile.path.name if ttcIndex is None \
                             else otFile.path.name + ":" + str(ttcIndex)
+
+        # Simple tables (e.g., hhea) get parsed from the file right away.
+        simple_trs = [v for k, v in font.offsetTable.tableRecords.items() \
+                            if k in font._earlyReadTables and font.isSupportedTableType(k)]
+        for tr in simple_trs:
+            font._tryReadTable(tr)
+
         return font
     # End of tryReadFromFile
 
@@ -109,10 +117,26 @@ class OTFont:
 
     @staticmethod
     def isSupportedTableType(tag:Tag):
-        if tag in ("hhea"):
+        if tag in ("hhea", "maxp"):
             return True
         else:
             return False
+
+    # simple tables that get read from a file as soon as the 
+    # font's OffsetTable is parsed:
+    _earlyReadTables = ("fmtx", "head", "hhea", "maxp", "OS/2")
+
+    _tryReadFromFileSwitch = {
+        "hhea": Table_hhea.tryReadFromFile,
+        "maxp": Table_maxp.tryReadFromFile
+        }
+
+    def _tryReadTable(self, tableRecord):
+        """Returns a table of type determined by tableRecord.tableTag, if supported."""
+        if not self.isSupportedTableType(tableRecord.tableTag):
+            return None
+        f = self._tryReadFromFileSwitch[tableRecord.tableTag]
+        self.tables[tableRecord.tableTag] = f(self, tableRecord)
 
 
     def addTable(self, table):
@@ -170,10 +194,14 @@ class TableRecord:
         if len(buffer) != TableRecord.size:
             return None
         tr = TableRecord()
-        tmp = struct.unpack(TableRecord._tableRecordFormat, buffer)
-        tr.tableTag = Tag(tmp[0])
-        tr.checkSum, tr.offset, tr.length = tmp[1:4]
+        vals = struct.unpack(TableRecord._tableRecordFormat, buffer)
+        tr.tableTag = Tag(vals[0])
+        tr.checkSum, tr.offset, tr.length = vals[1:4]
         return tr
+    # End of tryReadFromBuffer
+
+# End of class TableRecord
+
 
 
 class OffsetTable:
@@ -230,15 +258,15 @@ class OffsetTable:
 
         # get the header
         headerBytes = fileBytes[offsetInFile : offsetInFile + OffsetTable._offsetTableHeaderSize]
-        if len(headerBytes) < OffsetTable._offsetTableHeaderSize:
+        if len(headerBytes) < ot._offsetTableHeaderSize:
             raise OTCodecError("Unable to read OffsetTable from file at {:#08x}".format(offsetInFile))
-        tmp = struct.unpack(OffsetTable._offsetTableHeaderFormat, headerBytes)
+        tmp = struct.unpack(ot._offsetTableHeaderFormat, headerBytes)
         ot.sfntVersion = Tag(tmp[0])
         ot.numTables, ot.searchRange, ot.entrySelector, ot.rangeShift = tmp[1:5]
 
         # get the table records -- we'll wrap BytesIO around fileBytes to provide sequential reading
         filebio = BytesIO(fileBytes)
-        filebio.seek(offsetInFile + OffsetTable._offsetTableHeaderSize)
+        filebio.seek(offsetInFile + ot._offsetTableHeaderSize)
         for i in range(ot.numTables):
             recData = filebio.read(TableRecord.size)
             if len(recData) < TableRecord.size:

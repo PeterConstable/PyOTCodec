@@ -21,16 +21,28 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="OTFile.py">
+    <Compile Include="ot_file.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="OTFont.py">
+    <Compile Include="ot_font.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="OTTypes.py">
+    <Compile Include="ot_table.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="ot_types.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodec.py" />
+    <Compile Include="table_head.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="table_hhea.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="table_maxp.py">
+      <SubType>Code</SubType>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
