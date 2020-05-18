@@ -322,11 +322,11 @@ class OffsetTable:
         in memory. If called on an instance that was read from a file,
         an exception is raised.
         """
+        if hasattr(self, "offsetInFile"):
+            raise OTCodecError("Cannot remove a TableRecord from an OffsetTable that was read from a file.")
         if tableTag is None:
             # No-op
             return
-        if hasattr(self, "offsetInFile"):
-            raise OTCodecError("Cannot remove a TableRecord from an OffsetTable that was read from a file.")
         try:
             del self.tableRecords[tableTag]
         except:

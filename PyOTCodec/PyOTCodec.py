@@ -18,6 +18,18 @@ from ot_file import * # imports are transitive
 testResults = dict({})
 skippedTests = []
 
+# Several tests will use selawk.ttf, SourceHanSans-Regular.TTC
+salawk_file = OTFile(r"TestData\selawk.ttf")
+sourceHansSans_file = OTFile(r"TestData\SourceHanSans-Regular.TTC")
+
+
+
+#-------------------------------------------------------------
+# Tests for low-level stuff: 
+#   - file read methods
+#   - custom types: Tag, Fixed
+#-------------------------------------------------------------
+
 # test methods to read specific data types from file
 from io import BytesIO
 testBytes1 = ( b'\x02\x0F\x37\xDC\x9A'
@@ -80,9 +92,8 @@ b1 = b
 testResults["calcChecksum test 8"] = (calcCheckSum(b) == 6)
 testResults["calcChecksum test 9"] = (b == b1)
 
-font = OTFile(r"TestData\selawk.ttf").fonts[0]
-hhea = font.tables["hhea"]
-tr_hhea = font.offsetTable.tryGetTableRecord("hhea")
+hhea = salawk_file.fonts[0].tables["hhea"]
+tr_hhea = salawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 testResults["calcChecksum test 10"] = (hhea.calculatedCheckSum == tr_hhea.checkSum)
 
 
@@ -257,6 +268,11 @@ testResults["Fixed.tryReadFromFile test 4"] = result
 
 
 
+
+#-------------------------------------------------------------
+# Tests for OTFile, TTCHeader
+#-------------------------------------------------------------
+
 # tests for OTFile constructor path validations
 try:
     x = OTFile()
@@ -290,6 +306,7 @@ else:
     result = False
 testResults["OTFile path test 4"] = result
 
+testResults["OTFile path test 5"] = (salawk_file.path.name == r"selawk.ttf")
 
 # tests for OTFile.IsSupportedSfntVersion
 testResults["OTFile.IsSupportedSfntVersion test 1"] = (OTFile.isSupportedSfntVersion(b'\x00\x01\x00\x00') == True)
@@ -299,25 +316,29 @@ testResults["OTFile.IsSupportedSfntVersion test 4"] = (OTFile.isSupportedSfntVer
 testResults["OTFile.IsSupportedSfntVersion test 5"] = (OTFile.isSupportedSfntVersion("abcd") == False)
 
 
-# tests for OTFont.IsSupportedSfntVersion
-testResults["OTFont.IsSupportedSfntVersion test 1"] = (OTFont.isSupportedSfntVersion(b'\x00\x01\x00\x00') == True)
-testResults["OTFont.IsSupportedSfntVersion test 2"] = (OTFont.isSupportedSfntVersion("OTTO") == True)
-testResults["OTFont.IsSupportedSfntVersion test 3"] = (OTFont.isSupportedSfntVersion("true") == True)
-testResults["OTFont.IsSupportedSfntVersion test 4"] = (OTFont.isSupportedSfntVersion("ttcf") == False)
-testResults["OTFont.IsSupportedSfntVersion test 5"] = (OTFont.isSupportedSfntVersion("abcd") == False)
+testResults["OTFile read test 1"] = (salawk_file.sfntVersion == b'\x00\x01\x00\x00')
+testResults["OTFile read test 2"] = (salawk_file.numFonts == 1)
+testResults["OTFile read test 3"] = (salawk_file.isCollection() == False)
 
-# tests for OTFont.IsKnownTableType
-testResults["OTFont.IsKnownTableType test 1"] = (OTFont.isKnownTableType("CBDT") == True)
-testResults["OTFont.IsKnownTableType test 2"] = (OTFont.isKnownTableType("bdat") == True)
-testResults["OTFont.IsKnownTableType test 3"] = (OTFont.isKnownTableType("Gloc") == True)
-testResults["OTFont.IsKnownTableType test 4"] = (OTFont.isKnownTableType("TSI2") == True)
-testResults["OTFont.IsKnownTableType test 5"] = (OTFont.isKnownTableType("zzzz") == False)
+testResults["OTFile read test 4"] = (sourceHansSans_file.sfntVersion == "ttcf")
+testResults["OTFile read test 5"] = (sourceHansSans_file.numFonts == 10)
+testResults["OTFile read test 6"] = (sourceHansSans_file.isCollection() == True)
 
-# tests for OTFont.IsSupportedTableType
-testResults["OTFont.IsSupportedTableType test 1"] = (OTFont.isSupportedTableType("zzzz") == False)
-testResults["OTFont.IsSupportedTableType test 2"] = (OTFont.isSupportedTableType("hhea") == True)
+ttchdr = sourceHansSans_file.ttcHeader
+testResults["TTCHeader read test 1"] = (ttchdr.ttcTag == "ttcf")
+testResults["TTCHeader read test 2"] = (ttchdr.majorVersion == 1)
+testResults["TTCHeader read test 3"] = (ttchdr.minorVersion == 0)
+testResults["TTCHeader read test 4"] = (ttchdr.numFonts == 10)
 
 
+
+
+#-------------------------------------------------------------
+# Tests for TableRecord, OffsetTable
+#-------------------------------------------------------------
+
+
+#-------------------------------------------------------------
 # tests for TableRecord constructor
 tr = TableRecord()
 testResults["TableRecord() test 1"] = (type(tr) == TableRecord)
@@ -326,6 +347,7 @@ testResults["TableRecord() test 3"] = (tr.checkSum == 0)
 testResults["TableRecord() test 4"] = (tr.offset == 0)
 testResults["TableRecord() test 5"] = (tr.length == 0)
 
+#-------------------------------------------------------------
 # tests for TableRecord.createNewTableRecord
 try:
     tr = TableRecord.createNewTableRecord(None) # table Tag required
@@ -349,7 +371,30 @@ testResults["TableRecord.createNewTableRecord test 9"] = (tr.checkSum == 42)
 testResults["TableRecord.createNewTableRecord test 10"] = (tr.offset == 43)
 testResults["TableRecord.createNewTableRecord test 11"] = (tr.length == 44)
 
+#-------------------------------------------------------------
+# tests for TableRecord.tryReadFromBuffer
+offtbl = salawk_file.fonts[0].offsetTable
+tblrec = list(offtbl.tableRecords.values())[0]
+testResults["TableRecord test 1"] = (tblrec.tableTag == "DSIG")
+testResults["TableRecord test 2"] = (tblrec.checkSum == 0xF054_3E26)
+testResults["TableRecord test 3"] = (tblrec.offset == 0x0000_91E4)
+testResults["TableRecord test 4"] = (tblrec.length == 0x0000_1ADC)
 
+tblrec = list(offtbl.tableRecords.values())[5]
+testResults["TableRecord test 5"] = (tblrec.tableTag == "cmap")
+testResults["TableRecord test 6"] = (tblrec.checkSum == 0x22F2_F74C)
+testResults["TableRecord test 7"] = (tblrec.offset == 0x0000_0758)
+testResults["TableRecord test 8"] = (tblrec.length == 0x0000_0606)
+
+offtbl = sourceHansSans_file.fonts[0].offsetTable
+tblrec = list(offtbl.tableRecords.values())[3]
+testResults["TableRecord test 9"] = (tblrec.tableTag == "GPOS")
+testResults["TableRecord test 10"] = (tblrec.checkSum == 0x0D16_AD78)
+testResults["TableRecord test 11"] = (tblrec.offset == 0x00F8_CB20)
+testResults["TableRecord test 12"] = (tblrec.length == 0x0000_B91A)
+
+
+#-------------------------------------------------------------
 # tests for OffsetTable constructor
 ot = OffsetTable()
 testResults["OffsetTable() test 1"] = (type(ot) == OffsetTable)
@@ -358,6 +403,7 @@ testResults["OffsetTable() test 3"] = (ot.searchRange == 0)
 testResults["OffsetTable() test 4"] = (ot.entrySelector == 0)
 testResults["OffsetTable() test 5"] = (ot.rangeShift == 0)
 
+#-------------------------------------------------------------
 # tests for OffsetTable.createNewOffsetTable
 try:
     ot = OffsetTable.createNewOffsetTable(None) # sfntVersion tag required
@@ -389,7 +435,46 @@ testResults["OffsetTable.createNewOffsetTable test 10"] = (ot.searchRange == 42)
 testResults["OffsetTable.createNewOffsetTable test 11"] = (ot.entrySelector == 43)
 testResults["OffsetTable.createNewOffsetTable test 12"] = (ot.rangeShift == 44)
 
+
+#-------------------------------------------------------------
+# tests for OffsetTable.tryReadFromFile
+
+offtbl = salawk_file.fonts[0].offsetTable
+testResults["OffsetTable test 1"] = (offtbl.offsetInFile == 0)
+testResults["OffsetTable test 2"] = (offtbl.sfntVersion == b'\x00\x01\x00\x00')
+testResults["OffsetTable test 3"] = (offtbl.numTables == 15)
+testResults["OffsetTable test 4"] = (offtbl.searchRange == 0x80)
+testResults["OffsetTable test 5"] = (offtbl.entrySelector == 0x03)
+testResults["OffsetTable test 6"] = (offtbl.rangeShift == 0x70)
+
+offtbl = sourceHansSans_file.fonts[0].offsetTable
+testResults["OffsetTable test 7"] = (offtbl.offsetInFile == 0x34)
+testResults["OffsetTable test 8"] = (offtbl.sfntVersion == "OTTO")
+testResults["OffsetTable test 9"] = (offtbl.numTables == 16)
+testResults["OffsetTable test 10"] = (offtbl.searchRange == 0x0100)
+testResults["OffsetTable test 11"] = (offtbl.entrySelector == 0x0004)
+testResults["OffsetTable test 12"] = (offtbl.rangeShift == 0x0000)
+
+offtbl = sourceHansSans_file.fonts[1].offsetTable
+testResults["OffsetTable test 13"] = (offtbl.offsetInFile == 0x140)
+testResults["OffsetTable test 14"] = (offtbl.sfntVersion == "OTTO")
+testResults["OffsetTable test 15"] = (offtbl.numTables == 16)
+testResults["OffsetTable test 16"] = (offtbl.searchRange == 0x100)
+testResults["OffsetTable test 17"] = (offtbl.entrySelector == 0x04)
+testResults["OffsetTable test 18"] = (offtbl.rangeShift == 0x00)
+
+
+#-------------------------------------------------------------
+# tests for OffsetTable methods: tryGet, add, remove TR
+
+# tryGetTableRecord
+offtbl = salawk_file.fonts[0].offsetTable
+testResults["OffsetTable.TryGetTableRecord test 1"] = (type(offtbl.tryGetTableRecord("cmap")) == TableRecord)
+testResults["OffsetTable.TryGetTableRecord test 2"] = (offtbl.tryGetTableRecord("zzzz") == None)
+
+
 # tests for OffsetTable.AddTableRecord
+ot = OffsetTable.createNewOffsetTable("true", 42, 43, 44)
 try:
     ot.addTableRecord(None) # TableRecord object required
 except OTCodecError:
@@ -418,9 +503,8 @@ testResults["OffsetTable.addTableRecord test 5"] = (len(ot.tableRecords) == 1)
 testResults["OffsetTable.addTableRecord test 6"] = (ot.tableRecords["abcd"].checkSum == 43)
 
 # can't add table record to OffsetTable read from file
-font = OTFile(r"TestData\selawk.ttf").fonts[0]
 try:
-    font.offsetTable.addTableRecord(tr)
+    salawk_file.fonts[0].offsetTable.addTableRecord(tr)
 except OTCodecError:
     result = True
 else:
@@ -428,7 +512,7 @@ else:
 testResults["OffsetTable.AddTableRecord test 7"] = result
 
 # TableRecord read from file can be added to a new OffsetTable
-tr = font.offsetTable.tableRecords["cmap"]
+tr = salawk_file.fonts[0].offsetTable.tableRecords["cmap"]
 ot.addTableRecord(tr)
 testResults["OffsetTable.AddTableRecord test 8"] = (len(ot.tableRecords) == 2)
 testResults["OffsetTable.AddTableRecord test 9"] = (ot.tableRecords["cmap"].checkSum == 0x22F2_F74C)
@@ -466,19 +550,18 @@ else:
     result = True
 testResults["OffsetTable.removeTableRecord test 5"] = result
 
-# None is no-op, even for OffsetTable read from file
-font = OTFile(r"TestData\selawk.ttf").fonts[0]
+# Can't attempt to remove OffsetTable read from file, even if None is passed
 try:
-    font.offsetTable.removeTableRecord(None)
-except Exception:
-    result = False
-else:
+    salawk_file.fonts[0].offsetTable.removeTableRecord(None)
+except OTCodecError:
     result = True
+else:
+    result = False
 testResults["OffsetTable.removeTableRecord test 6"] = result
 
 # can't remove TableRecord from OffsetTable read from file
 try:
-    font.offsetTable.removeTableRecord("cmap")
+    salawk_file.fonts[0].offsetTable.removeTableRecord("cmap")
 except OTCodecError:
     result = True
 else:
@@ -487,7 +570,7 @@ testResults["OffsetTable.removeTableRecord test 7"] = result
 
 # even if not present, can't try to remove TableRecord from OffsetTable read from file
 try:
-    font.offsetTable.removeTableRecord("zzzz")
+    salawk_file.fonts[0].offsetTable.removeTableRecord("zzzz")
 except OTCodecError:
     result = True
 else:
@@ -496,14 +579,31 @@ testResults["OffsetTable.removeTableRecord test 8"] = result
 
 
 
-# tests for OTFile, OTFont, OffsetTable, TableRecord using selawk.ttf
-file = OTFile(r"TestData\selawk.ttf")
-testResults["OTFile path test 5"] = (file.path.name == r"selawk.ttf")
-testResults["OTFile read test 1"] = (file.sfntVersion == b'\x00\x01\x00\x00')
-testResults["OTFile read test 2"] = (file.numFonts == 1)
-testResults["OTFile read test 3"] = (file.isCollection() == False)
 
-font = file.fonts[0]
+#-------------------------------------------------------------
+#-------------------------------------------------------------
+
+# tests for OTFont.IsSupportedSfntVersion
+testResults["OTFont.IsSupportedSfntVersion test 1"] = (OTFont.isSupportedSfntVersion(b'\x00\x01\x00\x00') == True)
+testResults["OTFont.IsSupportedSfntVersion test 2"] = (OTFont.isSupportedSfntVersion("OTTO") == True)
+testResults["OTFont.IsSupportedSfntVersion test 3"] = (OTFont.isSupportedSfntVersion("true") == True)
+testResults["OTFont.IsSupportedSfntVersion test 4"] = (OTFont.isSupportedSfntVersion("ttcf") == False)
+testResults["OTFont.IsSupportedSfntVersion test 5"] = (OTFont.isSupportedSfntVersion("abcd") == False)
+
+# tests for OTFont.IsKnownTableType
+testResults["OTFont.IsKnownTableType test 1"] = (OTFont.isKnownTableType("CBDT") == True)
+testResults["OTFont.IsKnownTableType test 2"] = (OTFont.isKnownTableType("bdat") == True)
+testResults["OTFont.IsKnownTableType test 3"] = (OTFont.isKnownTableType("Gloc") == True)
+testResults["OTFont.IsKnownTableType test 4"] = (OTFont.isKnownTableType("TSI2") == True)
+testResults["OTFont.IsKnownTableType test 5"] = (OTFont.isKnownTableType("zzzz") == False)
+
+# tests for OTFont.IsSupportedTableType
+testResults["OTFont.IsSupportedTableType test 1"] = (OTFont.isSupportedTableType("zzzz") == False)
+testResults["OTFont.IsSupportedTableType test 2"] = (OTFont.isSupportedTableType("hhea") == True)
+
+
+
+font = salawk_file.fonts[0]
 testResults["OTFont read test 1"] = (font.offsetInFile == 0)
 testResults["OTFont read test 2"] = (font.sfntVersionTag() == b'\x00\x01\x00\x00')
 testResults["OTFont read test 3"] = (font.ttcIndex == None)
@@ -518,81 +618,33 @@ testResults["OTFont.TryGetTableOffset test 1"] = (font.tryGetTableOffset("cmap")
 testResults["OTFont.TryGetTableOffset test 2"] = (font.tryGetTableOffset("zzzz") == None)
 
 
-offtbl = font.offsetTable
-testResults["OffsetTable test 1"] = (offtbl.offsetInFile == 0)
-testResults["OffsetTable test 2"] = (offtbl.sfntVersion == b'\x00\x01\x00\x00')
-testResults["OffsetTable test 3"] = (offtbl.numTables == 15)
-testResults["OffsetTable test 4"] = (offtbl.searchRange == 0x80)
-testResults["OffsetTable test 5"] = (offtbl.entrySelector == 0x03)
-testResults["OffsetTable test 6"] = (offtbl.rangeShift == 0x70)
-
-testResults["OffsetTable.TryGetTableRecord test 1"] = (type(offtbl.tryGetTableRecord("cmap")) == TableRecord)
-testResults["OffsetTable.TryGetTableRecord test 2"] = (offtbl.tryGetTableRecord("zzzz") == None)
 
 
-tblrec = list(offtbl.tableRecords.values())[0]
-testResults["TableRecord test 1"] = (tblrec.tableTag == "DSIG")
-testResults["TableRecord test 2"] = (tblrec.checkSum == 0xF054_3E26)
-testResults["TableRecord test 3"] = (tblrec.offset == 0x0000_91E4)
-testResults["TableRecord test 4"] = (tblrec.length == 0x0000_1ADC)
 
-tblrec = list(offtbl.tableRecords.values())[5]
-testResults["TableRecord test 5"] = (tblrec.tableTag == "cmap")
-testResults["TableRecord test 6"] = (tblrec.checkSum == 0x22F2_F74C)
-testResults["TableRecord test 7"] = (tblrec.offset == 0x0000_0758)
-testResults["TableRecord test 8"] = (tblrec.length == 0x0000_0606)
+# tests for OTFile, TTCHeader, OTFont using SourceHanSans-Regular.TTC
 
-
-# tests for OTFile, TTCHeader, OTFont, OffsetTable, TableRecord using SourceHanSans-Regular.TTC
-file = OTFile(r"TestData\SourceHanSans-Regular.TTC")
-testResults["OTFile read test 4"] = (file.sfntVersion == "ttcf")
-testResults["OTFile read test 5"] = (file.numFonts == 10)
-testResults["OTFile read test 6"] = (file.isCollection() == True)
-
-ttchdr = file.ttcHeader
-testResults["TTCHeader read test 1"] = (ttchdr.ttcTag == "ttcf")
-testResults["TTCHeader read test 2"] = (ttchdr.majorVersion == 1)
-testResults["TTCHeader read test 3"] = (ttchdr.minorVersion == 0)
-testResults["TTCHeader read test 4"] = (ttchdr.numFonts == 10)
-
-font = file.fonts[0]
+font = sourceHansSans_file.fonts[0]
 testResults["OTFont read test 6"] = (font.offsetInFile == 0x34)
 testResults["OTFont read test 7"] = (font.sfntVersionTag() == "OTTO")
 testResults["OTFont read test 8"] = (font.ttcIndex == 0)
 testResults["OTFont read test 9"] = (font.isWithinTtc == True)
 testResults["OTFont read test 10"] = (font.defaultLabel == "SourceHanSans-Regular.TTC:0")
 
-offtbl = font.offsetTable
-testResults["OffsetTable test 7"] = (offtbl.offsetInFile == 0x34)
-testResults["OffsetTable test 8"] = (offtbl.sfntVersion == "OTTO")
-testResults["OffsetTable test 9"] = (offtbl.numTables == 16)
-testResults["OffsetTable test 10"] = (offtbl.searchRange == 0x0100)
-testResults["OffsetTable test 11"] = (offtbl.entrySelector == 0x0004)
-testResults["OffsetTable test 12"] = (offtbl.rangeShift == 0x0000)
 
-tblrec = list(offtbl.tableRecords.values())[3]
-testResults["TableRecord test 9"] = (tblrec.tableTag == "GPOS")
-testResults["TableRecord test 10"] = (tblrec.checkSum == 0x0D16_AD78)
-testResults["TableRecord test 11"] = (tblrec.offset == 0x00F8_CB20)
-testResults["TableRecord test 12"] = (tblrec.length == 0x0000_B91A)
-
-font = file.fonts[1]
+font = sourceHansSans_file.fonts[1]
 testResults["OTFont read test 11"] = (font.offsetInFile == 0x0140)
 testResults["OTFont read test 12"] = (font.sfntVersionTag() == "OTTO")
 testResults["OTFont read test 13"] = (font.ttcIndex == 1)
 testResults["OTFont read test 14"] = (font.isWithinTtc == True)
 testResults["OTFont read test 15"] = (font.defaultLabel == "SourceHanSans-Regular.TTC:1")
 
-offtbl = font.offsetTable
-testResults["OffsetTable test 13"] = (offtbl.offsetInFile == 0x140)
-testResults["OffsetTable test 14"] = (offtbl.sfntVersion == "OTTO")
-testResults["OffsetTable test 15"] = (offtbl.numTables == 16)
-testResults["OffsetTable test 16"] = (offtbl.searchRange == 0x100)
-testResults["OffsetTable test 17"] = (offtbl.entrySelector == 0x04)
-testResults["OffsetTable test 18"] = (offtbl.rangeShift == 0x00)
 
 
+
+#-------------------------------------------------------------
 # tests for table_hhea
+#-------------------------------------------------------------
+
 hhea = Table_hhea()
 testResults["Table_hhea constructor test 1"] = (type(hhea) == Table_hhea)
 testResults["Table_hhea constructor test 2"] = (hhea.tableTag == "hhea")
@@ -612,9 +664,8 @@ for k, v in expected:
 testResults["Table_hhea.createNew_hhea test 2"] = result
 
 # test Table_hhea.tryReadFromFile using selawk.ttf
-font = OTFile(r"TestData\selawk.ttf").fonts[0]
 try:
-    hhea = font.tables["hhea"]
+    hhea = salawk_file.fonts[0].tables["hhea"]
 except Exception:
     result = False
 else:
@@ -630,13 +681,12 @@ for k, v in expected:
         result = False
         break
 testResults["Table_hhea.tryReadFromFile test 3"] = result
-tr = font.offsetTable.tryGetTableRecord("hhea")
+tr = salawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 testResults["Table_hhea.tryReadFromFile test 4"] = (hhea.calculatedCheckSum == tr.checkSum)
 
 # test tryReadFromFile using SourceHanSans-Regular.TTC
-font = OTFile(r"TestData\SourceHanSans-Regular.TTC").fonts[0]
 try:
-    hhea = font.tables["hhea"]
+    hhea = sourceHansSans_file.fonts[0].tables["hhea"]
 except Exception:
     result = False
 else:
@@ -652,17 +702,17 @@ for k, v in expected:
         result = False
         break
 testResults["Table_hhea.tryReadFromFile test 7"] = result
-tr = font.offsetTable.tryGetTableRecord("hhea")
+tr = sourceHansSans_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 testResults["Table_hhea.tryReadFromFile test 8"] = (hhea.calculatedCheckSum == tr.checkSum)
 
 
 # test tryReadFromFile offset/length checks
-tr_s = font.offsetTable.tryGetTableRecord("hhea")
+tr_s = salawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 
 # offset out of bounds:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, 0x7FFF_FFFF, tr_s.length)
 try:
-    hhea = Table_hhea.tryReadFromFile(font, tr)
+    hhea = Table_hhea.tryReadFromFile(salawk_file.fonts[0], tr)
 except OTCodecError:
     result = True
 else:
@@ -672,7 +722,7 @@ testResults["Table_hhea.tryReadFromFile test 9"] = result
 # length out of bounds:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, 0x7FFF_FFFF)
 try:
-    hhea = Table_hhea.tryReadFromFile(font, tr)
+    hhea = Table_hhea.tryReadFromFile(salawk_file.fonts[0], tr)
 except OTCodecError:
     result = True
 else:
@@ -682,7 +732,7 @@ testResults["Table_hhea.tryReadFromFile test 10"] = result
 # wrong length:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, tr_s.length + 1)
 try:
-    hhea = Table_hhea.tryReadFromFile(font, tr)
+    hhea = Table_hhea.tryReadFromFile(salawk_file.fonts[0], tr)
 except Exception:
     result = True
 else:
@@ -690,7 +740,12 @@ else:
 testResults["Table_hhea.tryReadFromFile test 11"] = result
 
 
+
+
+#-------------------------------------------------------------
 # tests for table_maxp
+#-------------------------------------------------------------
+
 maxp = Table_maxp()
 testResults["Table_maxp constructor test 1"] = (type(maxp) == Table_maxp)
 testResults["Table_maxp constructor test 2"] = (maxp.tableTag == "maxp")
@@ -730,9 +785,8 @@ for k, v in expected:
 testResults["Table_maxp.createNew_maxp test 6"] = result
 
 # test Table_maxp.tryReadFromFile using selawk.ttf
-font = OTFile(r"TestData\selawk.ttf").fonts[0]
 try:
-    maxp = font.tables["maxp"]
+    maxp = salawk_file.fonts[0].tables["maxp"]
 except Exception:
     result = False
 else:
@@ -748,11 +802,16 @@ for k, v in expected:
         result = False
         break
 testResults["Table_maxp.tryReadFromFile test 3"] = result
-tr = font.offsetTable.tryGetTableRecord("maxp")
+tr = salawk_file.fonts[0].offsetTable.tryGetTableRecord("maxp")
 testResults["Table_maxp.tryReadFromFile test 4"] = (maxp.calculatedCheckSum == tr.checkSum)
 
 
+
+
+#-------------------------------------------------------------
 # tests for table_fmtx
+#-------------------------------------------------------------
+
 fmtx = Table_fmtx()
 testResults["Table_fmtx constructor test 1"] = (type(fmtx) == Table_fmtx)
 testResults["Table_fmtx constructor test 2"] = (fmtx.tableTag == "fmtx")
@@ -772,7 +831,7 @@ testResults["Table_maxp.createNew_fmtx test 2"] = result
 
 # test Table_fmtx.tryReadFromFile using skia.ttf -- if present
 try:
-    font = OTFile(r"TestData\skia.ttf").fonts[0]
+    font = OTFile(r"TestData\Skia.ttf").fonts[0]
 except Exception:
     skippedTests.append("Table_fmtx.tryReadFromFile using skia.ttf")
 else:
@@ -798,6 +857,7 @@ else:
 
 
 # Tests completed; report results.
+assert len(testResults) == 242
 
 print()
 print("{:<45} {:<}".format("Test", "result"))

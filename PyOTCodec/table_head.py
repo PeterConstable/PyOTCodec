@@ -211,23 +211,27 @@ class Table_head:
     # End _calcHeadCheckSum
 
 
-    @staticmethod
-    def _calcCheckSumAdjustment(font):
-        """Calculates the checkSumAdjustment for a font.
+    def calcCheckSumAdjustment(self):
+        """Calculates the checkSumAdjustment for the font containing the head
+        table. If the font is within a TTC, returns 0.
 
-        The checkSumAdjustment value is returned. No font data is changed. If
-        the font object does not have a head table (i.e., no TableRecord is
-        found), returns None.
+        The checkSumAdjustment value is returned. No font data is changed.
         
-        The font argument must be an OTFont object with the fileBytes attribute
-        set to a byte sequence containing the font data. This should only be
-        called for font data read from a file or for a complete font created
-        in memory.
+        The head table must have a parentFont attribute set to an OTFont
+        object, and that OT font must have the fileBytes attribute set to a
+        byte sequence containing the font data. This should only be called for 
+        font data read from a file or for a complete font created in memory.
         """
 
         from ot_font import OTFont, TableRecord
+        assert hasattr(self, "parentFont")
+        font = self.parentFont
         assert isinstance(font, OTFont)
         assert hasattr(font, "fileBytes")
+
+        # If within TTC, just return 0
+        if font.isWithinTtc:
+            return 0
 
         # get the head TableRecord
         head_rec = font.offsetTable.tryGetTableRecord("head")
@@ -236,14 +240,21 @@ class Table_head:
 
         # To calculate checkSumAdjustment, the font file must be modified by
         # setting head.checkSumAdjustment to 0. A checksum is calculated for
-        # the entire font file with that modification. To avoid copying the
-        # entire font data, the checksum can be computed sequentially on
-        # three segments:
+        # the entire font file with that modification. After computing the 
+        # file checksum, the differnce from 0xB1B0AFBA is taken.
+        # https://docs.microsoft.com/en-us/typography/opentype/spec/otff#calculating-checksums
+        #
+        # To avoid copying the entire font data to make a small change, the 
+        # file checksum can be computed sequentially on three segments:
+        #
         #   1) data before the modified head table (not copied)
         #   2) continue with a modified copy of the head table
         #   3) continue with the remainder (not copied)
+        #
+        # A memoryview will be used to avoid copying.
 
-        from ot_file import calcCheckSum
+        fontBytesView = memoryview(font.fileBytes)
+
 
         # All tables offsets (from start of file) are expected to be multiples 
         # of 4, though that might not be true in some fonts. Checksums must be
@@ -255,8 +266,7 @@ class Table_head:
         # phase is the number of extra bytes from the start of the head table
         # to include in the first segment
 
-        # use a memoryview to work with file segments without copying
-        fontBytesView = memoryview(font.fileBytes)
+        from ot_file import calcCheckSum
 
         # get checksum for the first segment
         first_segment_length = head_rec.offset + phase
@@ -279,7 +289,6 @@ class Table_head:
         third_segment = fontBytesView[first_segment_length + 12:]
         checksum = calcCheckSum(third_segment, leftPrior= checksum)
 
-        # last step is to diff from 0xB1B0AFBA
         return 0xB1B0AFBA - checksum
     # End of _calcCheckSumAdjustment
 
