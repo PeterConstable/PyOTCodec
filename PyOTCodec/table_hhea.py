@@ -128,13 +128,13 @@ class Table_hhea:
 
         # check the version
         if len(tableBytes) < hhea._hhea_version_size:
-            raise OTCodecError("The table lenght is wrong: can't even read the version.")
+            raise OTCodecError("The table length is wrong: can't even read the version.")
         vals = struct.unpack(hhea._hhea_version, tableBytes[:hhea._hhea_version_size])
         hhea.majorVersion, hhea.minorVersion = vals
         if hhea.majorVersion != 1:
             raise OTCodecError(f"Unsupported table version: {hhea.majorVersion}.{hhea.minorVersion}")
-        if hhea.minorVersion == 0:
-            assert len(tableBytes) == hhea._hhea_1_0_size
+        if len(tableBytes) < hhea._hhea_1_0_size:
+            raise OTCodecError(f"Cant't read the version {hhea.majorVersion}.{hhea.minorVersion} hhea table: the table is too short.")
 
         # unpack
         vals = struct.unpack(hhea._hhea_1_0_format, tableBytes)

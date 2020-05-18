@@ -138,8 +138,8 @@ class Table_head:
         head.majorVersion, head.minorVersion = vals
         if head.majorVersion != 1:
             raise OTCodecError(f"Unsupported table version: {hhea.majorVersion}.{hhea.minorVersion}")
-        if head.minorVersion == 0:
-            assert len(tableBytes) == head._head_1_0_size
+        if len(tableBytes) < head._head_1_0_size:
+            raise OTCodecError(f"Can't read the version {hhea.majorVersion}.{hhea.minorVersion} hhea table: the table is too short.")
 
         # unpack
         vals = struct.unpack(head._head_1_0_format, tableBytes)

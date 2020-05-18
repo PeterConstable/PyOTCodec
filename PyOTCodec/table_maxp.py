@@ -139,11 +139,10 @@ class Table_maxp:
         if maxp.version.fixedTableVersion != 0.5 and maxp.version.mantissa != 1:
             raise OTCodecError(f"Unsupported maxp version: {maxp.version}")
 
-        if maxp.version.fixedTableVersion == 0.5:
-            assert tableRecord.length == maxp._maxp_0_5_size
-        elif maxp.version == 1:
-            assert tableRecord.length == maxp._maxp_0_5_size + maxp._maxp_1_0_addl_size
-
+        if maxp.version.fixedTableVersion == 0.5 and tableRecord.length < maxp._maxp_0_5_size:
+            raise OTCodecError("Can't read the verion 0.5 maxp table: the table length is too short.")
+        elif maxp.version.mantissa == 1 and tableRecord.length < maxp._maxp_0_5_size + maxp._maxp_1_0_addl_size:
+            raise OTCodecError(f"Can't read the verion {maxp.version.fixedTableVersion} maxp table: the table length is too short.")
 
         # unpack v0.5 fields
         vals = struct.unpack(maxp._maxp_0_5_format, tableBytes[:maxp._maxp_0_5_size])

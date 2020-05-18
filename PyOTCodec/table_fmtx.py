@@ -116,11 +116,11 @@ class Table_fmtx:
         vals = struct.unpack(fmtx._fmtx_version, tableBytes[:fmtx._fmtx_version_size])
         fmtx.version = Fixed(vals[0])
         if fmtx.version.mantissa != 2:
-            raise OTCodecError(f"Unsupported fmtx version: {fmtx.version}")
+            raise OTCodecError(f"Unsupported fmtx version: {fmtx.version.fixedTableVersion}")
 
-        if fmtx.version == 2.0:
-            assert tableRecord.length == fmtx._fmtx_2_0_size
-
+        if fmtx.version.mantissa == 2 and tableRecord.length < fmtx._fmtx_2_0_size:
+            raise OTCodecError(f"Can't read the version {fmtx.version.fixedTableVersion} fmtx table: the table is too short.")
+            
         # unpack
         vals = struct.unpack(fmtx._fmtx_2_0_format, tableBytes)
         for k, v in zip(fmtx._fmtx_2_0_fields[1:], vals[1:]):
