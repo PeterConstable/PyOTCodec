@@ -2,7 +2,9 @@ import struct
 from io import BytesIO
 from ot_types import *
 #inline below: 
+#  import ot_table
 #  from ot_font import OTFont, TableRecord
+#  from ot_file import calcCheckSum
 
 
 
@@ -11,7 +13,11 @@ class Table_hhea:
     _expectedTag = "hhea"
 
     # hhea v1.0 format
-    _hhea_1_0_format = ">HH" + "hhh" + "H" + 11 * "h" + "H"
+
+    _hhea_version = ">HH"
+    _hhea_version_size = struct.calcsize(_hhea_version)
+
+    _hhea_1_0_format = ">2H" + "3h" + "H" + "11h" + "H"
     """ Structure:
         (big endian)                >
         majorVersion: uint16        H
@@ -111,24 +117,36 @@ class Table_hhea:
         hhea.tableRecord = tableRecord
 
         # get file bytes, then validate offset/length are in file bounds
-        # and that length is as expected for hhea
-        fileBytes = parentFont.otFile.fileBytes
+        fileBytes = parentFont.fileBytes
         offsetInFile = tableRecord.offset
         ot_table.ValidateOffsetAndLength(
-            len(fileBytes), offsetInFile, tableRecord.length,
-            hhea._hhea_1_0_size, "hhea"
+            len(fileBytes), offsetInFile, tableRecord.length
             )
 
-        # get the table bytes: since offset length are in bounds, get get the expected length
+        # get the table bytes: since offset length are in bounds, can get the expected length
         tableBytes = fileBytes[offsetInFile : offsetInFile + tableRecord.length]
-        assert(len(tableBytes) == hhea._hhea_1_0_size)
+
+        # check the version
+        if len(tableBytes) < hhea._hhea_version_size:
+            raise OTCodecError("The table lenght is wrong: can't even read the version.")
+        vals = struct.unpack(hhea._hhea_version, tableBytes[:hhea._hhea_version_size])
+        hhea.majorVersion, hhea.minorVersion = vals
+        if hhea.majorVersion != 1:
+            raise OTCodecError(f"Unsupported table version: {hhea.majorVersion}.{hhea.minorVersion}")
+        if hhea.minorVersion == 0:
+            assert len(tableBytes) == hhea._hhea_1_0_size
 
         # unpack
         vals = struct.unpack(hhea._hhea_1_0_format, tableBytes)
-        for k, v in zip(hhea._hhea_1_0_fields, vals):
+        for k, v in zip(hhea._hhea_1_0_fields[2:], vals[2:]):
             setattr(hhea, k, v)
+
+        # calculate checksum (should match what's in TableRecord)
+        from ot_file import calcCheckSum
+        hhea.calculatedCheckSum = calcCheckSum(tableBytes)
 
         return hhea
     # End of tryReadFromFile
 
+# End of class Table_hhea
 

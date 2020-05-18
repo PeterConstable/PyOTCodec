@@ -1,11 +1,19 @@
 import struct
 from io import BytesIO
 from ot_types import *
+#inline below: 
+#  import ot_table
+#  from ot_font import OTFont, TableRecord
+#  from ot_file import calcCheckSum
+
 
 
 class Table_maxp:
 
     _expectedTag = "maxp"
+
+    _maxp_version = ">4s"
+    _maxp_version_size = struct.calcsize(_maxp_version)
 
     # v0.5 fields
     _maxp_0_5_format = ">4sH"
@@ -114,35 +122,44 @@ class Table_maxp:
         maxp.tableRecord = tableRecord
 
         # get file bytes, then validate offset/length are in file bounds
-        fileBytes = parentFont.otFile.fileBytes
+        fileBytes = parentFont.fileBytes
         offsetInFile = tableRecord.offset
         ot_table.ValidateOffsetAndLength(
             len(fileBytes), offsetInFile, tableRecord.length
             )
 
-        # get the table bytes: since offset length are in bounds, get get the expected length
+        # get the table bytes: since offset length are in bounds, can get the expected length
         tableBytes = fileBytes[offsetInFile : offsetInFile + tableRecord.length]
 
-        # unpack v0.5 fields
-        vals = struct.unpack(maxp._maxp_0_5_format, tableBytes[:maxp._maxp_0_5_size])
+        # check the version
+        if len(tableBytes) < maxp._maxp_version_size:
+            raise OTCodecError("The table lenght is wrong: can't even read the version.")
+        vals = struct.unpack(maxp._maxp_version, tableBytes[:maxp._maxp_version_size])
         maxp.version = Fixed(vals[0])
-        maxp.numGlyphs = vals[1]
-
         if maxp.version.fixedTableVersion != 0.5 and maxp.version.mantissa != 1:
             raise OTCodecError(f"Unsupported maxp version: {maxp.version}")
 
         if maxp.version.fixedTableVersion == 0.5:
-            assert(tableRecord.length == maxp._maxp_0_5_size)
+            assert tableRecord.length == maxp._maxp_0_5_size
+        elif maxp.version == 1:
+            assert tableRecord.length == maxp._maxp_0_5_size + maxp._maxp_1_0_addl_size
 
-        if maxp.version != 1.0:
-            return maxp
 
-        assert(tableRecord.length == maxp._maxp_0_5_size + maxp._maxp_1_0_addl_size)
+        # unpack v0.5 fields
+        vals = struct.unpack(maxp._maxp_0_5_format, tableBytes[:maxp._maxp_0_5_size])
+        maxp.numGlyphs = vals[1]
 
-        # unpack additional v1.0 fields
-        vals = struct.unpack(maxp._maxp_1_0_addl_format, tableBytes[maxp._maxp_0_5_size:])
-        for k, v in zip(maxp._maxp_1_0_addl_fields, vals):
-            setattr(maxp, k, v)
+        if maxp.version.mantissa == 1:
+            # unpack additional v1.0 fields
+            vals = struct.unpack(maxp._maxp_1_0_addl_format, tableBytes[maxp._maxp_0_5_size:])
+            for k, v in zip(maxp._maxp_1_0_addl_fields, vals):
+                setattr(maxp, k, v)
+
+        # calculate checksum (should match what's in TableRecord)
+        from ot_file import calcCheckSum
+        maxp.calculatedCheckSum = calcCheckSum(tableBytes)
 
         return maxp
     # End of tryReadFromFile
+
+# End of class Table_maxp

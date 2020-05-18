@@ -3,6 +3,7 @@ from pathlib import Path
 from io import BytesIO
 from ot_types import *
 from table_fmtx import *
+from table_head import *
 from table_hhea import *
 from table_maxp import *
 from ot_file import *
@@ -37,16 +38,18 @@ class OTFont:
         """Returns an OffsetTable constructed from data in fileBytes. 
         
         Exceptions may be raised if fileBytes is not long enough."""
+
         font = OTFont()
-        font.otFile = otFile
-        if offsetInFile > len(otFile.fileBytes):
+        #font.otFile = otFile # Only present when read from a file (Not needed?)
+        font.fileBytes = otFile.fileBytes
+        if offsetInFile > len(font.fileBytes):
             raise OTCodecError("The file offset for the font is greater than the length of the file")
         font.offsetInFile = offsetInFile
         if ttcIndex is not None and ttcIndex >= otFile.numFonts:
             raise OTCodecError("The ttcIndex argument is greater than the last font index (numFonts - 1)")
         font.ttcIndex = ttcIndex
         font.isWithinTtc = False if ttcIndex is None else True
-        font.offsetTable = OffsetTable.tryReadFromFile(otFile.fileBytes, offsetInFile)
+        font.offsetTable = OffsetTable.tryReadFromFile(font.fileBytes, offsetInFile)
         font.defaultLabel = otFile.path.name if ttcIndex is None \
                             else otFile.path.name + ":" + str(ttcIndex)
 
@@ -118,7 +121,7 @@ class OTFont:
 
     @staticmethod
     def isSupportedTableType(tag:Tag):
-        if tag in ("fmtx", "hhea", "maxp"):
+        if tag in ("fmtx", "head", "hhea", "maxp"):
             return True
         else:
             return False
@@ -129,6 +132,7 @@ class OTFont:
 
     _tryReadFromFileSwitch = {
         "fmtx": Table_fmtx.tryReadFromFile,
+        "head": Table_head.tryReadFromFile,
         "hhea": Table_hhea.tryReadFromFile,
         "maxp": Table_maxp.tryReadFromFile
         }

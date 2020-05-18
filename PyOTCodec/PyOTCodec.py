@@ -61,6 +61,31 @@ else:
 testResults["Insufficient data test 2"] = result
 
 
+# tests for calcCheckSum
+b = b'\0\0\0\1\0\0\0\2\0\0\0\3'
+testResults["calcChecksum test 1"] = (calcCheckSum(b) == 6)
+b = b'\0\0\0\1\0\0\0\2\0\0\0\3\0'
+testResults["calcChecksum test 2"] = (calcCheckSum(b) == 6)
+testResults["calcChecksum test 3"] = (calcCheckSum(b, 4) == 10)
+b = bytearray(b'\0\0\0\1\0\0\0\2\0\0\0\3\0')
+b1 = b
+testResults["calcChecksum test 4"] = (calcCheckSum(b) == 6)
+testResults["calcChecksum test 5"] = (b == b1)
+b = bytes(b'\0\0\0\1\0\0\0\2\0\0\0\3\0')
+b1 = b
+testResults["calcChecksum test 6"] = (calcCheckSum(b) == 6)
+testResults["calcChecksum test 7"] = (b == b1)
+b = memoryview(b'\0\0\0\1\0\0\0\2\0\0\0\3\0')
+b1 = b
+testResults["calcChecksum test 8"] = (calcCheckSum(b) == 6)
+testResults["calcChecksum test 9"] = (b == b1)
+
+font = OTFile(r"TestData\selawk.ttf").fonts[0]
+hhea = font.tables["hhea"]
+tr_hhea = font.offsetTable.tryGetTableRecord("hhea")
+testResults["calcChecksum test 10"] = (hhea.calculatedCheckSum == tr_hhea.checkSum)
+
+
 # tests for Tag
 x = Tag(b'\x00\x01') # pad with 0x00
 testResults["Tag constructor test 1"] = (x == b'\x00\x01\x00\x00')
@@ -605,6 +630,8 @@ for k, v in expected:
         result = False
         break
 testResults["Table_hhea.tryReadFromFile test 3"] = result
+tr = font.offsetTable.tryGetTableRecord("hhea")
+testResults["Table_hhea.tryReadFromFile test 4"] = (hhea.calculatedCheckSum == tr.checkSum)
 
 # test tryReadFromFile using SourceHanSans-Regular.TTC
 font = OTFile(r"TestData\SourceHanSans-Regular.TTC").fonts[0]
@@ -614,8 +641,8 @@ except Exception:
     result = False
 else:
     result = True
-testResults["Table_hhea.tryReadFromFile test 4"] = result
-testResults["Table_hhea.tryReadFromFile test 5"] = (type(hhea) == Table_hhea)
+testResults["Table_hhea.tryReadFromFile test 5"] = result
+testResults["Table_hhea.tryReadFromFile test 6"] = (type(hhea) == Table_hhea)
 sourcehansans_0_hhea_values = [1, 0, 0x0488, -288, 0, 3000, -1002, -551, 2928, 1, 0, 0, 0, 0, 0, 0, 0, 0xFFFB]
 result = True
 expected = zip(Table_hhea._hhea_1_0_fields, sourcehansans_0_hhea_values)
@@ -624,7 +651,9 @@ for k, v in expected:
     if val != v:
         result = False
         break
-testResults["Table_hhea.tryReadFromFile test 6"] = result
+testResults["Table_hhea.tryReadFromFile test 7"] = result
+tr = font.offsetTable.tryGetTableRecord("hhea")
+testResults["Table_hhea.tryReadFromFile test 8"] = (hhea.calculatedCheckSum == tr.checkSum)
 
 
 # test tryReadFromFile offset/length checks
@@ -638,7 +667,7 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Table_hhea.tryReadFromFile test 4"] = result
+testResults["Table_hhea.tryReadFromFile test 9"] = result
 
 # length out of bounds:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, 0x7FFF_FFFF)
@@ -648,17 +677,17 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Table_hhea.tryReadFromFile test 5"] = result
+testResults["Table_hhea.tryReadFromFile test 10"] = result
 
 # wrong length:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, tr_s.length + 1)
 try:
     hhea = Table_hhea.tryReadFromFile(font, tr)
-except OTCodecError:
+except Exception:
     result = True
 else:
     result = False
-testResults["Table_hhea.tryReadFromFile test 5"] = result
+testResults["Table_hhea.tryReadFromFile test 11"] = result
 
 
 # tests for table_maxp
@@ -719,6 +748,8 @@ for k, v in expected:
         result = False
         break
 testResults["Table_maxp.tryReadFromFile test 3"] = result
+tr = font.offsetTable.tryGetTableRecord("maxp")
+testResults["Table_maxp.tryReadFromFile test 4"] = (maxp.calculatedCheckSum == tr.checkSum)
 
 
 # tests for table_fmtx

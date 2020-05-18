@@ -1,8 +1,8 @@
 import struct
 from io import BytesIO
 from ot_types import *
-from ot_file import *
 from ot_font import *
+#from ot_file import *
 
 
 class OTTable:

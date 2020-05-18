@@ -195,3 +195,46 @@ def ReadUint64(fileBytesIO:BytesIO):
     val, = struct.unpack(format, rawbytes)
     return val
 
+def calcCheckSum(data:bytes, leftPrior = 0):
+    """Calculate a checksum for an arbitrary array of data.
+
+    If the data length is not a multiple of 4, calculation
+    will be done with additional null byte padding.
+
+    Optionally takes a starting leftPrior value, a checksum
+    calculated from an immediately preceding segment of
+    data. This allows you to calculate a checksum in chunks.
+    For example, if you need to modify a short segment in a
+    long block of data, you can get a checksum for the
+    initial segment, then continue with the modified segment,
+    then continue with the following segment.
+    """
+    if not isinstance(data, (bytearray, bytes, memoryview)):
+        raise OTCodecError("Can only calculate a checksum on a byte sequence.")
+
+    pad = 4 - (len(data) % 4) if (len(data) % 4) != 0 else (len(data) % 4)
+    if pad:
+        # if bytes or memoryview were passed, we need a mutable copy
+        data = bytearray(data) + b'\0' * pad
+
+    # work on blocks of 4K
+    # Note: block size must be a multiple of 4
+    blocksize = 4096
+    assert (blocksize % 4) == 0
+
+    sum_ = leftPrior
+
+    for i in range(0, len(data), blocksize):
+        block = data[i : i + blocksize]
+        assert (len(block) % 4) == 0
+
+        # get num of uint32s
+        num = len(block) // 4
+        pattern = ">" + str(num) + "L"
+        vals = struct.unpack(pattern, block)
+        # integers in Python are unbounded
+        # ignore overflow beyond 32 bits
+        sum_ = sum(vals, start = sum_) & 0xffff_ffff
+
+    return sum_
+# End of calcChecksum
