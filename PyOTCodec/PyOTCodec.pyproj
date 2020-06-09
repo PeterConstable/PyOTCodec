@@ -34,6 +34,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodec.py" />
+    <Compile Include="table_colr.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="table_fmtx.py">
       <SubType>Code</SubType>
     </Compile>

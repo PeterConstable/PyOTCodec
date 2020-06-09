@@ -19,8 +19,9 @@ testResults = dict({})
 skippedTests = []
 
 # Several tests will use selawk.ttf, SourceHanSans-Regular.TTC
-salawk_file = OTFile(r"TestData\selawk.ttf")
+selawk_file = OTFile(r"TestData\selawk.ttf")
 sourceHansSans_file = OTFile(r"TestData\SourceHanSans-Regular.TTC")
+bungeeColor_file = OTFile(r"TestData\BungeeColor-Regular_colr_Windows.ttf")
 
 
 
@@ -92,8 +93,8 @@ b1 = b
 testResults["calcChecksum test 8"] = (calcCheckSum(b) == 6)
 testResults["calcChecksum test 9"] = (b == b1)
 
-hhea = salawk_file.fonts[0].tables["hhea"]
-tr_hhea = salawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
+hhea = selawk_file.fonts[0].tables["hhea"]
+tr_hhea = selawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 testResults["calcChecksum test 10"] = (hhea.calculatedCheckSum == tr_hhea.checkSum)
 
 
@@ -267,6 +268,14 @@ else:
 testResults["Fixed.tryReadFromFile test 4"] = result
 
 
+# tests for ot_types.createNewRecordsArray
+recordsArray = createNewRecordsArray(4, ("foo", "bar"), (17, 42))
+result = True
+result &= (len(recordsArray) == 4)
+result &= ("foo" in list(recordsArray[0]) and "bar" in list(recordsArray[1]))
+result &= (recordsArray[2]["foo"] == 17 and recordsArray[3]["bar"] == 42)
+testResults["ot_types.createNewRecordsArray test"] = result
+
 
 
 #-------------------------------------------------------------
@@ -306,7 +315,7 @@ else:
     result = False
 testResults["OTFile path test 4"] = result
 
-testResults["OTFile path test 5"] = (salawk_file.path.name == r"selawk.ttf")
+testResults["OTFile path test 5"] = (selawk_file.path.name == r"selawk.ttf")
 
 # tests for OTFile.IsSupportedSfntVersion
 testResults["OTFile.IsSupportedSfntVersion test 1"] = (OTFile.isSupportedSfntVersion(b'\x00\x01\x00\x00') == True)
@@ -316,9 +325,9 @@ testResults["OTFile.IsSupportedSfntVersion test 4"] = (OTFile.isSupportedSfntVer
 testResults["OTFile.IsSupportedSfntVersion test 5"] = (OTFile.isSupportedSfntVersion("abcd") == False)
 
 
-testResults["OTFile read test 1"] = (salawk_file.sfntVersion == b'\x00\x01\x00\x00')
-testResults["OTFile read test 2"] = (salawk_file.numFonts == 1)
-testResults["OTFile read test 3"] = (salawk_file.isCollection() == False)
+testResults["OTFile read test 1"] = (selawk_file.sfntVersion == b'\x00\x01\x00\x00')
+testResults["OTFile read test 2"] = (selawk_file.numFonts == 1)
+testResults["OTFile read test 3"] = (selawk_file.isCollection() == False)
 
 testResults["OTFile read test 4"] = (sourceHansSans_file.sfntVersion == "ttcf")
 testResults["OTFile read test 5"] = (sourceHansSans_file.numFonts == 10)
@@ -373,7 +382,7 @@ testResults["TableRecord.createNewTableRecord test 11"] = (tr.length == 44)
 
 #-------------------------------------------------------------
 # tests for TableRecord.tryReadFromBuffer
-offtbl = salawk_file.fonts[0].offsetTable
+offtbl = selawk_file.fonts[0].offsetTable
 tblrec = list(offtbl.tableRecords.values())[0]
 testResults["TableRecord test 1"] = (tblrec.tableTag == "DSIG")
 testResults["TableRecord test 2"] = (tblrec.checkSum == 0xF054_3E26)
@@ -439,7 +448,7 @@ testResults["OffsetTable.createNewOffsetTable test 12"] = (ot.rangeShift == 44)
 #-------------------------------------------------------------
 # tests for OffsetTable.tryReadFromFile
 
-offtbl = salawk_file.fonts[0].offsetTable
+offtbl = selawk_file.fonts[0].offsetTable
 testResults["OffsetTable test 1"] = (offtbl.offsetInFile == 0)
 testResults["OffsetTable test 2"] = (offtbl.sfntVersion == b'\x00\x01\x00\x00')
 testResults["OffsetTable test 3"] = (offtbl.numTables == 15)
@@ -468,7 +477,7 @@ testResults["OffsetTable test 18"] = (offtbl.rangeShift == 0x00)
 # tests for OffsetTable methods: tryGet, add, remove TR
 
 # tryGetTableRecord
-offtbl = salawk_file.fonts[0].offsetTable
+offtbl = selawk_file.fonts[0].offsetTable
 testResults["OffsetTable.TryGetTableRecord test 1"] = (type(offtbl.tryGetTableRecord("cmap")) == TableRecord)
 testResults["OffsetTable.TryGetTableRecord test 2"] = (offtbl.tryGetTableRecord("zzzz") == None)
 
@@ -504,7 +513,7 @@ testResults["OffsetTable.addTableRecord test 6"] = (ot.tableRecords["abcd"].chec
 
 # can't add table record to OffsetTable read from file
 try:
-    salawk_file.fonts[0].offsetTable.addTableRecord(tr)
+    selawk_file.fonts[0].offsetTable.addTableRecord(tr)
 except OTCodecError:
     result = True
 else:
@@ -512,7 +521,7 @@ else:
 testResults["OffsetTable.AddTableRecord test 7"] = result
 
 # TableRecord read from file can be added to a new OffsetTable
-tr = salawk_file.fonts[0].offsetTable.tableRecords["cmap"]
+tr = selawk_file.fonts[0].offsetTable.tableRecords["cmap"]
 ot.addTableRecord(tr)
 testResults["OffsetTable.AddTableRecord test 8"] = (len(ot.tableRecords) == 2)
 testResults["OffsetTable.AddTableRecord test 9"] = (ot.tableRecords["cmap"].checkSum == 0x22F2_F74C)
@@ -552,7 +561,7 @@ testResults["OffsetTable.removeTableRecord test 5"] = result
 
 # Can't attempt to remove OffsetTable read from file, even if None is passed
 try:
-    salawk_file.fonts[0].offsetTable.removeTableRecord(None)
+    selawk_file.fonts[0].offsetTable.removeTableRecord(None)
 except OTCodecError:
     result = True
 else:
@@ -561,7 +570,7 @@ testResults["OffsetTable.removeTableRecord test 6"] = result
 
 # can't remove TableRecord from OffsetTable read from file
 try:
-    salawk_file.fonts[0].offsetTable.removeTableRecord("cmap")
+    selawk_file.fonts[0].offsetTable.removeTableRecord("cmap")
 except OTCodecError:
     result = True
 else:
@@ -570,7 +579,7 @@ testResults["OffsetTable.removeTableRecord test 7"] = result
 
 # even if not present, can't try to remove TableRecord from OffsetTable read from file
 try:
-    salawk_file.fonts[0].offsetTable.removeTableRecord("zzzz")
+    selawk_file.fonts[0].offsetTable.removeTableRecord("zzzz")
 except OTCodecError:
     result = True
 else:
@@ -603,7 +612,7 @@ testResults["OTFont.IsSupportedTableType test 2"] = (OTFont.isSupportedTableType
 
 
 
-font = salawk_file.fonts[0]
+font = selawk_file.fonts[0]
 testResults["OTFont read test 1"] = (font.offsetInFile == 0)
 testResults["OTFont read test 2"] = (font.sfntVersionTag() == b'\x00\x01\x00\x00')
 testResults["OTFont read test 3"] = (font.ttcIndex == None)
@@ -665,7 +674,7 @@ testResults["Table_hhea.createNew_hhea test 2"] = result
 
 # test Table_hhea.tryReadFromFile using selawk.ttf
 try:
-    hhea = salawk_file.fonts[0].tables["hhea"]
+    hhea = selawk_file.fonts[0].tables["hhea"]
 except Exception:
     result = False
 else:
@@ -681,7 +690,7 @@ for k, v in expected:
         result = False
         break
 testResults["Table_hhea.tryReadFromFile test 3"] = result
-tr = salawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
+tr = selawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 testResults["Table_hhea.tryReadFromFile test 4"] = (hhea.calculatedCheckSum == tr.checkSum)
 
 # test tryReadFromFile using SourceHanSans-Regular.TTC
@@ -707,12 +716,12 @@ testResults["Table_hhea.tryReadFromFile test 8"] = (hhea.calculatedCheckSum == t
 
 
 # test tryReadFromFile offset/length checks
-tr_s = salawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
+tr_s = selawk_file.fonts[0].offsetTable.tryGetTableRecord("hhea")
 
 # offset out of bounds:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, 0x7FFF_FFFF, tr_s.length)
 try:
-    hhea = Table_hhea.tryReadFromFile(salawk_file.fonts[0], tr)
+    hhea = Table_hhea.tryReadFromFile(selawk_file.fonts[0], tr)
 except OTCodecError:
     result = True
 else:
@@ -722,7 +731,7 @@ testResults["Table_hhea.tryReadFromFile test 9"] = result
 # length out of bounds:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, 0x7FFF_FFFF)
 try:
-    hhea = Table_hhea.tryReadFromFile(salawk_file.fonts[0], tr)
+    hhea = Table_hhea.tryReadFromFile(selawk_file.fonts[0], tr)
 except OTCodecError:
     result = True
 else:
@@ -732,7 +741,7 @@ testResults["Table_hhea.tryReadFromFile test 10"] = result
 # wrong length:
 tr = TableRecord.createNewTableRecord("hhea", tr_s.checkSum, tr_s.offset, tr_s.length + 1)
 try:
-    hhea = Table_hhea.tryReadFromFile(salawk_file.fonts[0], tr)
+    hhea = Table_hhea.tryReadFromFile(selawk_file.fonts[0], tr)
 except Exception:
     result = True
 else:
@@ -786,7 +795,7 @@ testResults["Table_maxp.createNew_maxp test 6"] = result
 
 # test Table_maxp.tryReadFromFile using selawk.ttf
 try:
-    maxp = salawk_file.fonts[0].tables["maxp"]
+    maxp = selawk_file.fonts[0].tables["maxp"]
 except Exception:
     result = False
 else:
@@ -802,7 +811,7 @@ for k, v in expected:
         result = False
         break
 testResults["Table_maxp.tryReadFromFile test 3"] = result
-tr = salawk_file.fonts[0].offsetTable.tryGetTableRecord("maxp")
+tr = selawk_file.fonts[0].offsetTable.tryGetTableRecord("maxp")
 testResults["Table_maxp.tryReadFromFile test 4"] = (maxp.calculatedCheckSum == tr.checkSum)
 
 
@@ -827,7 +836,7 @@ for k, v in expected:
     if val != v:
         result = False
         break
-testResults["Table_maxp.createNew_fmtx test 2"] = result
+testResults["Table_fmtx.createNew_fmtx test 2"] = result
 
 # test Table_fmtx.tryReadFromFile using skia.ttf -- if present
 try:
@@ -841,23 +850,128 @@ else:
         result = False
     else:
         result = True
-    testResults["Table_fmtx.tryReadFromFile test 1"] = result
-    testResults["Table_fmtx.tryReadFromFile test 2"] = (type(fmtx) == Table_fmtx)
-    skia_fmtx_values = [b'\x00\x02\x00\x00', 0x0238, 0, 1, 3, 2, 4, 5, 7, 6]
+testResults["Table_fmtx.tryReadFromFile test 1"] = result
+testResults["Table_fmtx.tryReadFromFile test 2"] = (type(fmtx) == Table_fmtx)
+skia_fmtx_values = [b'\x00\x02\x00\x00', 0x0238, 0, 1, 3, 2, 4, 5, 7, 6]
+result = True
+expected = zip(Table_fmtx._fmtx_2_0_fields, skia_fmtx_values)
+for k, v in expected:
+    val = getattr(fmtx, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_fmtx.tryReadFromFile test 3"] = result
+
+
+
+#-------------------------------------------------------------
+# tests for table_COLR
+#-------------------------------------------------------------
+
+# test BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray
+recArray = BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray(4)
+result = True
+result &= (len(recArray) == 4)
+record = recArray[0]
+result &= (len(record) == 3)
+keys = list(record)
+result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
+result &= (record["glyphID"] == 0 and record["firstLayerIndex"] == 0 and record["numLayers"] == 0)
+testResults["BaseGlyphRecordsArray.createNew test"] = result
+
+# test LayerRecordsArray.createNew_LayerRecordsArray
+recArray = LayerRecordsArray.createNew_layerRecordsArray(4)
+result = True
+result &= (len(recArray) == 4)
+record = recArray[0]
+result &= (len(record) == 2)
+keys = list(record)
+result &= ("glyphID" in keys and "paletteIndex" in keys)
+result &= (record["glyphID"] == 0 and record["paletteIndex"] == 0)
+testResults["LayerRecordsArray.createNew test"] = result
+
+# test COLR constructor
+colr = Table_COLR()
+testResults["Table_COLR constructor test 1"] = (type(colr) == Table_COLR)
+testResults["Table_COLR constructor test 2"] = (colr.tableTag == "COLR")
+testResults["Table_COLR constructor test 3"] = (not hasattr(colr, "version"))
+
+# createNew_COLR: check default values for version 0
+colr = Table_COLR.createNew_COLR(0)
+testResults["Table_COLR.createNew_COLR test 1"] = (type(colr) == Table_COLR)
+result = True
+expected = zip(Table_COLR._colr_0_fields, Table_COLR._colr_0_defaults)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.createNew_COLR test 2"] = result
+
+# createNew_COLR: check default values for version 1
+colr = Table_COLR.createNew_COLR(1)
+testResults["Table_COLR.createNew_COLR test 3"] = (type(colr) == Table_COLR)
+result = True
+expected = zip(Table_COLR._colr_1_all_fields, Table_COLR._colr_1_all_defaults)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.createNew_COLR test 4"] = result
+
+# test Table_COLR.tryReadFromFile using BungeeColor-Regular_colr_Windows.ttf
+try:
+    colr = bungeeColor_file.fonts[0].tables["COLR"]
+except Exception:
+    result = False
+else:
     result = True
-    expected = zip(Table_fmtx._fmtx_2_0_fields, skia_fmtx_values)
-    for k, v in expected:
-        val = getattr(fmtx, k)
-        if val != v:
-            result = False
-            break
-    testResults["Table_fmtx.tryReadFromFile test 3"] = result
+testResults["Table_COLR.tryReadFromFile test 1"] = result
+testResults["Table_COLR.tryReadFromFile test 2"] = (type(colr) == Table_COLR)
+bungeeColor_COLR_headerValues = (0, 288, 14, 1742, 576)
+result = True
+expected = zip(Table_COLR._colr_0_fields, bungeeColor_COLR_headerValues)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.tryReadFromFile test 3"] = result
+recordArray = colr.baseGlyphRecords
+testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordArray) == 288)
+record = recordArray[3]
+keys = list(record)
+result = (len(record) == 3)
+result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
+testResults["Table_COLR.tryReadFromFile test 5"] = result
+result = (record["glyphID"] == 3 and record["firstLayerIndex"] == 6 and record["numLayers"] == 2)
+testResults["Table_COLR.tryReadFromFile test 6"] = result
+record = recordArray[174]
+result = (record["glyphID"] == 174 and record["firstLayerIndex"] == 348 and record["numLayers"] == 2)
+testResults["Table_COLR.tryReadFromFile test 7"] = result
+recordArray = colr.layerRecords
+testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordArray) == 576)
+record = recordArray[6]
+keys = list(record)
+result = (len(record) == 2)
+result &= ("glyphID" in keys and "paletteIndex" in keys)
+testResults["Table_COLR.tryReadFromFile test 9"] = result
+result = (record["glyphID"] == 452 and record["paletteIndex"] == 0)
+testResults["Table_COLR.tryReadFromFile test 10"] = result
+record = recordArray[401]
+result = (record["glyphID"] == 451 and record["paletteIndex"] == 1)
+testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 
 
 
+
+#-------------------------------------------------------------
 # Tests completed; report results.
-assert len(testResults) == 242
+print()
+print("Number of test results:", len(testResults))
+assert len(testResults) == 263
 
 print()
 print("{:<45} {:<}".format("Test", "result"))

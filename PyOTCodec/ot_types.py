@@ -232,3 +232,54 @@ class Fixed:
 
 
 class OTCodecError(Exception): pass
+
+
+
+# static functions
+
+def createNewRecordsArray(numRecords, fields, defaults):
+    """Return a list of record dicts with default values.
+
+    Records are represented as dicts, with the field names as keys.
+    The array is a list of these dicts.
+    """
+
+    array = []
+    for i in range(numRecords):
+        record = {}
+        for k, v in zip(fields, defaults):
+            record[k] = v
+        array.append(record)
+
+    return array
+
+
+def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayName):
+    """Takes a byte sequence and returns a list of record dicts with
+    the specified format read from the byte sequence.
+
+    The array is assumed to be at the start of the fileBytes sequence.
+    The format parameter is a string of the type needed for struct.unpack,
+    indicating the binary format in the file. The fieldNames parameter is a
+    sequence of names of the record fields, in order. The number of names
+    is assumed to match the number of values in the format.
+
+    Each dict represents a record from the file and has the names in
+    fieldNames as keys.
+    """
+
+    recordLength = struct.calcsize(format)
+    if len(buffer) < numRecords * recordLength:
+        raise OTCodecError(f"The file data is not long enough to read the {arrayName} array.")
+
+    array = []
+    index = 0
+    for i in range(numRecords):
+        record = {}
+        vals = struct.unpack(format, buffer[index : index + recordLength])
+        for k, v in zip(fieldNames, vals):
+            record[k] = v
+        array.append(record)
+        index += recordLength
+
+    return array
