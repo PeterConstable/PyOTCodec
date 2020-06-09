@@ -253,3 +253,5 @@ class LayerRecordsArray:
             )
 
  
+class BaseGlyphRecordsV1List:
+    pass

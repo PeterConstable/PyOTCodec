@@ -2,7 +2,7 @@ import struct
 from pathlib import Path
 from io import BytesIO
 from ot_types import *
-from table_colr import *
+from table_COLR import *
 from table_fmtx import *
 from table_head import *
 from table_hhea import *
