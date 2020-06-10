@@ -53,6 +53,8 @@ class Table_COLR:
     _colr_1_all_fields = _colr_0_fields + _colr_1_addl_fields
     _colr_1_all_defaults = _colr_0_defaults + _colr_1_addl_defaults
 
+
+
     def __init__(self):
         self.tableTag = Tag(self._expectedTag)
 
@@ -61,7 +63,8 @@ class Table_COLR:
     def createNew_COLR(version:int):
         """Creates a new version 0 or version 1 COLR table with default values.
         
-        Only the header is created; no record arrays or subtables are added.
+        Only the header and empry record arrays are created; no records or 
+        subtables are added.
         """
 
         if int(version) > 1:
@@ -71,6 +74,9 @@ class Table_COLR:
 
         for k, v in zip(colr._colr_0_fields, colr._colr_0_defaults):
             setattr(colr, k, v)
+
+        colr.baseGlyphRecords = []
+        colr.layerRecords = []
 
         if version == 1:
             for k, v in zip(colr._colr_1_addl_fields, colr._colr_1_addl_defaults):
@@ -123,11 +129,8 @@ class Table_COLR:
             for k, v in zip(colr._colr_1_addl_fields, vals):
                 setattr(colr, k, v)
 
-        # calculate checksum (should match what's in TableRecord)
-        from ot_file import calcCheckSum
-        colr.calculatedCheckSum = calcCheckSum(tableBytes)
 
-        # Finished with header fields. On to details...
+        # Finished with header fields. On to arrays and subtables...
 
         # BaseGlyphRecords array
         arrayLength = colr.numBaseGlyphRecords * BaseGlyphRecordsArray._baseGlyphRecord_size
@@ -165,6 +168,8 @@ class Table_COLR:
 
 
 class BaseGlyphRecordsArray:
+    # The OT spec doesn't define the array as its own struct type, but a class
+    # with static methods is used to contain related functionality.
 
     _baseGlyphRecord_format = ">3H"
     _baseGlyphRecord_size = struct.calcsize(_baseGlyphRecord_format)
@@ -216,9 +221,15 @@ class BaseGlyphRecordsArray:
             array.append(bgr)
 
         return array
+    # End of tryReadFromFile
+
+# End of class BaseGlyphRecordsArray
+
 
 
 class LayerRecordsArray:
+    # The OT spec doesn't define the array as its own struct type, but a class
+    # with static methods is used to contain related functionality.
 
     _layerRecord_format = ">2H"
     _layerRecord_size = struct.calcsize(_layerRecord_format)
@@ -251,7 +262,82 @@ class LayerRecordsArray:
             LayerRecordsArray._layerRecord_fields,
             "LayerRecords"
             )
+    # End of tryReadFromFile
+
+# End of class BaseGlyphRecordsArray
+
 
  
-class BaseGlyphRecordsV1List:
-    pass
+class BaseGlyphV1List:
+    
+    #format/size for List header (not for contained array, which is variable)
+    _baseGlyphV1List_format = ">L"
+    _baseGlyphV1List_size = struct.calcsize(_baseGlyphV1List_header_format)
+    _baseGlyphV1List_fields = ("numBaseGlyphV1Records")
+    _baseGlyphV1List_defaults = (0)
+
+    # format/size for records
+    _baseGlyphV1Record_format = ">HL"
+    _baseGlyphV1Record_size = struct.calcsize(_baseGlyphV1Record_format)
+    _baseGlyphV1Record_fields = ("glyphID", "layersV1Offset")
+    _baseGlyphV1Record_defaults = (0, 0)
+
+
+    @staticmethod
+    def createNew_BaseGlyphV1List(numRecords):
+        """Returns a BaseGlyphV1List object initialized with default values.
+        
+        An array of records with default values is created, but no
+        corresponding array of LayersV1 subtables is created."""
+
+        bgv1List = BaseGlyphV1List()
+        bgv1List.numRecords = numRecords
+        bgv1List.baseGlyphV1Records = []
+        if numRecords > 0:
+            bgv1List.baseGlyphV1Records = createNewRecordsArray(
+                numRecords,
+                BaseGlyphV1List._baseGlyphV1Record_fields,
+                BaseGlyphV1List._baseGlyphV1Record_defaults
+                )
+
+        return bgv1List
+    # End of createNew_BaseGlyphV1List
+
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        """Takes a byte sequence and returns a BaseGlyphV1List object read from
+        the byte sequence."""
+
+        bgv1List = BaseGlyphV1List()
+
+        # start with header fields -- check length first
+        if len(fileBytes) < BaseGlyphV1List._baseGlyphV1List_size:
+            raise OTCodecError("The data is not long enough to read the BaseGlyphV1List header fields.")
+
+        vals = struct.unpack(
+            BaseGlyphV1List._baseGlyphV1List_format,
+            fileBytes[:BaseGlyphV1List._baseGlyphV1List_size]
+            )
+        for k, v in zip(BaseGlyphV1List._baseGlyphV1List_fields, vals):
+            setattr(bgv1List, k, v)
+        
+        # get records array
+        arrayLength = bgv1List.numBaseGlyphV1Records * BaseGlyphV1List._baseGlyphV1Record_size
+        bgv1List.baseGlyphV1Records = tryReadRecordsArrayFromBuffer(
+            fileBytes[BaseGlyphV1List._baseGlyphV1List_size : BaseGlyphV1List._baseGlyphV1List_size + arrayLength],
+            bgv1List.numBaseGlyphV1Records,
+            BaseGlyphV1List._baseGlyphV1Record_format,
+            BaseGlyphV1List._baseGlyphV1Record_fields,
+            "BaseGlyphV1Records"
+            )
+
+        # get corresponding LayerV1 tables
+        pass
+        # TO DO: implement!!
+
+    # End of tryReadFromFile
+
+# End of class BaseGlyphV1List
+
+

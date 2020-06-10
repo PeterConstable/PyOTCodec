@@ -938,28 +938,28 @@ for k, v in expected:
         result = False
         break
 testResults["Table_COLR.tryReadFromFile test 3"] = result
-recordArray = colr.baseGlyphRecords
-testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordArray) == 288)
-record = recordArray[3]
+recordsArray = colr.baseGlyphRecords
+testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordsArray) == 288)
+record = recordsArray[3]
 keys = list(record)
 result = (len(record) == 3)
 result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
 testResults["Table_COLR.tryReadFromFile test 5"] = result
 result = (record["glyphID"] == 3 and record["firstLayerIndex"] == 6 and record["numLayers"] == 2)
 testResults["Table_COLR.tryReadFromFile test 6"] = result
-record = recordArray[174]
+record = recordsArray[174]
 result = (record["glyphID"] == 174 and record["firstLayerIndex"] == 348 and record["numLayers"] == 2)
 testResults["Table_COLR.tryReadFromFile test 7"] = result
-recordArray = colr.layerRecords
-testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordArray) == 576)
-record = recordArray[6]
+recordsArray = colr.layerRecords
+testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordsArray) == 576)
+record = recordsArray[6]
 keys = list(record)
 result = (len(record) == 2)
 result &= ("glyphID" in keys and "paletteIndex" in keys)
 testResults["Table_COLR.tryReadFromFile test 9"] = result
 result = (record["glyphID"] == 452 and record["paletteIndex"] == 0)
 testResults["Table_COLR.tryReadFromFile test 10"] = result
-record = recordArray[401]
+record = recordsArray[401]
 result = (record["glyphID"] == 451 and record["paletteIndex"] == 1)
 testResults["Table_COLR.tryReadFromFile test 11"] = result
 
