@@ -8,6 +8,10 @@ from io import BytesIO
 
 class Tag(str):
     
+    _tag_format = ">4s" # Use this to unpack from file before calling constructor.
+    _tag_size = struct.calcsize(_tag_format)
+
+
     # Use __new__, not __init__, so we can modify the value being constructed
     def __new__(cls, tagContent):
         """ Accept bytes, bytearray or string."""
@@ -96,8 +100,8 @@ class Tag(str):
 
 
 class Fixed:
+    """Representation of OpenType Fixed type.
 
-    """
     Fixed is described in the OT spec as "32-bit signed fixed-point number (16.16)". 
          
     In practice, prior to OT version 1.8.x, Fixed was used inconsistently as the specified type
@@ -128,6 +132,10 @@ class Fixed:
     value of "5.01" would normally be stored as 0x0005028F (0x28F = 655 decimal, = 65536 / 100).
     However, in some fonts such a fontRevision value would be represented as 0x00050100.
     """
+
+    _fixed_format = ">L" # Use this to unpack from file before calling createNewFixedFromUint32.
+    _fixed_size = struct.calcsize(_fixed_format)
+
 
     def __init__(self, fixedBytes):
         """Construct a 16.16 Fixed value from bytearray or bytes.
@@ -240,6 +248,10 @@ class F2Dot14:
     
     F2Dot14 is a 16-bit signed number with the low-order 14 bits as fraction.
     """
+
+    _f2Dot14_format = ">H" # Use this to unpack from file before calling createNewF2Dot14FromUint16.
+    _f2Dot14_size = struct.calcsize(_f2Dot14_format)
+
 
     def __init__(self, fixedBytes):
         """Construct an F2Dot14 (fixed 2.14) value from byte sequence.
@@ -357,6 +369,17 @@ class OTCodecError(Exception): pass
 
 
 # static functions
+
+def concatFormatStrings(str1:str, str2:str):
+    """Combines two struct format strings."""
+    if str1[0] in "@=<!" or str2[0] in "@=<!":
+        raise OTCodecError("Only big-endian format strings are supported.")
+
+    if str2[0] == '>':
+        return str1 + str2[1:]
+    else:
+        return str1 + str2
+
 
 def createNewRecordsArray(numRecords, fields, defaults):
     """Return a list of record dicts with default values.

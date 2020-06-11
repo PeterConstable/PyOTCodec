@@ -6,10 +6,6 @@ from ot_file import * # imports are transitive
 
 
 
-
-
-
-
 #-------------------------------------------------------------
 # END -- anything that follows is for testing
 #-------------------------------------------------------------
@@ -1118,6 +1114,82 @@ result = (record["glyphID"] == 451 and record["paletteIndex"] == 1)
 testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 
+# tests for VarFixed, VarF2Dot14
+x = VarFixed(0x48000,1,3)
+result = x.__repr__() == "{'value': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
+testResults["Table_COLR VarFixed test 1"] = result
+testResults["Table_COLR VarFixed test 2"] = (type(x.value) == Fixed and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarFixed test 3"] = (x.value == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+
+x = VarF2Dot14(0x6000, 1, 3)
+result = x.__repr__() == "{'value': 1.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
+testResults["Table_COLR VarF2Dot14 test 1"] = result
+testResults["Table_COLR VarF2Dot14 test 2"] = (type(x.value) == F2Dot14 and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarF2Dot14 test 3"] = (x.value == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+
+# tests for ColorIndex
+
+# alpha out of range [0, 1]
+x = VarF2Dot14(0x6000, 1, 3)
+try:
+    y = ColorIndex(24, x)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex test 1"] = result
+x = VarF2Dot14(0x8000, 1, 3)
+try:
+    y = ColorIndex(24, x)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex test 2"] = result
+
+x = VarF2Dot14(0x3000, 1, 3)
+y = ColorIndex(24, x)
+result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'value': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
+testResults["Table_COLR ColorIndex test 3"] = result
+testResults["Table_COLR ColorIndex test 4"] = (type(y.paletteIndex) == int and type(y.alpha) == VarF2Dot14)
+testResults["Table_COLR ColorIndex test 5"] = (y.paletteIndex == 24 and y.alpha.value == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+
+# tests for ColorStop
+
+# stopOffset out of range [0, 1]
+x = VarF2Dot14(0x3000, 1, 3)
+y = ColorIndex(24, x)
+x = VarF2Dot14(0x4001, 1, 3)
+try:
+    z = ColorStop(x, y)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorStop test 1"] = result
+x = VarF2Dot14(0x3000, 1, 3)
+y = ColorIndex(24, x)
+x = VarF2Dot14(0xC001, 1, 3)
+try:
+    z = ColorStop(x, y)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorStop test 2"] = result
+
+
+x = VarF2Dot14(0x1000, 1, 3)
+y = ColorIndex(24, x)
+x = VarF2Dot14(0x3000, 0, 4)
+z = ColorStop(x, y)
+result = z.__repr__() == "{'stopOffset': {'value': 0.75, 'varOuterIndex': 0, 'varInnerIndex': 4}, 'color': {'paletteIndex': 24, 'alpha': {'value': 0.25, 'varOuterIndex': 1, 'varInnerIndex': 3}}}"
+testResults["Table_COLR ColorStop test 3"] = result
+testResults["Table_COLR ColorStop test 4"] = (type(z.stopOffset) == VarF2Dot14 and type(z.color) == ColorIndex)
+testResults["Table_COLR ColorStop test 5"] = (z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
+testResults["Table_COLR ColorStop test 6"] = (z.color.paletteIndex == 24 and z.color.alpha.value == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+
+
 
 f = notoHW_COLR1_rev2
 
@@ -1127,7 +1199,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 301
+assert len(testResults) == 318
 
 print()
 print("{:<45} {:<}".format("Test", "result"))

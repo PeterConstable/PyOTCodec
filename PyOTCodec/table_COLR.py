@@ -211,7 +211,6 @@ class BaseGlyphRecordsArray:
             BaseGlyphRecordsArray._baseGlyphRecord_fields,
             "BaseGlyphRecords"
             )
-    # End of tryReadFromFile
 
 # End of class BaseGlyphRecordsArray
 
@@ -252,9 +251,88 @@ class LayerRecordsArray:
             LayerRecordsArray._layerRecord_fields,
             "LayerRecords"
             )
-    # End of tryReadFromFile
 
 # End of class BaseGlyphRecordsArray
+
+
+
+class VarFixed:
+    """Representation of OpenType Fixed type combined with an ItemVariationStore index."""
+
+    _varFixed_format = Fixed._fixed_format + "2H"
+    _varFixed_size = struct.calcsize(_varFixed_format)
+
+    def __init__(self, fixedNum:int, varOuterIndex:int, varInnerIndex:int):
+        self.value = Fixed.createNewFixedFromUint32(fixedNum)
+        self.varOuterIndex = varOuterIndex
+        self.varInnerIndex = varInnerIndex
+
+    def __repr__(self):
+        return {"value": self.value, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
+
+# End of class VarFixed
+
+
+
+class VarF2Dot14:
+    """Representation of OpenType F2Dot14 type combined with an ItemVariationStore index."""
+
+    _varF2Dot14_format = F2Dot14._f2Dot14_format + "2H"
+    _varF2Dot14_size = struct.calcsize(_varF2Dot14_format)
+
+    def __init__(self, f2Dot14Num:int, varOuterIndex:int, varInnerIndex:int):
+        self.value = F2Dot14.createNewF2Dot14FromUint16(f2Dot14Num)
+        self.varOuterIndex = varOuterIndex
+        self.varInnerIndex = varInnerIndex
+
+    def __repr__(self):
+        return {"value": self.value, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
+
+# End of class VarF2Dot14
+
+
+
+class ColorIndex:
+    """Representation of a palette index combined with an alpha that is variable."""
+
+    _colorIndex_format = concatFormatStrings(">H", VarF2Dot14._varF2Dot14_format)
+    _colorIndex_size = struct.calcsize(_colorIndex_format)
+
+    def __init__(self, paletteIndex:int, alpha:VarF2Dot14):
+        if alpha.value.value < 0 or alpha.value.value > 1:
+            raise OTCodecError(f"The alpha argument is invalid: value must be in the range [0, 1].")
+        self.paletteIndex = paletteIndex
+        self.alpha = alpha
+
+    def __repr__(self):
+        return {"paletteIndex": self.paletteIndex, "alpha": self.alpha}.__repr__()
+
+# End of class ColorIndex
+
+
+
+class ColorStop:
+    """Representation of a color stop: a variable stop offset (range [0, 1]) plus a ColorIndex."""
+
+    _colorStop_format = concatFormatStrings(VarF2Dot14._varF2Dot14_format, ColorIndex._colorIndex_format)
+    _colorStop_size = struct.calcsize(_colorStop_format)
+
+    def __init__(self, stopOffset:VarF2Dot14, color:ColorIndex):
+        if stopOffset.value.value < 0 or stopOffset.value.value > 1:
+            raise OTCodecError(f"The stopOffset argument is invalid: value must be in the range [0, 1].")
+        self.stopOffset = stopOffset
+        self.color = color
+
+    def __repr__(self):
+        return {'stopOffset': self.stopOffset, 'color': self.color}.__repr__()
+
+# End of class ColorStop
+
+
+
+class ColorLine:
+    pass
+# End of class ColorLine
 
 
  
@@ -379,7 +457,7 @@ class LayersV1:
     @staticmethod
     def tryReadFromFile(fileBytes):
 
-        layersv1 = LayersV1()
+        layersV1 = LayersV1()
 
         # start with header fields -- check length first
         if len(fileBytes) < LayersV1._layersV1List_size:
@@ -390,27 +468,27 @@ class LayersV1:
             fileBytes[:LayersV1._layersV1List_size]
             )
         for k, v in zip(LayersV1._layersV1List_fields, vals):
-            setattr(layersv1, k, v)
+            setattr(layersV1, k, v)
 
         # get records array
-        layersv1.layerV1Records = tryReadRecordsArrayFromBuffer(
+        layersV1.layerV1Records = tryReadRecordsArrayFromBuffer(
             fileBytes[LayersV1._layersV1List_size:],
-            layersv1.numLayerV1Records,
+            layersV1.numLayerV1Records,
             LayersV1._layerV1Record_format,
             LayersV1._layerV1Record_fields,
             "LayerV1Records"
             )
 
         # get corresponding Paint tables
-        offsets = [d["paintOffset"] for d in layersv1.layerV1Records]
+        offsets = [d["paintOffset"] for d in layersV1.layerV1Records]
         paintClasses = {} # {1: PaintFormat1, 2: PaintFormat2, 3: PaintFormat3}
-        layersv1.paintTables = tryReadMultiFormatSubtablesFromBuffer(
+        layersV1.paintTableFormats, layersV1.paintTables = tryReadMultiFormatSubtablesFromBuffer(
             fileBytes,
             paintClasses,
             offsets
             )
 
-        return layersv1
+        return layersV1
     # End of tryReadFromFile
 
 # End of class LayersV1
