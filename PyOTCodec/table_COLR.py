@@ -334,8 +334,6 @@ class BaseGlyphV1List:
             offsets
             )
 
-        # TO DO: implement!!
-
         return bgv1List
     # End of tryReadFromFile
 

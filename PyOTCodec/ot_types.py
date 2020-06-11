@@ -472,6 +472,8 @@ def tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses, subtableOffse
         format, = struct.unpack(">H", buffer[offset : offset + 2])
         formats.append(format)
         if format in keys(subtableClasses):
+            class_ = subtableClasses[format]
+            assert isinstance(class_, type)
             subtables.append(
                 class_.tryReadFromFile(buffer[offset:])
                 )
