@@ -409,7 +409,7 @@ def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayN
 
 
 def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
-    """Takes a byte sequence and returns a list of objects for the 
+    """Takes a byte sequence and returns a list of objects of the 
     specified subtable type read from the byte sequence.
 
     The buffer is assumed to be large enough to contain all of the
@@ -420,7 +420,7 @@ def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
     method that takes a buffer and returns an object of that class."""
 
     bufferLength = len(buffer)
-    subtableArray = []
+    subtables = []
 
     for offset in subtableOffsets:
         if offset > bufferLength:
@@ -431,5 +431,52 @@ def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
             subtableClass.tryReadFromFile(buffer[offset:])
             )
 
-    return subtableArray
+    return subtables
 # End of tryReadSubtablesFromBuffer
+
+
+
+def tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses, subtableOffsets):
+    """Takes a byte sequence and returns a list of objects of the
+    specified subtable types read from the byte sequence.
+
+    Also returns a list of the subtable formats.
+
+    This is designed for subtables of related types but with
+    different formats, with each subtable starting with a uint16
+    format field.
+
+    The buffer is assumed to be large enough to contain all of the
+    subtables, and that all of the subtable offsets are from the
+    start of the buffer.
+    
+    The subtableClasses parameter expects a dict with the formats
+    (integers) as keys and corresponding classes as values. If the
+    data includes a subtable with an unsupported format, None will
+    be returned in place of that subtable object.
+
+    Each subtable class is assumed to have a static 'tryReadFromFile'
+    method that takes a buffer and returns an object of that class.
+    """
+
+    bufferLength = len(buffer)
+    subtables = []
+    formats = []
+
+    for offset in subtableOffsets:
+        if offset + 2 > bufferLength:
+            raise OTCodecError(f"Subtable offset is past the end of the data.")
+        assert type(offset) == int
+
+        # Before reading the subtable, we must peek to determine its format.
+        format, = struct.unpack(">H", buffer[offset : offset + 2])
+        formats.append(format)
+        if format in keys(subtableClasses):
+            subtables.append(
+                class_.tryReadFromFile(buffer[offset:])
+                )
+        else:
+            subtables.append(None)
+
+    return formats, subtables
+# End of tryReadMultiFormatSubtablesFromBuffer
