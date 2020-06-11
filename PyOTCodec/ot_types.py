@@ -1,6 +1,7 @@
 import math
 import re
 import struct
+import itertools
 from io import BytesIO
 
 
@@ -93,6 +94,7 @@ class Tag(str):
 # End of class Tag
 
 
+
 class Fixed:
 
     """
@@ -158,7 +160,7 @@ class Fixed:
 
     @staticmethod
     def createNewFixedFromFloat(val:float):
-        """Takes a float between -32,768 and 32,767 and returns a fixed. 
+        """Takes a float between -32,768 and 32,767 and returns a Fixed. 
 
         Fractional values will be rounded to the nearest 1/65,536. If val is out
         of range (< -32,768 or > 32,767), an exception is raised.
@@ -167,6 +169,8 @@ class Fixed:
             raise OTCodecError("The val argument is out of range.")
         mant = math.floor(val)
         frac = int(math.fabs(math.modf(val)[0]) * 65536) # num of 1/65536ths
+        if mant < 0:
+            frac = 65536 - frac
         bytes_ = struct.pack(">hH", mant, frac)
         return Fixed(bytes_)
 
@@ -211,7 +215,7 @@ class Fixed:
         """Returns a Fixed constructed from values in the buffer. Returns None 
         if the buffer is the wrong length."""
         if type(buffer) != bytearray and type(buffer) != bytes:
-            raise OTCodecError("The fixedBytes argument must be bytearray or bytes.")
+            raise OTCodecError("The buffer argument must be bytearray or bytes.")
         if len(buffer) != 4:
             return None
         return Fixed(buffer)
@@ -231,6 +235,123 @@ class Fixed:
 
 
 
+class F2Dot14:
+    """Representation of OpenType F2Dot14 type.
+    
+    F2Dot14 is a 16-bit signed number with the low-order 14 bits as fraction.
+    """
+
+    def __init__(self, fixedBytes):
+        """Construct an F2Dot14 (fixed 2.14) value from byte sequence.
+        
+        Length of the byte sequence must be 2 bytes, and must be in
+        big-endian order, as would occur in a font file.
+        """
+        if type(fixedBytes) != bytearray and type(fixedBytes) != bytes:
+            raise OTCodecError("The fixedBytes argument must be bytearray or bytes.")
+        if len(fixedBytes) != 2:
+            raise OTCodecError("The fixedBytes argument must be 2 bytes in length.")
+    
+        self._rawBytes = bytes(fixedBytes)
+        val, = struct.unpack(">h", fixedBytes)
+        self.value = val / (1 << 14)
+        vals = struct.unpack(">2B", fixedBytes)
+
+        # integer portion
+        self.mantissa = vals[0] // 0x40
+        if self.mantissa > 1:
+            self.mantissa -= 4
+
+        # fraction portion
+        self.fraction = (vals[0] & 0x3f) * 256 + vals[1]
+        pass
+
+
+    @staticmethod
+    def createNewF2Dot14FromUint16(val:int):
+        """Takes an integer from 0 to 0xFFFF and returns an F2Dot14.
+
+        The integer is interpreted like a big-ending byte sequence representing
+        an F2Dot14."""
+
+        if val < 0 or val > 0xFFFF:
+            raise OTCodecError("The val argument must be between 0 "
+                               "and 65,535 (0xFFFF—at most 4 hex digits).")
+
+        bytes_ = struct.pack(">H", val)
+        return F2Dot14(bytes_)
+
+
+    @staticmethod
+    def createNewF2Dot14FromFloat(val:float):
+        """Tables a float between [-2, 2) and returns an F2Dot14.
+
+        Fractional values will be rounded to the nearest 1/2**14 (1/16384ths). 
+        If val is out of range, an exception is raised."""
+
+        if val < -2 or val >= 2:
+            raise OTCodecError("The val argument is out of range.")
+
+        mant = math.floor(val)
+        frac = int(math.modf(val)[0] * 2 ** 14)
+        if frac < 0:
+            frac = 2 ** 14 + frac
+        frac = int(math.fabs(math.modf(val)[0]) * 2 ** 14) # num of 1/16384ths
+        if mant < 0:
+            frac = 16384 - frac
+        bytes_ = struct.pack(">h", mant * 2**14 + frac)
+        return F2Dot14(bytes_)
+
+    def getF2Dot14AsUint16(self):
+        val, = struct.unpack(">H", self._rawBytes)
+        return val
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        if isinstance(other, F2Dot14):
+            return self.value == other.value
+        elif isinstance(other, (bytearray, bytes)):
+            return self._rawBytes == other
+        elif isinstance(other, float):
+            return self.value == other
+        else:
+            return False
+
+    def __hash__(self):
+        return float.__hash__(self.value)
+
+    def __str__(self):
+        return str(self.value)
+
+    def __repr__(self):
+        return str(self.value)
+
+    @staticmethod
+    def tryReadFromBuffer(buffer:bytearray):
+        """Return an F2Dot14 constructed from values in the buffer. Returns
+        None if the buffer is the wrong length (not 2 bytes)."""
+        if not isinstance(buffer, (bytearray, bytes)):
+            raise OTCodecError("The buffer argument must be bytearray or bytes.")
+        if len(buffer) != 2:
+            return None
+        return F2Dot14(buffer)
+
+    @staticmethod
+    def tryReadFromFile(fileBytesIO:BytesIO):
+        """Returns an F2Dot14 read from the current position in the BytesIO stream.
+
+        An exception may be raised if not enough bytes can be read."""
+        from ot_file import ReadRawBytes
+        # ReadRawBytes will raise exception if not enough data
+        bytes_ = ReadRawBytes(fileBytesIO, 2)
+        return F2Dot14(bytes_)
+
+# End of class F2Dot14
+
+
+
 class OTCodecError(Exception): pass
 
 
@@ -244,21 +365,22 @@ def createNewRecordsArray(numRecords, fields, defaults):
     The array is a list of these dicts.
     """
 
-    array = []
-    for i in range(numRecords):
-        record = {}
-        for k, v in zip(fields, defaults):
-            record[k] = v
-        array.append(record)
+    # Using a dict comprehension nested inside a list comprehension
 
-    return array
+    return [ {k: v for k,v in zip(fields, defaults)} 
+          for i in range(numRecords)
+        ]
+# End of createNewRecordsArray
+
 
 
 def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayName):
     """Takes a byte sequence and returns a list of record dicts with
     the specified format read from the byte sequence.
 
-    The array is assumed to be at the start of the fileBytes sequence.
+    The buffer argument is assumed start at the first record and end at the
+    end of the array.
+
     The format parameter is a string of the type needed for struct.unpack,
     indicating the binary format in the file. The fieldNames parameter is a
     sequence of names of the record fields, in order. The number of names
@@ -272,14 +394,42 @@ def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayN
     if len(buffer) < numRecords * recordLength:
         raise OTCodecError(f"The file data is not long enough to read the {arrayName} array.")
 
-    array = []
-    index = 0
-    for i in range(numRecords):
-        record = {}
-        vals = struct.unpack(format, buffer[index : index + recordLength])
-        for k, v in zip(fieldNames, vals):
-            record[k] = v
-        array.append(record)
-        index += recordLength
+    # iter_unpack will return an iterator over the records array, which
+    # can then be used in a comprehension
+    unpack_iter = struct.iter_unpack(format, buffer[:numRecords * recordLength])
 
-    return array
+    # using a dict comprehension nested within a list comprehension
+    return [ 
+        {k: v for k,v in zip(fieldNames, vals)}
+        for vals in itertools.islice(unpack_iter, numRecords)
+    ]
+
+# End of tryReadRecordsArrayFromBuffer
+
+
+
+def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
+    """Takes a byte sequence and returns a list of objects for the 
+    specified subtable type read from the byte sequence.
+
+    The buffer is assumed to be large enough to contain all of the
+    subtables, and that all of the subtable offsets are from the
+    start of the buffer.
+    
+    The subtable class is assumed to have a static 'tryReadFromFile'
+    method that takes a buffer and returns an object of that class."""
+
+    bufferLength = len(buffer)
+    subtableArray = []
+
+    for offset in subtableOffsets:
+        if offset > bufferLength:
+            raise OTCodecError(f"Offset to {subtableClass.__name__} table is past the end of the data.")
+
+        assert type(offset) == int
+        subtableArray.append(
+            subtableClass.tryReadFromFile(buffer[offset:])
+            )
+
+    return subtableArray
+# End of tryReadSubtablesFromBuffer

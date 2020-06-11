@@ -22,6 +22,7 @@ skippedTests = []
 selawk_file = OTFile(r"TestData\selawk.ttf")
 sourceHansSans_file = OTFile(r"TestData\SourceHanSans-Regular.TTC")
 bungeeColor_file = OTFile(r"TestData\BungeeColor-Regular_colr_Windows.ttf")
+notoHW_COLR1_rev2 = OTFile(r"TestData\noto-handwriting-colr_1_rev2.ttf")
 
 
 
@@ -151,6 +152,12 @@ except OTCodecError:
     result = True
 else:
     result = False
+try:
+    Fixed(b'\x00\x01\x02\x03\x04')
+except OTCodecError:
+    result &= True
+else:
+    result &= False
 testResults["Fixed constructor test 3"] = result
 
 # good args
@@ -199,8 +206,8 @@ testResults["Fixed.createNewFixedFromFloat test 2"] = result
 
 f = Fixed.createNewFixedFromFloat(1.5)
 testResults["Fixed.createNewFixedFromFloat test 3"] = (f._rawBytes == bytes(b'\x00\x01\x80\x00'))
-f = Fixed.createNewFixedFromFloat(-4095.5)
-testResults["Fixed.createNewFixedFromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00\x80\x00'))
+f = Fixed.createNewFixedFromFloat(-4095.75)
+testResults["Fixed.createNewFixedFromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00\x40\x00'))
 f = Fixed.createNewFixedFromFloat(1.3125)
 testResults["Fixed.createNewFixedFromFloat test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
 
@@ -222,9 +229,8 @@ testResults["Fixed members test 1"] = (f.value == -4095.5)
 testResults["Fixed members test 2"] = (f.mantissa == -4096)
 testResults["Fixed members test 3"] = (f.fraction == 0x8000)
 testResults["Fixed members test 4"] = (f.getFixedAsUint32() == 0xF0008000)
-testResults["Fixed members test 5"] = (f.value == -4095.5)
-testResults["Fixed members test 6"] = (f.__str__() == "-4095.5")
-testResults["Fixed members test 7"] = (f.__repr__() == "-4095.5")
+testResults["Fixed members test 5"] = (f.__str__() == "-4095.5")
+testResults["Fixed members test 6"] = (f.__repr__() == "-4095.5")
 f = Fixed(b'\x00\x02\x50\x00')
 testResults["Fixed members test 8"] = (f.fixedTableVersion == 2.5)
 
@@ -246,9 +252,10 @@ testResults["Fixed.tryReadFromBuffer test 2"] = result
 
 # Fixed.tryReadFromBuffer: returns None if buffer length != 4 bytes
 testResults["Fixed.tryReadFromBuffer test 3"] = (Fixed.tryReadFromBuffer(b'\xF0\x00') == None)
+testResults["Fixed.tryReadFromBuffer test 4"] = (Fixed.tryReadFromBuffer(b'\xF0\x00\x00\x00\x00') == None)
 
 # Fixed.tryReadFromBuffer: good arg
-testResults["Fixed.tryReadFromBuffer test 3"] = (Fixed.tryReadFromBuffer(b'\xF0\x00\x80\x00') == -4095.5)
+testResults["Fixed.tryReadFromBuffer test 5"] = (Fixed.tryReadFromBuffer(b'\xF0\x00\x80\x00') == -4095.5)
 
 
 # tests for Fixed.tryReadFromFile
@@ -268,7 +275,154 @@ else:
 testResults["Fixed.tryReadFromFile test 4"] = result
 
 
+# tests for F2Dot14
+
+# arg must be bytearray or bytes
+try:
+    F2Dot14(None)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14 constructor test 1"] = result
+try:
+    F2Dot14(123)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14 constructor test 2"] = result
+
+# arg length must be 2 bytes
+try:
+    F2Dot14(b'\x01')
+except OTCodecError:
+    result = True
+else:
+    result = False
+try:
+    F2Dot14(b'\x00\x01\x02')
+except OTCodecError:
+    result &= True
+else:
+    result &= False
+testResults["F2Dot14 constructor test 3"] = result
+
+# good args
+testResults["F2Dot14 constructor test 4"] = (type(F2Dot14(bytearray([0,1]))) == F2Dot14)
+testResults["F2Dot14 constructor test 5"] = (type(F2Dot14(bytes(b'\xF0\x00'))) == F2Dot14)
+testResults["F2Dot14 constructor test 6"] = (F2Dot14(b'\xF0\x00') == -0.25)
+
+# Fixed.createNewF2Dot14FromUint16: arg must be between 0 and 0xffff
+try:
+    F2Dot14.createNewF2Dot14FromUint16(-1)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.createNewF2Dot14FromUint16 test 1"] = result
+try:
+    F2Dot14.createNewF2Dot14FromUint16(0x1_0000)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.createNewF2Dot14FromUint16 test 2"] = result
+
+f = F2Dot14.createNewF2Dot14FromUint16(0x6000)
+testResults["F2Dot14.createNewF2Dot14FromUint16 test 3"] = (f == 1.5)
+f = F2Dot14.createNewF2Dot14FromUint16(0xF000)
+testResults["F2Dot14.createNewF2Dot14FromUint16 test 4"] = (f == -0.25)
+f = F2Dot14.createNewF2Dot14FromUint16(0x3c01)
+testResults["F2Dot14.createNewF2Dot14FromUint16 test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
+
+# F2Dot14.createNewF2Dot14FromFloat
+try:
+    F2Dot14.createNewF2Dot14FromFloat(-4)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.createNewF2Dot14FromFloat test 1"] = result
+try:
+    F2Dot14.createNewF2Dot14FromFloat(4)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.createNewF2Dot14FromFloat test 2"] = result
+
+f = F2Dot14.createNewF2Dot14FromFloat(1.5)
+testResults["F2Dot14.createNewF2Dot14FromFloat test 3"] = (f._rawBytes == bytes(b'\x60\x00'))
+f = F2Dot14.createNewF2Dot14FromFloat(-0.25)
+testResults["F2Dot14.createNewF2Dot14FromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00'))
+f = F2Dot14.createNewF2Dot14FromFloat(1.3125)
+testResults["F2Dot14.createNewF2Dot14FromFloat test 5"] = (f._rawBytes == bytes(b'\x54\x00'))
+
+# F2Dot14 ==
+f = F2Dot14(b'\xF0\x80')
+testResults["F2Dot14 __eq__ test 1"] = (F2Dot14(b'\xF0\x80') == f)
+testResults["F2Dot14 __eq__ test 2"] = (f == F2Dot14(b'\xF0\x80'))
+testResults["F2Dot14 __eq__ test 3"] = (f != F2Dot14(b'\x00\x00'))
+testResults["F2Dot14 __eq__ test 4"] = (f == bytearray(b'\xF0\x80'))
+testResults["F2Dot14 __eq__ test 5"] = (f == bytes(b'\xF0\x80'))
+testResults["F2Dot14 __eq__ test 6"] = (f == -0.2421875)
+
+# F2Dot14 misc
+f = F2Dot14(b'\xB0\x00')
+testResults["F2Dot14 members test 1"] = (f.value == -1.25)
+testResults["F2Dot14 members test 2"] = (f.mantissa == -2)
+testResults["F2Dot14 members test 3"] = (f.fraction == 0x3000)
+testResults["F2Dot14 members test 4"] = (f.getF2Dot14AsUint16() == 0xB000)
+testResults["F2Dot14 members test 5"] = (f.__str__() == "-1.25")
+testResults["F2Dot14 members test 6"] = (f.__repr__() == "-1.25")
+
+# F2Dot14.tryReadFromBuffer: arg type must be bytearray or bytes
+try:
+    F2Dot14.tryReadFromBuffer(None)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.tryReadFromBuffer test 1"] = result
+try:
+    F2Dot14.tryReadFromBuffer(123)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.tryReadFromBuffer test 2"] = result
+
+# F2Dot14.tryReadFromBuffer: returns None if buffer length != 2 bytes
+testResults["F2Dot14.tryReadFromBuffer test 3"] = (F2Dot14.tryReadFromBuffer(b'\xF0') == None)
+testResults["F2Dot14.tryReadFromBuffer test 4"] = (F2Dot14.tryReadFromBuffer(b'\xF0\x00\x00') == None)
+
+# F2Dot14.tryReadFromBuffer: good arg
+testResults["F2Dot14.tryReadFromBuffer test 5"] = (F2Dot14.tryReadFromBuffer(b'\xF0\x00') == -0.25)
+
+# tests for F2Dot14.tryReadFromFile
+testbio = BytesIO(testBytes1)
+f = F2Dot14.tryReadFromFile(testbio)
+testResults["F2Dot14.tryReadFromFile test 1"] = (type(f) == F2Dot14)
+testResults["F2Dot14.tryReadFromFile test 2"] = (f.getF2Dot14AsUint16() == 0x020F)
+f = F2Dot14.tryReadFromFile(testbio)
+testResults["F2Dot14.tryReadFromFile test 3"] = (f.getF2Dot14AsUint16() == 0x37DC)
+testbio.seek(-1, 2) #from end of stream
+try:
+    f = F2Dot14.tryReadFromFile(testbio)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["F2Dot14.tryReadFromFile test 4"] = result
+
+
+
+
+
+
 # tests for ot_types.createNewRecordsArray
+
 recordsArray = createNewRecordsArray(4, ("foo", "bar"), (17, 42))
 result = True
 result &= (len(recordsArray) == 4)
@@ -965,13 +1119,15 @@ testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 
 
+f = notoHW_COLR1_rev2
+
 
 
 #-------------------------------------------------------------
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 263
+assert len(testResults) == 301
 
 print()
 print("{:<45} {:<}".format("Test", "result"))

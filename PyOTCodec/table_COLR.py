@@ -5,6 +5,7 @@ from ot_types import *
 
 class Table_COLR:
 
+    
     _expectedTag = "COLR"
 
     _colr_version = ">H"
@@ -125,7 +126,10 @@ class Table_COLR:
 
         if colr.version > 0:
             # at least version 1 fields are supported
-            vals = struct.unpack(colr._colr_1_addl_format, tableBytes[colr._colr_0_size:])
+            vals = struct.unpack(
+                colr._colr_1_addl_format, 
+                tableBytes[colr._colr_0_size : colr._colr_0_size + colr._colr_1_addl_size]
+                )
             for k, v in zip(colr._colr_1_addl_fields, vals):
                 setattr(colr, k, v)
 
@@ -133,27 +137,31 @@ class Table_COLR:
         # Finished with header fields. On to arrays and subtables...
 
         # BaseGlyphRecords array
-        arrayLength = colr.numBaseGlyphRecords * BaseGlyphRecordsArray._baseGlyphRecord_size
         colr.baseGlyphRecords = []
         if colr.baseGlyphRecordsOffset > 0:
             colr.baseGlyphRecords = BaseGlyphRecordsArray.tryReadFromFile(
-                tableBytes[colr.baseGlyphRecordsOffset: colr.baseGlyphRecordsOffset + arrayLength],
+                tableBytes[colr.baseGlyphRecordsOffset: ],
                 colr.numBaseGlyphRecords
                 )
 
         # LayerRecords array
-        arrayLength = colr.numLayerRecords * LayerRecordsArray._layerRecord_size
         colr.layerRecords = []
         if colr.layerRecordsOffset > 0:
             colr.layerRecords = LayerRecordsArray.tryReadFromFile(
-                tableBytes[colr.layerRecordsOffset:colr.layerRecordsOffset + arrayLength],
+                tableBytes[colr.layerRecordsOffset:],
                 colr.numLayerRecords
                 )
 
         # version 1 data
         if colr.version > 0:
-            # TO DO: IMPLEMENT!!
-            pass
+            if colr.baseGlyphV1ListOffset > 0:
+                colr.baseGlyphV1 = BaseGlyphV1List.tryReadFromFile(
+                    tableBytes[colr.baseGlyphV1ListOffset:]
+                    )
+
+            if colr.itemVariationStoreOffset > 0:
+                # !!! TO DO: IMPLEMENT !!!
+                pass
 
 
         # calculate checksum (should match what's in TableRecord)
@@ -203,24 +211,6 @@ class BaseGlyphRecordsArray:
             BaseGlyphRecordsArray._baseGlyphRecord_fields,
             "BaseGlyphRecords"
             )
-
-        # check that array fits in the byte sequence provided
-        arrayLength = numRecords * BaseGlyphRecordsArray._baseGlyphRecord_size
-        if len(fileBytes) < arrayLength:
-            raise OTCodecError(f"The table is not long enough for {numRecords} BaseGlyphRecords.")
-
-        array = []
-        for i in range(numRecords):
-            bgr = {}
-            vals = struct.unpack(
-                BaseGlyphRecordsArray._baseGlyphRecord_format,
-                fileBytes[:arrayLength]
-                )
-            for k, v in zip(BaseGlyphRecordsArray._baseGlyphRecord_fields, vals):
-                bgr[k] = v
-            array.append(bgr)
-
-        return array
     # End of tryReadFromFile
 
 # End of class BaseGlyphRecordsArray
@@ -272,8 +262,8 @@ class BaseGlyphV1List:
     
     #format/size for List header (not for contained array, which is variable)
     _baseGlyphV1List_format = ">L"
-    _baseGlyphV1List_size = struct.calcsize(_baseGlyphV1List_header_format)
-    _baseGlyphV1List_fields = ("numBaseGlyphV1Records")
+    _baseGlyphV1List_size = struct.calcsize(_baseGlyphV1List_format)
+    _baseGlyphV1List_fields = ("numBaseGlyphV1Records",)
     _baseGlyphV1List_defaults = (0)
 
     # format/size for records
@@ -307,7 +297,12 @@ class BaseGlyphV1List:
     @staticmethod
     def tryReadFromFile(fileBytes):
         """Takes a byte sequence and returns a BaseGlyphV1List object read from
-        the byte sequence."""
+        the byte sequence.
+        
+        The fileBytes argument is assumed to start at the beginning of the 
+        BaseGlyphV1List and to contain the header, records array and all
+        referenced subtables.
+        """
 
         bgv1List = BaseGlyphV1List()
 
@@ -323,9 +318,8 @@ class BaseGlyphV1List:
             setattr(bgv1List, k, v)
         
         # get records array
-        arrayLength = bgv1List.numBaseGlyphV1Records * BaseGlyphV1List._baseGlyphV1Record_size
         bgv1List.baseGlyphV1Records = tryReadRecordsArrayFromBuffer(
-            fileBytes[BaseGlyphV1List._baseGlyphV1List_size : BaseGlyphV1List._baseGlyphV1List_size + arrayLength],
+            fileBytes[BaseGlyphV1List._baseGlyphV1List_size:],
             bgv1List.numBaseGlyphV1Records,
             BaseGlyphV1List._baseGlyphV1Record_format,
             BaseGlyphV1List._baseGlyphV1Record_fields,
@@ -333,11 +327,72 @@ class BaseGlyphV1List:
             )
 
         # get corresponding LayerV1 tables
-        pass
+        offsets = [d["layersV1Offset"] for d in bgv1List.baseGlyphV1Records]
+        bgv1List.layerV1Tables = tryReadSubtablesFromBuffer(
+            fileBytes,
+            LayersV1,
+            offsets
+            )
+
         # TO DO: implement!!
 
+        return bgv1List
     # End of tryReadFromFile
 
 # End of class BaseGlyphV1List
 
 
+
+class LayersV1:
+
+    _layersV1List_format = ">L"
+    _layersV1List_size = struct.calcsize(_layersV1List_format)
+    _layersV1List_fields = ("numLayerV1Records",)
+    _layersV1List_defaults = (0)
+
+    # format/size for records
+    _layerV1Record_format = ">HL"
+    _layerV1Record_size = struct.calcsize(_layerV1Record_format)
+    _layerV1Record_fields = ("glyphID", "paintOffset")
+    _layerV1Record_defaults = (0, 0)
+
+
+    @staticmethod
+    def createNew_LayersV1():
+        pass
+        # !!! TO DO: IMPLEMENT !!!
+
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+
+        layersv1 = LayersV1()
+
+        # start with header fields -- check length first
+        if len(fileBytes) < LayersV1._layersV1List_size:
+            raise OTCodecError("The data is not long enough to read the LayersV1 header fields.")
+
+        vals = struct.unpack(
+            LayersV1._layersV1List_format,
+            fileBytes[:LayersV1._layersV1List_size]
+            )
+        for k, v in zip(LayersV1._layersV1List_fields, vals):
+            setattr(layersv1, k, v)
+
+        # get records array
+        layersv1.layerV1Records = tryReadRecordsArrayFromBuffer(
+            fileBytes[LayersV1._layersV1List_size:],
+            layersv1.numLayerV1Records,
+            LayersV1._layerV1Record_format,
+            LayersV1._layerV1Record_fields,
+            "LayerV1Records"
+            )
+
+        # get corresponding Paint tables
+        pass
+        # !!! TO DO: IMPLEMENT !!!
+
+        return layersv1
+    # End of tryReadFromFile
+
+# End of class LayersV1
