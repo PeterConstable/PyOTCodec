@@ -356,9 +356,24 @@ class LayersV1:
 
 
     @staticmethod
-    def createNew_LayersV1():
-        pass
-        # !!! TO DO: IMPLEMENT !!!
+    def createNew_LayersV1(numRecords):
+        """Returns a BaseGlyphV1List object initialized with default values.
+        
+        An array of records with default values is created, but no
+        corresponding array of LayersV1 subtables is created."""
+
+        layersv1 = LayersV1()
+        layersv1.numRecords = numRecords
+        layersv1.layerV1Records = []
+        if numRecords > 0:
+            layersv1.layerV1Records = createNewRecordsArray(
+                numRecords,
+                LayersV1._layersV1List_fields,
+                LayersV1._layersV1List_defaults
+                )
+
+        return bgv1List
+    # End of createNew_LayersV1
 
 
     @staticmethod
@@ -387,8 +402,13 @@ class LayersV1:
             )
 
         # get corresponding Paint tables
-        pass
-        # !!! TO DO: IMPLEMENT !!!
+        offsets = [d["paintOffset"] for d in layersv1.layerV1Records]
+        paintClasses = {} # {1: PaintFormat1, 2: PaintFormat2, 3: PaintFormat3}
+        layersv1.paintTables = tryReadMultiFormatSubtablesFromBuffer(
+            fileBytes,
+            paintClasses,
+            offsets
+            )
 
         return layersv1
     # End of tryReadFromFile

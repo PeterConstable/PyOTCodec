@@ -427,7 +427,7 @@ def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
             raise OTCodecError(f"Offset to {subtableClass.__name__} table is past the end of the data.")
 
         assert type(offset) == int
-        subtableArray.append(
+        subtables.append(
             subtableClass.tryReadFromFile(buffer[offset:])
             )
 
@@ -471,7 +471,7 @@ def tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses, subtableOffse
         # Before reading the subtable, we must peek to determine its format.
         format, = struct.unpack(">H", buffer[offset : offset + 2])
         formats.append(format)
-        if format in keys(subtableClasses):
+        if format in subtableClasses:
             class_ = subtableClasses[format]
             assert isinstance(class_, type)
             subtables.append(
