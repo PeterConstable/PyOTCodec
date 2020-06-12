@@ -506,6 +506,29 @@ result &= (recordsArray[2]["foo"] == 17 and recordsArray[3]["bar"] == 42)
 testResults["createNewRecordsArray test"] = result
 
 
+# tests for tryReadRecordsArrayFromBuffer
+
+buffer = b'\x40\x00\x40'
+numRecs = 5
+fmt = ">hL"
+fields = ("test1", "test2")
+name = "Test"
+try:
+    x = tryReadRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, name)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["tryReadRecordsArrayFromBuffer test 1"] = result
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\x00\x72\x00\x00\x40\x00\x40\x72\x00\x00\xfc\x09\x73\x72\x00\x00\x40\x00\x40\x72\x00\x00\x72\x8c\x85\x72\x32\x50'
+x = tryReadRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, name)
+result = (type(x) == list and len(x) == 5 and type(x[0]) == dict and list(x[0]) == ["test1", "test2"])
+testResults["tryReadRecordsArrayFromBuffer test 2"] = result
+result = (x[0]["test1"] == 0x4000 and x[0]["test2"] == 0x4072_0000 and x[3]["test1"] == -1015 and x[3]["test2"] == 0x7372_0000)
+testResults["tryReadRecordsArrayFromBuffer test 3"] = result
+
+
+
 
 #-------------------------------------------------------------
 # Tests for OTFile, TTCHeader
@@ -1458,7 +1481,6 @@ Still need tests for
     - PaintFormat1
     - PaintFormat2
     - PaintFormat3
-    - tryReadRecordsArrayFromBuffer
     - tryReadComplexRecordsArrayFromBuffer
     - tryReadSubtablesFromBuffer
     - tryReadMultiFormatSubtablesFromBuffer
@@ -1475,7 +1497,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 394
+assert len(testResults) == 397
 
 print()
 print("{:<55} {:<}".format("Test", "result"))

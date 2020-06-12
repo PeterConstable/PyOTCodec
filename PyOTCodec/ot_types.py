@@ -397,6 +397,7 @@ def concatFormatStrings(*args):
     return result
 
 
+
 def createNewRecordsArray(numRecords, fields, defaults):
     """Return a list of record dicts with default values.
 
