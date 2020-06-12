@@ -8,8 +8,9 @@ from io import BytesIO
 
 class Tag(str):
     
-    _tag_format = ">4s" # Use this to unpack from file before calling constructor.
-    _tag_size = struct.calcsize(_tag_format)
+    _packedFormat = ">4s" # Use this to unpack from file before calling constructor.
+    _packedSize = struct.calcsize(_packedFormat)
+    _numUnpackedValues = 1
 
 
     # Use __new__, not __init__, so we can modify the value being constructed
@@ -133,8 +134,11 @@ class Fixed:
     However, in some fonts such a fontRevision value would be represented as 0x00050100.
     """
 
-    _fixed_format = ">L" # Use this to unpack from file before calling createNewFixedFromUint32.
-    _fixed_size = struct.calcsize(_fixed_format)
+    # Use the following to unpack bytes from a file before calling 
+    # interpretUnpackedValues() or createNewFixedFromUint32().
+    _packedFormat = ">L"
+    _packedSize = struct.calcsize(_packedFormat)
+    _numUnpackedValues = 1
 
 
     def __init__(self, fixedBytes):
@@ -153,6 +157,15 @@ class Fixed:
         self.value = val / (1 << 16)
         vals = struct.unpack(">hH", fixedBytes)
         self.mantissa, self.fraction = vals
+
+
+    @staticmethod
+    def interpretUnpackedValues(*vals):
+        """Takes a tuple of raw values obtained from struct.unpack() and returns
+        a tuple of derived values corresponding to the record fields."""
+
+        assert len(vals) == Fixed._numUnpackedValues
+        return Fixed.createNewFixedFromUint32(vals[0])
 
 
     @staticmethod
@@ -249,8 +262,11 @@ class F2Dot14:
     F2Dot14 is a 16-bit signed number with the low-order 14 bits as fraction.
     """
 
-    _f2Dot14_format = ">H" # Use this to unpack from file before calling createNewF2Dot14FromUint16.
-    _f2Dot14_size = struct.calcsize(_f2Dot14_format)
+    # Use the following to unpack bytes from a file before calling 
+    # createNewF2Dot14FromUint16.
+    _packedFormat = ">H"
+    _packedSize = struct.calcsize(_packedFormat)
+    _numUnpackedValues = 1
 
 
     def __init__(self, fixedBytes):
@@ -277,6 +293,15 @@ class F2Dot14:
         # fraction portion
         self.fraction = (vals[0] & 0x3f) * 256 + vals[1]
         pass
+
+
+    @staticmethod
+    def interpretUnpackedValues(*vals):
+        """Takes a tuple of raw values obtained from struct.unpack() and returns
+        a tuple of derived values corresponding to the record fields."""
+
+        assert len(vals) == F2Dot14._numUnpackedValues
+        return F2Dot14.createNewF2Dot14FromUint16(vals[0])
 
 
     @staticmethod
@@ -370,15 +395,25 @@ class OTCodecError(Exception): pass
 
 # static functions
 
-def concatFormatStrings(str1:str, str2:str):
-    """Combines two struct format strings."""
-    if str1[0] in "@=<!" or str2[0] in "@=<!":
+def concatFormatStrings(*args):
+    """Combines struct format strings."""
+    if len(args) == 0:
+        return None
+    if len(args) == 1:
+        return args[0]
+    assert type(args[0]) == str
+    if args[0][0] in "@=<!":
         raise OTCodecError("Only big-endian format strings are supported.")
-
-    if str2[0] == '>':
-        return str1 + str2[1:]
-    else:
-        return str1 + str2
+    result = args[0]
+    for arg in args[1:]:
+        assert type(arg) == str
+        if arg[0] in "@=<!":
+            raise OTCodecError("Only big-endian format strings are supported.")
+        if arg[0] == '>':
+            result += arg[1:]
+        else:
+            result += arg
+    return result
 
 
 def createNewRecordsArray(numRecords, fields, defaults):
@@ -428,6 +463,53 @@ def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayN
     ]
 
 # End of tryReadRecordsArrayFromBuffer
+
+
+
+def tryReadComplexRecordsArrayFromBuffer(
+        buffer, numRecords, format, fieldNames, recordClass, arrayName
+        ):
+    """Takes a byte sequence and returns a list of record dicts with
+    the specified format read from the byte sequence.
+
+    This is used for records that contain defined structures, not
+    just basic binary types supported in struct.unpack(). For records
+    comprised only of basic types, use tryReadRecordsArrayFromBuffer.
+
+    The buffer argument is assumed start at the first record and end at the
+    end of the array.
+
+    The format parameter is a string of the type needed for struct.unpack,
+    indicating the raw binary format in the file.
+
+    The fieldNames parameter is a sequence of names of the record fields,
+    in order. Some or all of these fields can be defined, complex data
+    types.
+
+    The record class is assumed to have a static interpretUnpackedValues()
+    method that takes the raw values returned by struct.unpack() and
+    returns a tuple of the higher-level values for the given record type.
+    The number of elements in the tuple must be the same as the number
+    of field names.
+
+    Each dict represents a record from the file and has the names in
+    fieldNames as keys.
+    """
+
+    recordLength = struct.calcsize(format)
+    if len(buffer) < numRecords * recordLength:
+        raise OTCodecError(f"The file data is not long enough to read the {arrayName} array.")
+
+    # iter_unpack will return an iterator over the records array
+    unpack_iter = struct.iter_unpack(format, buffer[:numRecords * recordLength])
+
+    # using a dict comprehension nested within a list comprehension
+    return [
+        {k: v for k, v in zip(fieldNames, recordClass.interpretUnpackedValues(*vals))}
+        for vals in itertools.islice(unpack_iter, numRecords)
+        ]
+
+# End of tryReadComplexRecordsArrayFromBuffer
 
 
 
