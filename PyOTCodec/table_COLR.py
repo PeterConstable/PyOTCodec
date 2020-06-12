@@ -268,11 +268,12 @@ class VarFixed:
     """
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
-    _numUnpackedValues = Fixed._numUnpackedValues + 2
+    _numPackedValues = Fixed._numPackedValues + 2
 
 
-    def __init__(self, fixedNum:int, varOuterIndex:int, varInnerIndex:int):
-        self.value = Fixed.createNewFixedFromUint32(fixedNum)
+    def __init__(self, value:Fixed, varOuterIndex:int, varInnerIndex:int):
+        assert type(value) == Fixed and varOuterIndex >= 0 and varInnerIndex >= 0
+        self.value = value
         self.varOuterIndex = varOuterIndex
         self.varInnerIndex = varInnerIndex
 
@@ -282,8 +283,8 @@ class VarFixed:
         """Takes a tuple of raw values obtained from struct.unpack() and returns
         a tuple of derived values corresponding to the structure fields."""
 
-        assert len(vals) == VarFixed._numUnpackedValues
-        value = Fixed.interpretUnpackedValues(*vals[:Fixed._numUnpackedValues])
+        assert len(vals) == VarFixed._numPackedValues
+        value = Fixed.createFixedFromUint32(vals[0])
         return value, vals[1], vals[2]
 
 
@@ -306,23 +307,23 @@ class VarF2Dot14:
     """
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
-    _numUnpackedValues = F2Dot14._numUnpackedValues + 2
+    _numPackedValues = F2Dot14._numPackedValues + 2
 
+
+    def __init__(self, value:F2Dot14, varOuterIndex:int, varInnerIndex:int):
+        assert type(value) == F2Dot14 and varOuterIndex >= 0 and varInnerIndex >= 0
+        self.value = value
+        self.varOuterIndex = varOuterIndex
+        self.varInnerIndex = varInnerIndex
 
     @staticmethod
     def interpretUnpackedValues(*vals):
         """Takes a tuple of raw values obtained from struct.unpack() and returns
         a tuple of derived values corresponding to the structure fields."""
 
-        assert len(vals) == VarF2Dot14._numUnpackedValues
-        value = F2Dot14.interpretUnpackedValues(*vals[:F2Dot14._numUnpackedValues])
+        assert len(vals) == VarF2Dot14._numPackedValues
+        value = F2Dot14.createF2Dot14FromUint16(vals[0])
         return value, vals[1], vals[2]
-
-
-    def __init__(self, f2Dot14Num:int, varOuterIndex:int, varInnerIndex:int):
-        self.value = F2Dot14.createNewF2Dot14FromUint16(f2Dot14Num)
-        self.varOuterIndex = varOuterIndex
-        self.varInnerIndex = varInnerIndex
 
     def __repr__(self):
         return {"value": self.value, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
@@ -341,6 +342,7 @@ class VarFWord:
 
 
     def __init__(self, coordinate, varOuterIndex, varInnerIndex):
+        assert (varOuterIndex >= 0 and varInnerIndex >= 0)
         self.coordinate = coordinate
         self.varOuterIndex = varOuterIndex
         self.varInnerIndex = varInnerIndex
@@ -362,6 +364,7 @@ class VarUFWord:
 
 
     def __init__(self, distance, varOuterIndex, varInnerIndex):
+        assert (distance >= 0 and varOuterIndex >= 0 and varInnerIndex >= 0)
         self.distance = distance
         self.varOuterIndex = varOuterIndex
         self.varInnerIndex = varInnerIndex
@@ -386,24 +389,12 @@ class Affine2x2:
 
 
     def __init__(self, xx:VarFixed, xy:VarFixed, yx:VarFixed, yy:VarFixed):
+        assert (type(xx) == VarFixed and type(xy) == VarFixed and type(yx) == VarFixed and type(yy) == VarFixed)
         self.xx = xx
         self.xy = xy
         self.yx = yx
         self.yy = yy
 
-    @staticmethod
-    def interpretUnpackedValues(*vals):
-        """Takes a tuple of raw values obtained from struct.unpack() and returns
-        a tuple of derived values corresponding to the structure fields."""
-
-        assert len(vals) == Affine2x2._numUnpackedValues
-
-        xx = VarFixed.interpretUnpackedValues(*vals[:VarFixed._numUnpackedValues])
-        xy = VarFixed.interpretUnpackedValues(*vals[VarFixed._numUnpackedValues : 2 * VarFixed._numUnpackedValues])
-        yx = VarFixed.interpretUnpackedValues(*vals[2 * VarFixed._numUnpackedValues : 3 * VarFixed._numUnpackedValues])
-        yy = VarFixed.interpretUnpackedValues(*vals[3 * VarFixed._numUnpackedValues : ])
-
-        return xx, xy, yx, yy
 
     def tryReadFromFile(fileBytes):
 
@@ -414,7 +405,7 @@ class Affine2x2:
         tableVals = []
         for i in range(4):
             tableVals.append(
-                VarFixed.interpretUnpackedValues(*vals[i * VarFixed._numUnpackedValues: (i + 1) * VarFixed._numUnpackedValues])
+                VarFixed(*VarFixed.interpretUnpackedValues(*vals[i * VarFixed._numPackedValues: (i + 1) * VarFixed._numPackedValues]))
                 )
         return Affine2x2(*tableVals)
 
@@ -437,10 +428,11 @@ class ColorIndex:
     """
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("paletteIndex", "alpha")
-    _numUnpackedValues = 1 + VarF2Dot14._numUnpackedValues
+    _numPackedValues = 1 + VarF2Dot14._numPackedValues
 
 
     def __init__(self, paletteIndex:int, alpha:VarF2Dot14):
+        assert (type(alpha) == VarF2Dot14 and paletteIndex >= 0)
         if alpha.value.value < 0 or alpha.value.value > 1:
             raise OTCodecError(f"The alpha argument is invalid: value must be in the range [0, 1].")
         self.paletteIndex = paletteIndex
@@ -452,9 +444,9 @@ class ColorIndex:
         """Takes a tuple of raw values obtained from struct.unpack() and returns
         a tuple of derived values corresponding to the structure fields."""
 
-        assert len(vals) == ColorIndex._numUnpackedValues
+        assert len(vals) == ColorIndex._numPackedValues
 
-        alpha = VarF2Dot14.interpretUnpackedValues(*vals[1:])
+        alpha = VarF2Dot14(*VarF2Dot14.interpretUnpackedValues(*vals[1:]))
         return vals[0], alpha
 
 
@@ -476,10 +468,11 @@ class ColorStop:
     """
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("stopOffset", "color")
-    _numUnpackedValues = VarF2Dot14._numUnpackedValues + ColorIndex._numUnpackedValues
+    _numPackedValues = VarF2Dot14._numPackedValues + ColorIndex._numPackedValues
 
 
     def __init__(self, stopOffset:VarF2Dot14, color:ColorIndex):
+        assert (type(stopOffset) == VarF2Dot14 and type(color) == ColorIndex)
         if stopOffset.value.value < 0 or stopOffset.value.value > 1:
             raise OTCodecError(f"The stopOffset argument is invalid: value must be in the range [0, 1].")
         self.stopOffset = stopOffset
@@ -491,10 +484,10 @@ class ColorStop:
         """Takes a tuple of raw values obtained from struct.unpack() and returns
         a tuple of derived values corresponding to the structure fields."""
 
-        assert len(vals) == ColorStop._numUnpackedValues
+        assert len(vals) == ColorStop._numPackedValues
 
-        stopOffset = VarF2Dot14.interpretUnpackedValues(*vals[:VarF2Dot14._numUnpackedValues])
-        color = ColorIndex.interpretUnpackedValues(*vals[VarF2Dot14._numUnpackedValues:])
+        stopOffset = VarF2Dot14(*VarF2Dot14.interpretUnpackedValues(*vals[:VarF2Dot14._numPackedValues]))
+        color = ColorIndex(*ColorIndex.interpretUnpackedValues(*vals[VarF2Dot14._numPackedValues:]))
         return stopOffset, color
 
 

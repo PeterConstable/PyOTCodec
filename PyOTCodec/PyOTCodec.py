@@ -25,7 +25,7 @@ notoHW_COLR1_rev2 = OTFile(r"TestData\noto-handwriting-colr_1_rev2.ttf")
 #-------------------------------------------------------------
 # Tests for low-level stuff: 
 #   - file read methods
-#   - custom types: Tag, Fixed
+#   - custom types: Tag, Fixed, F2Dot14
 #-------------------------------------------------------------
 
 # test methods to read specific data types from file
@@ -41,15 +41,15 @@ testBytes1 = ( b'\x02\x0F\x37\xDC\x9A'
                b'\xB2'
                )
 testbio = BytesIO(testBytes1)
-testResults["ReadRawBytes test"] = ReadRawBytes(testbio, 5) == b'\x02\x0F\x37\xDC\x9A'
-testResults["ReadInt8 test"] = ReadInt8(testbio) == -94 # \xA2
-testResults["ReadUint8 test"] = ReadUint8(testbio) == 0x0F
-testResults["ReadInt16"] = ReadInt16(testbio) == -6180 # \xE7\xDC
-testResults["ReadUint16"] = ReadUint16(testbio) == 0x9A02
-testResults["ReadInt32"] = ReadInt32(testbio) == -1087906662 # \xBF\x27\xDC\x9A
-testResults["ReadUint32"] = ReadUint32(testbio) == 0xB20F37DC
-testResults["ReadInt64"] = ReadInt64(testbio) == -7349294909316519972 # \x9A\x02\x0F\x37\xDC\x9A\x27\xDC
-testResults["ReadUint64"] = ReadUint64(testbio) == 0x27DC9AB20F37DC9A
+testResults["File read test 1 (ReadRawBytes)"] = ReadRawBytes(testbio, 5) == b'\x02\x0F\x37\xDC\x9A'
+testResults["File read test 2 (ReadInt8)"] = ReadInt8(testbio) == -94 # \xA2
+testResults["File read test 3 (ReadUint8)"] = ReadUint8(testbio) == 0x0F
+testResults["File read test 4 (ReadInt16)"] = ReadInt16(testbio) == -6180 # \xE7\xDC
+testResults["File read test 5 (ReadUint16)"] = ReadUint16(testbio) == 0x9A02
+testResults["File read test 6 (ReadInt32)"] = ReadInt32(testbio) == -1087906662 # \xBF\x27\xDC\x9A
+testResults["File read test 7 (ReadUint32)"] = ReadUint32(testbio) == 0xB20F37DC
+testResults["File read test 8 (ReadInt64)"] = ReadInt64(testbio) == -7349294909316519972 # \x9A\x02\x0F\x37\xDC\x9A\x27\xDC
+testResults["File read test 9 (ReadUint64)"] = ReadUint64(testbio) == 0x27DC9AB20F37DC9A
 
 # reading with insufficient data left from current position
 try:
@@ -58,7 +58,7 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Insufficient data test 1"] = result
+testResults["File read test 10 (insufficient data)"] = result
 
 # reading with insufficient data left from current position
 testbio.seek(-1, 2)
@@ -68,7 +68,7 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Insufficient data test 2"] = result
+testResults["File read test 11 (insufficient data)"] = result
 
 
 # tests for calcCheckSum
@@ -96,6 +96,11 @@ testResults["calcChecksum test 10"] = (hhea.calculatedCheckSum == tr_hhea.checkS
 
 
 # tests for Tag
+
+testResults["Tag constants test 1"] = (Tag._packedFormat == ">4s")
+testResults["Tag constants test 2"] = (Tag._packedSize == 4)
+testResults["Tag constants test 3"] = (Tag._numPackedValues == 1)
+
 x = Tag(b'\x00\x01') # pad with 0x00
 testResults["Tag constructor test 1"] = (x == b'\x00\x01\x00\x00')
 x = Tag(b'\x61\x62\x63\x64')
@@ -124,6 +129,10 @@ testResults["Tag validation test 6"] = Tag.validateTag(" €c") == 0x07
 
 
 # tests for Fixed
+
+testResults["Fixed constants test 1"] = (Fixed._packedFormat == ">L")
+testResults["Fixed constants test 2"] = (Fixed._packedSize == 4)
+testResults["Fixed constants test 3"] = (Fixed._numPackedValues == 1)
 
 # arg must be bytearray or bytes
 try:
@@ -161,51 +170,52 @@ testResults["Fixed constructor test 4"] = (type(Fixed(bytearray([0,1,0,0]))) == 
 testResults["Fixed constructor test 5"] = (type(Fixed(bytes(b'\xF0\x00\x80\x00'))) == Fixed)
 testResults["Fixed constructor test 6"] = (Fixed(b'\xF0\x00\x80\x00') == -4095.5)
 
-# Fixed.createNewFixedFromUint32: arg must be between 0 and 0xffff_ffff
+# Fixed.createFixedFromUint32: arg must be between 0 and 0xffff_ffff
 try:
-    Fixed.createNewFixedFromUint32(-1)
+    Fixed.createFixedFromUint32(-1)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["Fixed.createNewFixedFromUint32 test 1"] = result
+testResults["Fixed.createFixedFromUint32 test 1"] = result
 try:
-    Fixed.createNewFixedFromUint32(0x1_FFFF_FFFF)
+    Fixed.createFixedFromUint32(0x1_FFFF_FFFF)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["Fixed.createNewFixedFromUint32 test 2"] = result
+testResults["Fixed.createFixedFromUint32 test 2"] = result
 
-f = Fixed.createNewFixedFromUint32(0x0001_8000)
-testResults["Fixed.createNewFixedFromUint32 test 3"] = (f == 1.5)
-f = Fixed.createNewFixedFromUint32(0xF000_8000)
-testResults["Fixed.createNewFixedFromUint32 test 4"] = (f == -4095.5)
-f = Fixed.createNewFixedFromUint32(0x0001_5000)
-testResults["Fixed.createNewFixedFromUint32 test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+f = Fixed.createFixedFromUint32(0x0001_8000)
+testResults["Fixed.createFixedFromUint32 test 3"] = (f == 1.5)
+f = Fixed.createFixedFromUint32(0xF000_8000)
+testResults["Fixed.createFixedFromUint32 test 4"] = (f == -4095.5)
+f = Fixed.createFixedFromUint32(0x0001_5000)
+testResults["Fixed.createFixedFromUint32 test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
 
-# Fixed.createNewFixedFromFloat
+# Fixed.createFixedFromFloat
 try:
-    Fixed.createNewFixedFromFloat(-40000)
+    Fixed.createFixedFromFloat(-40000)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["Fixed.createNewFixedFromFloat test 1"] = result
+testResults["Fixed.createFixedFromFloat test 1"] = result
 try:
-    Fixed.createNewFixedFromFloat(40000)
+    Fixed.createFixedFromFloat(40000)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["Fixed.createNewFixedFromFloat test 2"] = result
+testResults["Fixed.createFixedFromFloat test 2"] = result
 
-f = Fixed.createNewFixedFromFloat(1.5)
-testResults["Fixed.createNewFixedFromFloat test 3"] = (f._rawBytes == bytes(b'\x00\x01\x80\x00'))
-f = Fixed.createNewFixedFromFloat(-4095.75)
-testResults["Fixed.createNewFixedFromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00\x40\x00'))
-f = Fixed.createNewFixedFromFloat(1.3125)
-testResults["Fixed.createNewFixedFromFloat test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+f = Fixed.createFixedFromFloat(1.5)
+testResults["Fixed.createFixedFromFloat test 3"] = (f._rawBytes == bytes(b'\x00\x01\x80\x00'))
+f = Fixed.createFixedFromFloat(-4095.75)
+testResults["Fixed.createFixedFromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00\x40\x00'))
+f = Fixed.createFixedFromFloat(1.3125)
+testResults["Fixed.createFixedFromFloat test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+
 
 # Fixed ==
 f = Fixed(b'\xF0\x00\x80\x00')
@@ -273,6 +283,10 @@ testResults["Fixed.tryReadFromFile test 4"] = result
 
 # tests for F2Dot14
 
+testResults["F2Dot14 constants test 1"] = (F2Dot14._packedFormat == ">H")
+testResults["F2Dot14 constants test 2"] = (F2Dot14._packedSize == 2)
+testResults["F2Dot14 constants test 3"] = (F2Dot14._numPackedValues == 1)
+
 # arg must be bytearray or bytes
 try:
     F2Dot14(None)
@@ -309,51 +323,51 @@ testResults["F2Dot14 constructor test 4"] = (type(F2Dot14(bytearray([0,1]))) == 
 testResults["F2Dot14 constructor test 5"] = (type(F2Dot14(bytes(b'\xF0\x00'))) == F2Dot14)
 testResults["F2Dot14 constructor test 6"] = (F2Dot14(b'\xF0\x00') == -0.25)
 
-# Fixed.createNewF2Dot14FromUint16: arg must be between 0 and 0xffff
+# Fixed.createF2Dot14FromUint16: arg must be between 0 and 0xffff
 try:
-    F2Dot14.createNewF2Dot14FromUint16(-1)
+    F2Dot14.createF2Dot14FromUint16(-1)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["F2Dot14.createNewF2Dot14FromUint16 test 1"] = result
+testResults["F2Dot14.createF2Dot14FromUint16 test 1"] = result
 try:
-    F2Dot14.createNewF2Dot14FromUint16(0x1_0000)
+    F2Dot14.createF2Dot14FromUint16(0x1_0000)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["F2Dot14.createNewF2Dot14FromUint16 test 2"] = result
+testResults["F2Dot14.createF2Dot14FromUint16 test 2"] = result
 
-f = F2Dot14.createNewF2Dot14FromUint16(0x6000)
-testResults["F2Dot14.createNewF2Dot14FromUint16 test 3"] = (f == 1.5)
-f = F2Dot14.createNewF2Dot14FromUint16(0xF000)
-testResults["F2Dot14.createNewF2Dot14FromUint16 test 4"] = (f == -0.25)
-f = F2Dot14.createNewF2Dot14FromUint16(0x3c01)
-testResults["F2Dot14.createNewF2Dot14FromUint16 test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
+f = F2Dot14.createF2Dot14FromUint16(0x6000)
+testResults["F2Dot14.createF2Dot14FromUint16 test 3"] = (f == 1.5)
+f = F2Dot14.createF2Dot14FromUint16(0xF000)
+testResults["F2Dot14.createF2Dot14FromUint16 test 4"] = (f == -0.25)
+f = F2Dot14.createF2Dot14FromUint16(0x3c01)
+testResults["F2Dot14.createF2Dot14FromUint16 test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
 
-# F2Dot14.createNewF2Dot14FromFloat
+# F2Dot14.createF2Dot14FromFloat
 try:
-    F2Dot14.createNewF2Dot14FromFloat(-4)
+    F2Dot14.createF2Dot14FromFloat(-4)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["F2Dot14.createNewF2Dot14FromFloat test 1"] = result
+testResults["F2Dot14.createF2Dot14FromFloat test 1"] = result
 try:
-    F2Dot14.createNewF2Dot14FromFloat(4)
+    F2Dot14.createF2Dot14FromFloat(4)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["F2Dot14.createNewF2Dot14FromFloat test 2"] = result
+testResults["F2Dot14.createF2Dot14FromFloat test 2"] = result
 
-f = F2Dot14.createNewF2Dot14FromFloat(1.5)
-testResults["F2Dot14.createNewF2Dot14FromFloat test 3"] = (f._rawBytes == bytes(b'\x60\x00'))
-f = F2Dot14.createNewF2Dot14FromFloat(-0.25)
-testResults["F2Dot14.createNewF2Dot14FromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00'))
-f = F2Dot14.createNewF2Dot14FromFloat(1.3125)
-testResults["F2Dot14.createNewF2Dot14FromFloat test 5"] = (f._rawBytes == bytes(b'\x54\x00'))
+f = F2Dot14.createF2Dot14FromFloat(1.5)
+testResults["F2Dot14.createF2Dot14FromFloat test 3"] = (f._rawBytes == bytes(b'\x60\x00'))
+f = F2Dot14.createF2Dot14FromFloat(-0.25)
+testResults["F2Dot14.createF2Dot14FromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00'))
+f = F2Dot14.createF2Dot14FromFloat(1.3125)
+testResults["F2Dot14.createF2Dot14FromFloat test 5"] = (f._rawBytes == bytes(b'\x54\x00'))
 
 # F2Dot14 ==
 f = F2Dot14(b'\xF0\x80')
@@ -414,7 +428,72 @@ testResults["F2Dot14.tryReadFromFile test 4"] = result
 
 
 
+#-------------------------------------------------------------
+# Tests for ot_types static functions
+#-------------------------------------------------------------
 
+# tests for concatFormatStrings
+try:
+    x = concatFormatStrings(None)
+except:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 1"] = result
+try:
+    x = concatFormatStrings(42)
+except:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 2"] = result
+try:
+    x = concatFormatStrings(42, "abc")
+except:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 3"] = result
+try:
+    x = concatFormatStrings("abc", 42)
+except:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 4"] = result
+try:
+    x = concatFormatStrings("abc", "def", 42, "ghi")
+except:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 5"] = result
+try:
+    x = concatFormatStrings("@abc", "def")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 6"] = result
+try:
+    x = concatFormatStrings(">abc", "@def")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 7"] = result
+try:
+    x = concatFormatStrings(">abc", ">def", "@ghi")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["concatFormatStrings test 8"] = result
+testResults["concatFormatStrings test 9"] = (concatFormatStrings("abc") == "abc")
+testResults["concatFormatStrings test 10"] = (concatFormatStrings(">abc", "def") == ">abcdef")
+testResults["concatFormatStrings test 11"] = (concatFormatStrings(">abc", ">def") == ">abcdef")
+testResults["concatFormatStrings test 12"] = (concatFormatStrings(">abc", ">def", "ghi") == ">abcdefghi")
+testResults["concatFormatStrings test 13"] = (concatFormatStrings(">abc", ">def", ">ghi") == ">abcdefghi")
 
 
 # tests for ot_types.createNewRecordsArray
@@ -424,7 +503,7 @@ result = True
 result &= (len(recordsArray) == 4)
 result &= ("foo" in list(recordsArray[0]) and "bar" in list(recordsArray[1]))
 result &= (recordsArray[2]["foo"] == 17 and recordsArray[3]["bar"] == 42)
-testResults["ot_types.createNewRecordsArray test"] = result
+testResults["createNewRecordsArray test"] = result
 
 
 
@@ -914,7 +993,7 @@ testResults["Table_maxp constructor test 3"] = (not hasattr(maxp, "version"))
 maxp = Table_maxp.createNew_maxp(0.5)
 testResults["Table_maxp.createNew_maxp test 1"] = (type(maxp) == Table_maxp)
 result = True
-expected = zip(Table_maxp._maxp_0_5_fields, [Fixed.createNewFixedFromUint32(0x0000_5000), 0])
+expected = zip(Table_maxp._maxp_0_5_fields, [Fixed.createFixedFromUint32(0x0000_5000), 0])
 for k, v in expected:
     val = getattr(maxp, k)
     if val != v:
@@ -927,7 +1006,7 @@ testResults["Table_maxp.createNew_maxp test 3"] = (not hasattr(maxp, "maxPoints"
 maxp = Table_maxp.createNew_maxp(1.0)
 testResults["Table_maxp.createNew_maxp test 4"] = (type(maxp) == Table_maxp)
 result = True
-expected = zip(Table_maxp._maxp_0_5_fields, [Fixed.createNewFixedFromUint32(0x0001_0000), 0])
+expected = zip(Table_maxp._maxp_0_5_fields, [Fixed.createFixedFromUint32(0x0001_0000), 0])
 for k, v in expected:
     val = getattr(maxp, k)
     if val != v:
@@ -1115,81 +1194,278 @@ testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 
 # tests for VarFixed, VarF2Dot14
-x = VarFixed(0x48000,1,3)
-result = x.__repr__() == "{'value': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
-testResults["Table_COLR VarFixed test 1"] = result
-testResults["Table_COLR VarFixed test 2"] = (type(x.value) == Fixed and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
-testResults["Table_COLR VarFixed test 3"] = (x.value == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
 
-x = VarF2Dot14(0x6000, 1, 3)
+testResults["Table_COLR VarFixed constants test 1"] = (VarFixed._packedFormat == (Fixed._packedFormat + "2H"))
+testResults["Table_COLR VarFixed constants test 2"] = (VarFixed._packedSize == 8)
+testResults["Table_COLR VarFixed constants test 3"] = (VarFixed._fieldNames == ("value", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarFixed constants test 4"] = (VarFixed._numPackedValues == 3)
+try:
+    x = VarFixed(0x1_8000, 4, 7)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFixed constructor test 1"] = result
+try:
+    x = VarFixed(Fixed.createFixedFromUint32(0x48000), -17, 23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFixed constructor test 2"] = result
+try:
+    x = VarFixed(Fixed.createFixedFromUint32(0x48000), 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFixed constructor test 3"] = result
+x = VarFixed(Fixed.createFixedFromUint32(0x48000),1,3)
+testResults["Table_COLR VarFixed constructor test 4"] = (type(x.value) == Fixed and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarFixed constructor test 5"] = (x.value == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+result = x.__repr__() == "{'value': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
+testResults["Table_COLR VarFixed __repr__ test"] = result
+x = VarFixed.interpretUnpackedValues(0x1_8000, 4, 7)
+testResults["Table_COLR VarFixed interpretUnpackedValues test 1"] = (len(x) == 3 and type(x[0]) == Fixed and type(x[1]) == int and type(x[2]) == int)
+testResults["Table_COLR VarFixed interpretUnpackedValues test 2"] = (x[0]._rawBytes == b'\x00\x01\x80\x00' and x[1] == 4 and x[2] == 7)
+x = VarFixed(*VarFixed.interpretUnpackedValues(0x1_8000, 4, 7))
+testResults["Table_COLR VarFixed interpretUnpackedValues test 3"] = (type(x) == VarFixed and x.value._rawBytes == b'\x00\x01\x80\x00' and x.varOuterIndex == 4 and x.varInnerIndex == 7)
+
+testResults["Table_COLR VarF2Dot14 constants test 1"] = (VarF2Dot14._packedFormat == (F2Dot14._packedFormat + "2H"))
+testResults["Table_COLR VarF2Dot14 constants test 2"] = (VarF2Dot14._packedSize == 6)
+testResults["Table_COLR VarF2Dot14 constants test 3"] = (VarF2Dot14._fieldNames == ("value", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarF2Dot14 constants test 4"] = (VarF2Dot14._numPackedValues == 3)
+try:
+    x = VarF2Dot14(0x6000, 4, 7)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarF2Dot14 constructor test 1"] = result
+try:
+    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), -17, 23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarF2Dot14 constructor test 2"] = result
+try:
+    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarF2Dot14 constructor test 3"] = result
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 1, 3)
+testResults["Table_COLR VarF2Dot14 constructor test 4"] = (type(x.value) == F2Dot14 and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarF2Dot14 constructor test 5"] = (x.value == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
 result = x.__repr__() == "{'value': 1.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
-testResults["Table_COLR VarF2Dot14 test 1"] = result
-testResults["Table_COLR VarF2Dot14 test 2"] = (type(x.value) == F2Dot14 and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
-testResults["Table_COLR VarF2Dot14 test 3"] = (x.value == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+testResults["Table_COLR VarF2Dot14 __repr__ test"] = result
+x = VarF2Dot14.interpretUnpackedValues(0x7000, 4, 7)
+testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 1"] = (len(x) == 3 and type(x[0]) == F2Dot14 and type(x[1]) == int and type(x[2]) == int)
+testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 2"] = (x[0]._rawBytes == b'\x70\x00' and x[1] == 4 and x[2] == 7)
+x = VarF2Dot14(*VarF2Dot14.interpretUnpackedValues(0x7000, 4, 7))
+testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 3"] = (type(x) == VarF2Dot14 and x.value._rawBytes == b'\x70\x00' and x.varOuterIndex == 4 and x.varInnerIndex == 7)
+
+# tests for VarFWord, VarUFWord
+testResults["Table_COLR VarFWord constants test 1"] = (VarFWord._packedFormat == ">h2H")
+testResults["Table_COLR VarFWord constants test 2"] = (VarFWord._packedSize == 6)
+testResults["Table_COLR VarFWord constants test 3"] = (VarFWord._fieldNames == ("coordinate", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarFWord constants test 4"] = (VarFWord._numPackedValues == 3)
+x = VarFWord(-24, 17, 23)
+testResults["Table_COLR VarFWord constructor test 1"] = (type(x) == VarFWord and type(x.coordinate) == int and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarFWord constructor test 2"] = (x.coordinate == -24 and x.varOuterIndex == 17 and x.varInnerIndex == 23)
+try:
+    x = VarFWord(24, -17, 23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFWord constructor test 3"] = result
+try:
+    x = VarFWord(24, 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFWord constructor test 4"] = result
+testResults["Table_COLR VarFWord __repr__ test"] = (x.__repr__() == "{'coordinate': -24, 'varOuterIndex': 17, 'varInnerIndex': 23}")
+
+testResults["Table_COLR VarUFWord constants test 1"] = (VarUFWord._packedFormat == ">3H")
+testResults["Table_COLR VarUFWord constants test 2"] = (VarUFWord._packedSize == 6)
+testResults["Table_COLR VarUFWord constants test 3"] = (VarUFWord._fieldNames == ("distance", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarUFWord constants test 4"] = (VarUFWord._numPackedValues == 3)
+x = VarUFWord(24, 17, 23)
+testResults["Table_COLR VarUFWord constructor test 1"] = (type(x) == VarUFWord and type(x.distance) == int and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarUFWord constructor test 2"] = (x.distance == 24 and x.varOuterIndex == 17 and x.varInnerIndex == 23)
+try:
+    x = VarUFWord(-24, 17, 23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarUFWord constructor test 3"] = result
+try:
+    x = VarUFWord(24, -17, 23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarUFWord constructor test 4"] = result
+try:
+    x = VarUFWord(24, 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarUFWord constructor test 5"] = result
+testResults["Table_COLR VarUFWord __repr__ test"] = (x.__repr__() == "{'distance': 24, 'varOuterIndex': 17, 'varInnerIndex': 23}")
+
 
 # tests for ColorIndex
 
-# alpha out of range [0, 1]
-x = VarF2Dot14(0x6000, 1, 3)
-try:
-    y = ColorIndex(24, x)
-except OTCodecError:
-    result = True
-else:
-    result = False
-testResults["Table_COLR ColorIndex test 1"] = result
-x = VarF2Dot14(0x8000, 1, 3)
-try:
-    y = ColorIndex(24, x)
-except OTCodecError:
-    result = True
-else:
-    result = False
-testResults["Table_COLR ColorIndex test 2"] = result
+testResults["ColorIndex constants test 1"] = (ColorIndex._packedFormat == ">HH2H")
+testResults["ColorIndex constants test 2"] = (ColorIndex._packedSize == 8)
+testResults["ColorIndex constants test 3"] = (ColorIndex._fieldNames == ("paletteIndex", "alpha"))
+testResults["ColorIndex constants test 4"] = (ColorIndex._numPackedValues == 4)
 
-x = VarF2Dot14(0x3000, 1, 3)
+# constructor tests -- arg validations
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
+try:
+    y = ColorIndex(-24, x)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex constructor test 1"] = result
+try:
+    y = ColorIndex(24, 42)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex constructor test 2"] = result
+
+# alpha out of range [0, 1]
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 1, 3)
+try:
+    y = ColorIndex(24, x)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex constructor test 2"] = result
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x8000), 1, 3)
+try:
+    y = ColorIndex(24, x)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex constructor test 3"] = result
+
+# good args
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
+y = ColorIndex(24, x)
+testResults["Table_COLR ColorIndex constructor test 5"] = (type(y.paletteIndex) == int and type(y.alpha) == VarF2Dot14)
+testResults["Table_COLR ColorIndex test constructor 6"] = (y.paletteIndex == 24 and y.alpha.value == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
 y = ColorIndex(24, x)
 result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'value': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
-testResults["Table_COLR ColorIndex test 3"] = result
-testResults["Table_COLR ColorIndex test 4"] = (type(y.paletteIndex) == int and type(y.alpha) == VarF2Dot14)
-testResults["Table_COLR ColorIndex test 5"] = (y.paletteIndex == 24 and y.alpha.value == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+testResults["Table_COLR ColorIndex __repr__ test"] = result
+
+x = ColorIndex.interpretUnpackedValues(17, 0xC000, 3, 5)
+result = (len(x) == 2 and type(x[0]) == int and type(x[1]) == VarF2Dot14)
+testResults["Table_COLR ColorIndex interpretUnpackedValues test 1"] = result
+x = ColorIndex(*ColorIndex.interpretUnpackedValues(17, 0x3000, 3, 5))
+result = (type(x) == ColorIndex and x.paletteIndex == 17 and x.alpha.value.value == 0.75 and x.alpha.varOuterIndex == 3 and x.alpha.varInnerIndex == 5)
+testResults["Table_COLR ColorIndex interpretUnpackedValues test 2"] = result
+
 
 # tests for ColorStop
 
+testResults["ColorStop constants test 1"] = (ColorStop._packedFormat == ">H2HHH2H")
+testResults["ColorStop constants test 2"] = (ColorStop._packedSize == 14)
+testResults["ColorStop constants test 3"] = (ColorStop._fieldNames == ("stopOffset", "color"))
+testResults["ColorStop constants test 4"] = (ColorStop._numPackedValues == 7)
+
+# arg validations
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x1000), 1, 3)
+y = ColorIndex(24, x)
+try:
+    z = ColorStop(24, y)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorStop constructor test 1"] = result
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
+try:
+    z = ColorStop(x, 24)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorStop constructor test 2"] = result
+
 # stopOffset out of range [0, 1]
-x = VarF2Dot14(0x3000, 1, 3)
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
 y = ColorIndex(24, x)
-x = VarF2Dot14(0x4001, 1, 3)
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x4001), 1, 3)
 try:
     z = ColorStop(x, y)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["Table_COLR ColorStop test 1"] = result
-x = VarF2Dot14(0x3000, 1, 3)
+testResults["Table_COLR ColorStop constructor test 3"] = result
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
 y = ColorIndex(24, x)
-x = VarF2Dot14(0xC001, 1, 3)
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0xC001), 1, 3)
 try:
     z = ColorStop(x, y)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["Table_COLR ColorStop test 2"] = result
+testResults["Table_COLR ColorStop constructor test 4"] = result
 
-
-x = VarF2Dot14(0x1000, 1, 3)
+# good args
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x1000), 1, 3)
 y = ColorIndex(24, x)
-x = VarF2Dot14(0x3000, 0, 4)
+x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 0, 4)
 z = ColorStop(x, y)
+testResults["Table_COLR ColorStop constructor test 5"] = (type(z.stopOffset) == VarF2Dot14 and type(z.color) == ColorIndex)
+testResults["Table_COLR ColorStop constructor test 6"] = (z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
+testResults["Table_COLR ColorStop constructor test 7"] = (z.color.paletteIndex == 24 and z.color.alpha.value == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
 result = z.__repr__() == "{'stopOffset': {'value': 0.75, 'varOuterIndex': 0, 'varInnerIndex': 4}, 'color': {'paletteIndex': 24, 'alpha': {'value': 0.25, 'varOuterIndex': 1, 'varInnerIndex': 3}}}"
-testResults["Table_COLR ColorStop test 3"] = result
-testResults["Table_COLR ColorStop test 4"] = (type(z.stopOffset) == VarF2Dot14 and type(z.color) == ColorIndex)
-testResults["Table_COLR ColorStop test 5"] = (z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
-testResults["Table_COLR ColorStop test 6"] = (z.color.paletteIndex == 24 and z.color.alpha.value == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+testResults["Table_COLR ColorStop __repr__ test"] = result
+
+#interpretUnpackedValues
+x = ColorStop.interpretUnpackedValues(0x3000, 0, 4, 24, 0x1000, 1, 3)
+result = (len(x) == 2 and type(x[0]) == VarF2Dot14 and type(x[1]) == ColorIndex)
+testResults["Table_COLR ColorStop interpretUnpackedValues test 1"] = result
+x = ColorStop(*ColorStop.interpretUnpackedValues(0x3000, 0, 4, 24, 0x1000, 1, 3))
+result = (type(x) == ColorStop and x.stopOffset.value.value == 0.75 and x.color.paletteIndex == 24)
+testResults["Table_COLR ColorStop interpretUnpackedValues test 2"] = result
 
 
+"""
+Still need tests for
+    - ColorLine
+    - Affine2x2
+    - PaintFormat1
+    - PaintFormat2
+    - PaintFormat3
+    - tryReadRecordsArrayFromBuffer
+    - tryReadComplexRecordsArrayFromBuffer
+    - tryReadSubtablesFromBuffer
+    - tryReadMultiFormatSubtablesFromBuffer
+    - LayersV1
+    - BaseGlyphV1List
+    - COLR V1
+"""
 
 f = notoHW_COLR1_rev2
 
@@ -1199,13 +1475,13 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 318
+assert len(testResults) == 394
 
 print()
-print("{:<45} {:<}".format("Test", "result"))
-print("=====================================================")
+print("{:<55} {:<}".format("Test", "result"))
+print("===============================================================")
 for k, v in testResults.items():
-    print(f"{k:<45} {'Pass' if v else '!! FAIL !!'}")
+    print(f"{k:<55} {'Pass' if v else '!! FAIL !!'}")
 print()
 print(f"Number of test cases: {len(testResults)}")
 print(f"Number of tests failing: {list(testResults.values()).count(False)}")

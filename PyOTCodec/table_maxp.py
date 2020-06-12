@@ -90,10 +90,10 @@ class Table_maxp:
         maxp = Table_maxp()
         
         if version == 0.5:
-            maxp.version = Fixed.createNewFixedFromUint32(0x0000_5000)
+            maxp.version = Fixed.createFixedFromUint32(0x0000_5000)
             maxp.numGlyphs = 0
         else:
-            maxp.version = Fixed.createNewFixedFromUint32(0x0001_0000)
+            maxp.version = Fixed.createFixedFromUint32(0x0001_0000)
             maxp.numGlyphs = 0
             for k, v in zip(maxp._maxp_1_0_addl_fields, maxp._maxp_1_0_addl_defaults):
                 setattr(maxp, k, v)

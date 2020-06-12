@@ -71,8 +71,6 @@ class Table_fmtx:
         fmtx = Table_fmtx()
 
         fmtx.version = Fixed(fmtx._fmtx_2_0_defaults[0])
-        #fmtx.version = Fixed.createNewFixedFromUint32(fmtx._fmtx_2_0_defaults[0])
-        #fmtx.version = Fixed.createNewFixedFromFloat(fmtx._fmtx_2_0_defaults[0])
         for k, v in zip(fmtx._fmtx_2_0_fields[1:], fmtx._fmtx_2_0_defaults[1:]):
             setattr(fmtx, k, v)
 

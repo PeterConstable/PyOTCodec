@@ -10,7 +10,7 @@ class Tag(str):
     
     _packedFormat = ">4s" # Use this to unpack from file before calling constructor.
     _packedSize = struct.calcsize(_packedFormat)
-    _numUnpackedValues = 1
+    _numPackedValues = 1
 
 
     # Use __new__, not __init__, so we can modify the value being constructed
@@ -135,10 +135,10 @@ class Fixed:
     """
 
     # Use the following to unpack bytes from a file before calling 
-    # interpretUnpackedValues() or createNewFixedFromUint32().
+    # interpretUnpackedValues() or createFixedFromUint32().
     _packedFormat = ">L"
     _packedSize = struct.calcsize(_packedFormat)
-    _numUnpackedValues = 1
+    _numPackedValues = 1
 
 
     def __init__(self, fixedBytes):
@@ -160,16 +160,7 @@ class Fixed:
 
 
     @staticmethod
-    def interpretUnpackedValues(*vals):
-        """Takes a tuple of raw values obtained from struct.unpack() and returns
-        a tuple of derived values corresponding to the record fields."""
-
-        assert len(vals) == Fixed._numUnpackedValues
-        return Fixed.createNewFixedFromUint32(vals[0])
-
-
-    @staticmethod
-    def createNewFixedFromUint32(val:int):
+    def createFixedFromUint32(val:int):
         """Takes an integer from 0 to 0xFFFFFFFF and returns a Fixed."""
 
         if val < 0 or val > 0xFFFF_FFFF:
@@ -180,7 +171,7 @@ class Fixed:
 
 
     @staticmethod
-    def createNewFixedFromFloat(val:float):
+    def createFixedFromFloat(val:float):
         """Takes a float between -32,768 and 32,767 and returns a Fixed. 
 
         Fractional values will be rounded to the nearest 1/65,536. If val is out
@@ -263,10 +254,10 @@ class F2Dot14:
     """
 
     # Use the following to unpack bytes from a file before calling 
-    # createNewF2Dot14FromUint16.
+    # createF2Dot14FromUint16.
     _packedFormat = ">H"
     _packedSize = struct.calcsize(_packedFormat)
-    _numUnpackedValues = 1
+    _numPackedValues = 1
 
 
     def __init__(self, fixedBytes):
@@ -296,16 +287,7 @@ class F2Dot14:
 
 
     @staticmethod
-    def interpretUnpackedValues(*vals):
-        """Takes a tuple of raw values obtained from struct.unpack() and returns
-        a tuple of derived values corresponding to the record fields."""
-
-        assert len(vals) == F2Dot14._numUnpackedValues
-        return F2Dot14.createNewF2Dot14FromUint16(vals[0])
-
-
-    @staticmethod
-    def createNewF2Dot14FromUint16(val:int):
+    def createF2Dot14FromUint16(val:int):
         """Takes an integer from 0 to 0xFFFF and returns an F2Dot14.
 
         The integer is interpreted like a big-ending byte sequence representing
@@ -320,7 +302,7 @@ class F2Dot14:
 
 
     @staticmethod
-    def createNewF2Dot14FromFloat(val:float):
+    def createF2Dot14FromFloat(val:float):
         """Tables a float between [-2, 2) and returns an F2Dot14.
 
         Fractional values will be rounded to the nearest 1/2**14 (1/16384ths). 
@@ -397,13 +379,12 @@ class OTCodecError(Exception): pass
 
 def concatFormatStrings(*args):
     """Combines struct format strings."""
-    if len(args) == 0:
-        return None
-    if len(args) == 1:
-        return args[0]
+    assert len(args) > 0
     assert type(args[0]) == str
     if args[0][0] in "@=<!":
         raise OTCodecError("Only big-endian format strings are supported.")
+    if len(args) == 1:
+        return args[0]
     result = args[0]
     for arg in args[1:]:
         assert type(arg) == str
