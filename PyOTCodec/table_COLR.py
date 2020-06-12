@@ -155,7 +155,7 @@ class Table_COLR:
         # version 1 data
         if colr.version > 0:
             if colr.baseGlyphV1ListOffset > 0:
-                colr.baseGlyphV1 = BaseGlyphV1List.tryReadFromFile(
+                colr.baseGlyphV1List = BaseGlyphV1List.tryReadFromFile(
                     tableBytes[colr.baseGlyphV1ListOffset:]
                     )
 
