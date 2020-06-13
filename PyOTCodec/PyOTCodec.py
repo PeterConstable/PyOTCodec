@@ -560,6 +560,9 @@ result = (x[1]['test1'] == -1073725390 and x[1]['test2']._rawBytes == b'\xC0\x00
 testResults["tryReadComplexRecordsArrayFromBuffer test 4"] = result
 
 
+# tests for tryReadSubtablesFromBuffer
+
+
 
 #-------------------------------------------------------------
 # Tests for OTFile, TTCHeader
