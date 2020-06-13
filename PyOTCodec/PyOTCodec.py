@@ -530,7 +530,7 @@ testResults["tryReadRecordsArrayFromBuffer test 3"] = result
 
 # tests for tryReadComplexRecordsArrayFromBuffer
 
-class testRec_ReadCPRA:
+class test_tryReadCPRA:
     @staticmethod
     def interpretUnpackedValues(*args):
         # will receive ">hHHH"; reinterpret as (int32, Fixed)
@@ -544,14 +544,14 @@ fmt = ">hHHH"
 fields = ("test1", "test2")
 name = "Test"
 try:
-    x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, testRec_ReadCPRA, name)
+    x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, test_tryReadCPRA, name)
 except OTCodecError:
     result = True
 else:
     result = False
 testResults["tryReadComplexRecordsArrayFromBuffer test 1"] = result
 buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\xC0\x00\x40\x32\xC0\x00\x40\x32\x40\x00\x40\x72\x00\x00\x80\x56\x7f\xff\x7f\xff\x7f\xff\x7f\xff'
-x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, testRec_ReadCPRA, name)
+x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, test_tryReadCPRA, name)
 result = (type(x) == list and len(x) == 3 and type(x[0]) == dict and len(x[0]) == len(fields) and list(x[0]) == list(fields))
 testResults["tryReadComplexRecordsArrayFromBuffer test 2"] = result
 result = (x[0]['test1'] == 0x40004072 and type(x[0]['test2']) == Fixed and x[0]['test2']._rawBytes == b'\x00\x00\x80\x56')
@@ -561,6 +561,42 @@ testResults["tryReadComplexRecordsArrayFromBuffer test 4"] = result
 
 
 # tests for tryReadSubtablesFromBuffer
+
+class test_tryReadSTFB:
+    _format = ">hH"
+    _size = struct.calcsize(_format)
+    _fields = ("field1", "field2")
+
+    def __init__(self, field1, field2):
+        self.field1 = field1
+        self.field2 = field2
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        vals = struct.unpack(test_tryReadSTFB._format, fileBytes[:test_tryReadSTFB._size])
+        return test_tryReadSTFB(*vals)
+
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56'
+offsets = (20,)
+try:
+    x = tryReadSubtablesFromBuffer(buffer, test_tryReadSTFB, offsets)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["tryReadSubtablesFromBuffer test 1"] = result
+
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\xC0\x00\x40\x32\xC0\x00\x40\x32\x40\x00\x40\x72\x00\x00\x80\x56\x7f\xff\x7f\xff\x7f\xff\x7f\xff'
+offsets = (2, 8, 14)
+x = tryReadSubtablesFromBuffer(buffer, test_tryReadSTFB, offsets)
+results = (type(x) == list and len(x) == 3 and type(x[0]) == test_tryReadSTFB)
+results &= (list(x[0].__dict__) == list(test_tryReadSTFB._fields))
+testResults["tryReadSubtablesFromBuffer test 2"] = result
+
+results = (x[0].field1 == 0x4072 and x[0].field2 == 0)
+results &= (x[1].field1 == -16384 and x[1].field2 == 0x4032)
+results &= (x[2].field1 == 0x4032 and x[2].field2 == 0x4000)
+testResults["tryReadSubtablesFromBuffer test 3"] = result
 
 
 
@@ -1515,7 +1551,6 @@ Still need tests for
     - PaintFormat1
     - PaintFormat2
     - PaintFormat3
-    - tryReadSubtablesFromBuffer
     - tryReadMultiFormatSubtablesFromBuffer
     - LayersV1
     - BaseGlyphV1List
@@ -1530,7 +1565,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 401
+assert len(testResults) == 404
 
 print()
 print("{:<55} {:<}".format("Test", "result"))
