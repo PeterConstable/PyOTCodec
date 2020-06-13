@@ -528,6 +528,37 @@ result = (x[0]["test1"] == 0x4000 and x[0]["test2"] == 0x4072_0000 and x[3]["tes
 testResults["tryReadRecordsArrayFromBuffer test 3"] = result
 
 
+# tests for tryReadComplexRecordsArrayFromBuffer
+
+class testRec_ReadCPRA:
+    @staticmethod
+    def interpretUnpackedValues(*args):
+        # will receive ">hHHH"; reinterpret as (int32, Fixed)
+        x, = struct.unpack(">l", struct.pack(">hH", *args[:2]))
+        y = Fixed.createFixedFromUint32((args[2] << 16) + args[3])
+        return x, y
+
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56'
+numRecs = 3
+fmt = ">hHHH"
+fields = ("test1", "test2")
+name = "Test"
+try:
+    x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, testRec_ReadCPRA, name)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["tryReadComplexRecordsArrayFromBuffer test 1"] = result
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\xC0\x00\x40\x32\xC0\x00\x40\x32\x40\x00\x40\x72\x00\x00\x80\x56\x7f\xff\x7f\xff\x7f\xff\x7f\xff'
+x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, testRec_ReadCPRA, name)
+result = (type(x) == list and len(x) == 3 and type(x[0]) == dict and len(x[0]) == len(fields) and list(x[0]) == list(fields))
+testResults["tryReadComplexRecordsArrayFromBuffer test 2"] = result
+result = (x[0]['test1'] == 0x40004072 and type(x[0]['test2']) == Fixed and x[0]['test2']._rawBytes == b'\x00\x00\x80\x56')
+testResults["tryReadComplexRecordsArrayFromBuffer test 3"] = result
+result = (x[1]['test1'] == -1073725390 and x[1]['test2']._rawBytes == b'\xC0\x00\x40\x32')
+testResults["tryReadComplexRecordsArrayFromBuffer test 4"] = result
+
 
 
 #-------------------------------------------------------------
@@ -1481,7 +1512,6 @@ Still need tests for
     - PaintFormat1
     - PaintFormat2
     - PaintFormat3
-    - tryReadComplexRecordsArrayFromBuffer
     - tryReadSubtablesFromBuffer
     - tryReadMultiFormatSubtablesFromBuffer
     - LayersV1
@@ -1497,7 +1527,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 397
+assert len(testResults) == 401
 
 print()
 print("{:<55} {:<}".format("Test", "result"))
