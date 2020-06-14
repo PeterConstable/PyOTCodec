@@ -175,6 +175,26 @@ class Table_COLR:
 
 
 
+class BaseGlyphRecord:
+
+    _packedFormat = ">3H"
+    """Structure:
+        (big endian)            >
+        glyphID         uint16  H
+        firstLayerIndex uint16  H
+        numLayers       uint16  H
+    """
+    _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 3
+    _fieldNames = ("glyphID", "firstLayerIndex", "numLayers")
+    _defaultValues = (0, 0, 0)
+
+    def __init__(self, *args):
+        assert len(args) == 3
+        for f, v in zip(BaseGlyphRecord._fieldNames, args):
+            setattr(self, f, v)
+
+
 class BaseGlyphRecordsArray:
     # The OT spec doesn't define the array as its own struct type, but a class
     # with static methods is used to contain related functionality.
@@ -213,6 +233,26 @@ class BaseGlyphRecordsArray:
             )
 
 # End of class BaseGlyphRecordsArray
+
+
+
+class LayerRecord:
+
+    _packedFormat = ">2H"
+    """Structure:
+        (big endian)            >
+        glyphID         uint16  H
+        paletteIndex    uint16  H
+    """
+    _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2
+    _fieldNames = ("glyphID", "paletteIndex")
+    _defaultValues = (0, 0)
+
+    def __init__(self, *args):
+        assert len(args) == 2
+        for f, v in zip(LayerRecord._fieldNames, args):
+            setattr(self, f, v)
 
 
 
@@ -267,8 +307,8 @@ class VarFixed:
         varInnerIndex   uint16  H
     """
     _packedSize = struct.calcsize(_packedFormat)
-    _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
     _numPackedValues = Fixed._numPackedValues + 2
+    _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
 
 
     def __init__(self, value:Fixed, varOuterIndex:int, varInnerIndex:int):
@@ -306,8 +346,8 @@ class VarF2Dot14:
         varInnerIndex   uint16  H
     """
     _packedSize = struct.calcsize(_packedFormat)
-    _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
     _numPackedValues = F2Dot14._numPackedValues + 2
+    _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
 
 
     def __init__(self, value:F2Dot14, varOuterIndex:int, varInnerIndex:int):
@@ -337,8 +377,8 @@ class VarFWord:
 
     _packedFormat = ">h2H"
     _packedSize = struct.calcsize(_packedFormat)
-    _fieldNames = ("coordinate", "varOuterIndex", "varInnerIndex")
     _numPackedValues = 3
+    _fieldNames = ("coordinate", "varOuterIndex", "varInnerIndex")
 
 
     def __init__(self, coordinate, varOuterIndex, varInnerIndex):
@@ -359,8 +399,8 @@ class VarUFWord:
 
     _packedFormat = ">3H"
     _packedSize = struct.calcsize(_packedFormat)
-    _fieldNames = ("distance", "varOuterIndex", "varInnerIndex")
     _numPackedValues = 3
+    _fieldNames = ("distance", "varOuterIndex", "varInnerIndex")
 
 
     def __init__(self, distance, varOuterIndex, varInnerIndex):
@@ -385,6 +425,7 @@ class Affine2x2:
         VarFixed._packedFormat
         )
     _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = VarFixed._numPackedValues * 4
     _fieldNames = ("xx", "xy", "yx", "yy")
 
 
@@ -427,8 +468,8 @@ class ColorIndex:
         alpha           VarF2Dot14
     """
     _packedSize = struct.calcsize(_packedFormat)
-    _fieldNames = ("paletteIndex", "alpha")
     _numPackedValues = 1 + VarF2Dot14._numPackedValues
+    _fieldNames = ("paletteIndex", "alpha")
 
 
     def __init__(self, paletteIndex:int, alpha:VarF2Dot14):
@@ -467,8 +508,8 @@ class ColorStop:
         color           ColorIndex
     """
     _packedSize = struct.calcsize(_packedFormat)
-    _fieldNames = ("stopOffset", "color")
     _numPackedValues = VarF2Dot14._numPackedValues + ColorIndex._numPackedValues
+    _fieldNames = ("stopOffset", "color")
 
 
     def __init__(self, stopOffset:VarF2Dot14, color:ColorIndex):
@@ -508,6 +549,7 @@ class ColorLine:
         numStops        uint16  H
     """
     _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2
     _fieldNames = ("extend", "numStops")
     _defaultValues = (0, 0)
 
@@ -566,6 +608,7 @@ class PaintFormat1:
         color           ColorIndex
     """
     _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 1 + ColorIndex._numPackedValues
     _fieldNames = ("format", "color")
     
 
@@ -615,6 +658,7 @@ class PaintFormat2:
         y2              VarFWord
     """
     _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2 + VarFWord._numPackedValues * 6
     _fieldNames = ("format", "colorLineOffset", "x0", "y0", "x1", "y1", "x2", "y2")
 
 
@@ -671,6 +715,7 @@ class PaintFormat3:
         transformOffset Offset32    L
     """
     _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2 + VarFWord._numPackedValues * 4 + VarUFWord._numPackedValues * 2
     _fieldNames = ("format", "colorLineOffset", "x0", "y0", "x1", "y1", "radius0", "radius1", "transformOffset")
 
 
@@ -712,6 +757,26 @@ class PaintFormat3:
         return paint
 
 # End of class PaintFormat3
+
+
+
+class BaseGlyphV1Record:
+
+    _packedFormat = ">HL"
+    """Structure:
+        (big endian)                >
+        glyphID         uint16      H
+        layersV1Offset  Offset32    L
+    """
+    _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2
+    _fieldNames = ("glyphID", "layersV1Offset")
+    _defaults = (0, 0)
+
+    def __init__(self, *args):
+        assert len(args) == 2
+        for f, v in zip(BaseGlyphV1Record._fieldNames, args):
+            setattr(self, f, v)
 
 
 
@@ -798,6 +863,20 @@ class BaseGlyphV1List:
 
 # End of class BaseGlyphV1List
 
+
+
+class LayerV1Record:
+
+    _packedFormat = ">HL"
+    _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2
+    _fieldNames = ("glyphID", "paintOffset")
+    _defaults = (0, 0)
+
+    def __init__(self, *args):
+        assert len(args) == 2
+        for f, v in zip(LayerV1Record._fieldNames, args):
+            setattr(self, f, v)
 
 
 class LayersV1:

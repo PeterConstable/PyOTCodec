@@ -599,6 +599,9 @@ results &= (x[2].field1 == 0x4032 and x[2].field2 == 0x4000)
 testResults["tryReadSubtablesFromBuffer test 3"] = result
 
 
+# tests for tryReadMultiFormatSubtablesFromBuffer
+
+
 
 #-------------------------------------------------------------
 # Tests for OTFile, TTCHeader
@@ -1190,6 +1193,43 @@ testResults["Table_fmtx.tryReadFromFile test 3"] = result
 # tests for table_COLR
 #-------------------------------------------------------------
 
+# test BaseGlyphRecord
+x = BaseGlyphRecord(2, 4, 17)
+result = (type(x) == BaseGlyphRecord)
+for f in BaseGlyphRecord._fieldNames:
+    result &= hasattr(x, f)
+testResults["BaseGlyphRecord constructor test 1"] = result
+result = (x.glyphID == 2 and x.firstLayerIndex == 4 and x.numLayers == 17)
+testResults["BaseGlyphRecord constructor test 2"] = result
+
+# tests for LayerRecord
+x = LayerRecord(2, 17)
+result = (type(x) == LayerRecord)
+for f in LayerRecord._fieldNames:
+    result &= hasattr(x, f)
+testResults["LayerRecord constructor test 1"] = result
+result = (x.glyphID == 2 and x.paletteIndex == 17)
+testResults["LayerRecord constructor test 2"] = result
+
+# tests for BaseGlyphV1Record
+x = BaseGlyphV1Record(2, 17)
+result = (type(x) == BaseGlyphV1Record)
+for f in BaseGlyphV1Record._fieldNames:
+    result &= hasattr(x, f)
+testResults["BaseGlyphV1Record constructor test 1"] = result
+result = (x.glyphID == 2 and x.layersV1Offset == 17)
+testResults["BaseGlyphV1Record constructor test 2"] = result
+
+# tests for LayerV1Record
+x = LayerV1Record(2, 17)
+result = (type(x) == LayerV1Record)
+for f in LayerV1Record._fieldNames:
+    result &= hasattr(x, f)
+testResults["LayerV1Record constructor test 1"] = result
+result = (x.glyphID == 2 and x.paintOffset == 17)
+testResults["LayerV1Record constructor test 2"] = result
+
+
 # test BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray
 recArray = BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray(4)
 result = True
@@ -1211,79 +1251,6 @@ keys = list(record)
 result &= ("glyphID" in keys and "paletteIndex" in keys)
 result &= (record["glyphID"] == 0 and record["paletteIndex"] == 0)
 testResults["LayerRecordsArray.createNew test"] = result
-
-# test COLR constructor
-colr = Table_COLR()
-testResults["Table_COLR constructor test 1"] = (type(colr) == Table_COLR)
-testResults["Table_COLR constructor test 2"] = (colr.tableTag == "COLR")
-testResults["Table_COLR constructor test 3"] = (not hasattr(colr, "version"))
-
-# createNew_COLR: check default values for version 0
-colr = Table_COLR.createNew_COLR(0)
-testResults["Table_COLR.createNew_COLR test 1"] = (type(colr) == Table_COLR)
-result = True
-expected = zip(Table_COLR._colr_0_fields, Table_COLR._colr_0_defaults)
-for k, v in expected:
-    val = getattr(colr, k)
-    if val != v:
-        result = False
-        break
-testResults["Table_COLR.createNew_COLR test 2"] = result
-
-# createNew_COLR: check default values for version 1
-colr = Table_COLR.createNew_COLR(1)
-testResults["Table_COLR.createNew_COLR test 3"] = (type(colr) == Table_COLR)
-result = True
-expected = zip(Table_COLR._colr_1_all_fields, Table_COLR._colr_1_all_defaults)
-for k, v in expected:
-    val = getattr(colr, k)
-    if val != v:
-        result = False
-        break
-testResults["Table_COLR.createNew_COLR test 4"] = result
-
-# test Table_COLR.tryReadFromFile using BungeeColor-Regular_colr_Windows.ttf
-try:
-    colr = bungeeColor_file.fonts[0].tables["COLR"]
-except Exception:
-    result = False
-else:
-    result = True
-testResults["Table_COLR.tryReadFromFile test 1"] = result
-testResults["Table_COLR.tryReadFromFile test 2"] = (type(colr) == Table_COLR)
-bungeeColor_COLR_headerValues = (0, 288, 14, 1742, 576)
-result = True
-expected = zip(Table_COLR._colr_0_fields, bungeeColor_COLR_headerValues)
-for k, v in expected:
-    val = getattr(colr, k)
-    if val != v:
-        result = False
-        break
-testResults["Table_COLR.tryReadFromFile test 3"] = result
-recordsArray = colr.baseGlyphRecords
-testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordsArray) == 288)
-record = recordsArray[3]
-keys = list(record)
-result = (len(record) == 3)
-result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
-testResults["Table_COLR.tryReadFromFile test 5"] = result
-result = (record["glyphID"] == 3 and record["firstLayerIndex"] == 6 and record["numLayers"] == 2)
-testResults["Table_COLR.tryReadFromFile test 6"] = result
-record = recordsArray[174]
-result = (record["glyphID"] == 174 and record["firstLayerIndex"] == 348 and record["numLayers"] == 2)
-testResults["Table_COLR.tryReadFromFile test 7"] = result
-recordsArray = colr.layerRecords
-testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordsArray) == 576)
-record = recordsArray[6]
-keys = list(record)
-result = (len(record) == 2)
-result &= ("glyphID" in keys and "paletteIndex" in keys)
-testResults["Table_COLR.tryReadFromFile test 9"] = result
-result = (record["glyphID"] == 452 and record["paletteIndex"] == 0)
-testResults["Table_COLR.tryReadFromFile test 10"] = result
-record = recordsArray[401]
-result = (record["glyphID"] == 451 and record["paletteIndex"] == 1)
-testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 
 # tests for VarFixed, VarF2Dot14
@@ -1544,6 +1511,84 @@ result = (type(x) == ColorStop and x.stopOffset.value.value == 0.75 and x.color.
 testResults["Table_COLR ColorStop interpretUnpackedValues test 2"] = result
 
 
+# test COLR constructor
+colr = Table_COLR()
+testResults["Table_COLR constructor test 1"] = (type(colr) == Table_COLR)
+testResults["Table_COLR constructor test 2"] = (colr.tableTag == "COLR")
+testResults["Table_COLR constructor test 3"] = (not hasattr(colr, "version"))
+
+# createNew_COLR: check default values for version 0
+colr = Table_COLR.createNew_COLR(0)
+testResults["Table_COLR.createNew_COLR test 1"] = (type(colr) == Table_COLR)
+result = True
+expected = zip(Table_COLR._colr_0_fields, Table_COLR._colr_0_defaults)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.createNew_COLR test 2"] = result
+
+# createNew_COLR: check default values for version 1
+colr = Table_COLR.createNew_COLR(1)
+testResults["Table_COLR.createNew_COLR test 3"] = (type(colr) == Table_COLR)
+result = True
+expected = zip(Table_COLR._colr_1_all_fields, Table_COLR._colr_1_all_defaults)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.createNew_COLR test 4"] = result
+
+# test Table_COLR.tryReadFromFile using BungeeColor-Regular_colr_Windows.ttf
+try:
+    colr = bungeeColor_file.fonts[0].tables["COLR"]
+except Exception:
+    result = False
+else:
+    result = True
+testResults["Table_COLR.tryReadFromFile test 1"] = result
+testResults["Table_COLR.tryReadFromFile test 2"] = (type(colr) == Table_COLR)
+bungeeColor_COLR_headerValues = (0, 288, 14, 1742, 576)
+result = True
+expected = zip(Table_COLR._colr_0_fields, bungeeColor_COLR_headerValues)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.tryReadFromFile test 3"] = result
+recordsArray = colr.baseGlyphRecords
+testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordsArray) == 288)
+record = recordsArray[3]
+keys = list(record)
+result = (len(record) == 3)
+result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
+testResults["Table_COLR.tryReadFromFile test 5"] = result
+result = (record["glyphID"] == 3 and record["firstLayerIndex"] == 6 and record["numLayers"] == 2)
+testResults["Table_COLR.tryReadFromFile test 6"] = result
+record = recordsArray[174]
+result = (record["glyphID"] == 174 and record["firstLayerIndex"] == 348 and record["numLayers"] == 2)
+testResults["Table_COLR.tryReadFromFile test 7"] = result
+recordsArray = colr.layerRecords
+testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordsArray) == 576)
+record = recordsArray[6]
+keys = list(record)
+result = (len(record) == 2)
+result &= ("glyphID" in keys and "paletteIndex" in keys)
+testResults["Table_COLR.tryReadFromFile test 9"] = result
+result = (record["glyphID"] == 452 and record["paletteIndex"] == 0)
+testResults["Table_COLR.tryReadFromFile test 10"] = result
+record = recordsArray[401]
+result = (record["glyphID"] == 451 and record["paletteIndex"] == 1)
+testResults["Table_COLR.tryReadFromFile test 11"] = result
+
+
+
+
+# END OF TEST CASES
+
 """
 Still need tests for
     - ColorLine
@@ -1565,7 +1610,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 404
+assert len(testResults) == 412
 
 print()
 print("{:<55} {:<}".format("Test", "result"))
