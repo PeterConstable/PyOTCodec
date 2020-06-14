@@ -1194,40 +1194,177 @@ testResults["Table_fmtx.tryReadFromFile test 3"] = result
 #-------------------------------------------------------------
 
 # test BaseGlyphRecord
+
+testResults["Table_COLR BaseGlyphRecord constants test 1"] = (BaseGlyphRecord._packedFormat == ">3H")
+testResults["Table_COLR BaseGlyphRecord constants test 2"] = (BaseGlyphRecord._packedSize == 6)
+testResults["Table_COLR BaseGlyphRecord constants test 3"] = (BaseGlyphRecord._numPackedValues == 3)
+testResults["Table_COLR BaseGlyphRecord constants test 4"] = (BaseGlyphRecord._fieldNames == ("glyphID", "firstLayerIndex", "numLayers"))
+testResults["Table_COLR BaseGlyphRecord constants test 5"] = (BaseGlyphRecord._fieldTypes == (int, int, int))
+
+try:
+    x = BaseGlyphRecord(2, 4)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphRecord constructor test 1"] = result
+try:
+    x = BaseGlyphRecord(2.0, 4, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphRecord constructor test 2"] = result
+try:
+    x = BaseGlyphRecord(-2, 4, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphRecord constructor test 3"] = result
+try:
+    x = BaseGlyphRecord(2, -4, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphRecord constructor test 4"] = result
+try:
+    x = BaseGlyphRecord(2, 4, -17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphRecord constructor test 5"] = result
 x = BaseGlyphRecord(2, 4, 17)
 result = (type(x) == BaseGlyphRecord)
 for f in BaseGlyphRecord._fieldNames:
     result &= hasattr(x, f)
-testResults["BaseGlyphRecord constructor test 1"] = result
+testResults["BaseGlyphRecord constructor test 6"] = result
 result = (x.glyphID == 2 and x.firstLayerIndex == 4 and x.numLayers == 17)
-testResults["BaseGlyphRecord constructor test 2"] = result
+testResults["BaseGlyphRecord constructor test 7"] = result
+
 
 # tests for LayerRecord
+
+testResults["Table_COLR LayerRecord constants test 1"] = (LayerRecord._packedFormat == ">2H")
+testResults["Table_COLR LayerRecord constants test 2"] = (LayerRecord._packedSize == 4)
+testResults["Table_COLR LayerRecord constants test 3"] = (LayerRecord._numPackedValues == 2)
+testResults["Table_COLR LayerRecord constants test 4"] = (LayerRecord._fieldNames == ("glyphID", "paletteIndex"))
+testResults["Table_COLR LayerRecord constants test 5"] = (LayerRecord._fieldTypes == (int, int))
+
+try:
+    x = LayerRecord(2)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerRecord constructor test 1"] = result
+try:
+    x = LayerRecord(2.0, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerRecord constructor test 2"] = result
+try:
+    x = LayerRecord(-2, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerRecord constructor test 3"] = result
+try:
+    x = LayerRecord(2, -17)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerRecord constructor test 4"] = result
 x = LayerRecord(2, 17)
 result = (type(x) == LayerRecord)
 for f in LayerRecord._fieldNames:
     result &= hasattr(x, f)
-testResults["LayerRecord constructor test 1"] = result
+testResults["LayerRecord constructor test 5"] = result
 result = (x.glyphID == 2 and x.paletteIndex == 17)
-testResults["LayerRecord constructor test 2"] = result
+testResults["LayerRecord constructor test 6"] = result
+
 
 # tests for BaseGlyphV1Record
+try:
+    x = BaseGlyphV1Record(2)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1Record constructor test 1"] = result
+try:
+    x = BaseGlyphV1Record(2.0, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1Record constructor test 2"] = result
+try:
+    x = BaseGlyphV1Record(-2, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1Record constructor test 3"] = result
+try:
+    x = BaseGlyphV1Record(2, -17)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1Record constructor test 4"] = result
+
 x = BaseGlyphV1Record(2, 17)
 result = (type(x) == BaseGlyphV1Record)
 for f in BaseGlyphV1Record._fieldNames:
     result &= hasattr(x, f)
-testResults["BaseGlyphV1Record constructor test 1"] = result
+testResults["BaseGlyphV1Record constructor test 5"] = result
 result = (x.glyphID == 2 and x.layersV1Offset == 17)
-testResults["BaseGlyphV1Record constructor test 2"] = result
+testResults["BaseGlyphV1Record constructor test 6"] = result
+
 
 # tests for LayerV1Record
+try:
+    x = LayerV1Record(2)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerV1Record constructor test 1"] = result
+try:
+    x = LayerV1Record(2.0, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerV1Record constructor test 2"] = result
+try:
+    x = LayerV1Record(-2, 17)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerV1Record constructor test 3"] = result
+try:
+    x = LayerV1Record(2, -17)
+except:
+    result = True
+else:
+    result = False
+testResults["LayerV1Record constructor test 4"] = result
 x = LayerV1Record(2, 17)
 result = (type(x) == LayerV1Record)
 for f in LayerV1Record._fieldNames:
     result &= hasattr(x, f)
-testResults["LayerV1Record constructor test 1"] = result
+testResults["LayerV1Record constructor test 5"] = result
 result = (x.glyphID == 2 and x.paintOffset == 17)
-testResults["LayerV1Record constructor test 2"] = result
+testResults["LayerV1Record constructor test 6"] = result
 
 
 # test BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray
@@ -1253,146 +1390,254 @@ result &= (record["glyphID"] == 0 and record["paletteIndex"] == 0)
 testResults["LayerRecordsArray.createNew test"] = result
 
 
-# tests for VarFixed, VarF2Dot14
+# tests for VarFixed
 
 testResults["Table_COLR VarFixed constants test 1"] = (VarFixed._packedFormat == (Fixed._packedFormat + "2H"))
 testResults["Table_COLR VarFixed constants test 2"] = (VarFixed._packedSize == 8)
-testResults["Table_COLR VarFixed constants test 3"] = (VarFixed._fieldNames == ("value", "varOuterIndex", "varInnerIndex"))
-testResults["Table_COLR VarFixed constants test 4"] = (VarFixed._numPackedValues == 3)
+testResults["Table_COLR VarFixed constants test 3"] = (VarFixed._numPackedValues == 3)
+testResults["Table_COLR VarFixed constants test 4"] = (VarFixed._fieldNames == ("value", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarFixed constants test 5"] = (VarFixed._fieldTypes == (Fixed, int, int))
+
 try:
-    x = VarFixed(0x1_8000, 4, 7)
+    x = VarFixed(Fixed.createFixedFromUint32(0x48000), 4)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarFixed constructor test 1"] = result
 try:
-    x = VarFixed(Fixed.createFixedFromUint32(0x48000), -17, 23)
+    x = VarFixed(0x1_8000, 4, 7)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarFixed constructor test 2"] = result
 try:
-    x = VarFixed(Fixed.createFixedFromUint32(0x48000), 17, -23)
+    x = VarFixed(Fixed.createFixedFromUint32(0x48000), -17, 23)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarFixed constructor test 3"] = result
+try:
+    x = VarFixed(Fixed.createFixedFromUint32(0x48000), 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFixed constructor test 4"] = result
 x = VarFixed(Fixed.createFixedFromUint32(0x48000),1,3)
-testResults["Table_COLR VarFixed constructor test 4"] = (type(x.value) == Fixed and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
-testResults["Table_COLR VarFixed constructor test 5"] = (x.value == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+testResults["Table_COLR VarFixed constructor test 5"] = (type(x.value) == Fixed and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarFixed constructor test 6"] = (x.value == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+
 result = x.__repr__() == "{'value': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
 testResults["Table_COLR VarFixed __repr__ test"] = result
+
 x = VarFixed.interpretUnpackedValues(0x1_8000, 4, 7)
 testResults["Table_COLR VarFixed interpretUnpackedValues test 1"] = (len(x) == 3 and type(x[0]) == Fixed and type(x[1]) == int and type(x[2]) == int)
 testResults["Table_COLR VarFixed interpretUnpackedValues test 2"] = (x[0]._rawBytes == b'\x00\x01\x80\x00' and x[1] == 4 and x[2] == 7)
 x = VarFixed(*VarFixed.interpretUnpackedValues(0x1_8000, 4, 7))
 testResults["Table_COLR VarFixed interpretUnpackedValues test 3"] = (type(x) == VarFixed and x.value._rawBytes == b'\x00\x01\x80\x00' and x.varOuterIndex == 4 and x.varInnerIndex == 7)
 
+
+# tests for VarF2Dot14
+
 testResults["Table_COLR VarF2Dot14 constants test 1"] = (VarF2Dot14._packedFormat == (F2Dot14._packedFormat + "2H"))
 testResults["Table_COLR VarF2Dot14 constants test 2"] = (VarF2Dot14._packedSize == 6)
-testResults["Table_COLR VarF2Dot14 constants test 3"] = (VarF2Dot14._fieldNames == ("value", "varOuterIndex", "varInnerIndex"))
-testResults["Table_COLR VarF2Dot14 constants test 4"] = (VarF2Dot14._numPackedValues == 3)
+testResults["Table_COLR VarF2Dot14 constants test 3"] = (VarF2Dot14._numPackedValues == 3)
+testResults["Table_COLR VarF2Dot14 constants test 4"] = (VarF2Dot14._fieldNames == ("value", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarF2Dot14 constants test 5"] = (VarF2Dot14._fieldTypes == (F2Dot14, int, int))
+
 try:
-    x = VarF2Dot14(0x6000, 4, 7)
+    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 4)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarF2Dot14 constructor test 1"] = result
 try:
-    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), -17, 23)
+    x = VarF2Dot14(0x6000, 4, 7)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarF2Dot14 constructor test 2"] = result
 try:
-    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 17, -23)
+    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), -17, 23)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarF2Dot14 constructor test 3"] = result
+try:
+    x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarF2Dot14 constructor test 4"] = result
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 1, 3)
-testResults["Table_COLR VarF2Dot14 constructor test 4"] = (type(x.value) == F2Dot14 and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
-testResults["Table_COLR VarF2Dot14 constructor test 5"] = (x.value == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+testResults["Table_COLR VarF2Dot14 constructor test 5"] = (type(x.value) == F2Dot14 and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
+testResults["Table_COLR VarF2Dot14 constructor test 6"] = (x.value == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+
 result = x.__repr__() == "{'value': 1.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
 testResults["Table_COLR VarF2Dot14 __repr__ test"] = result
+
 x = VarF2Dot14.interpretUnpackedValues(0x7000, 4, 7)
 testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 1"] = (len(x) == 3 and type(x[0]) == F2Dot14 and type(x[1]) == int and type(x[2]) == int)
 testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 2"] = (x[0]._rawBytes == b'\x70\x00' and x[1] == 4 and x[2] == 7)
 x = VarF2Dot14(*VarF2Dot14.interpretUnpackedValues(0x7000, 4, 7))
 testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 3"] = (type(x) == VarF2Dot14 and x.value._rawBytes == b'\x70\x00' and x.varOuterIndex == 4 and x.varInnerIndex == 7)
 
-# tests for VarFWord, VarUFWord
+
+# tests for VarFWord
+
 testResults["Table_COLR VarFWord constants test 1"] = (VarFWord._packedFormat == ">h2H")
 testResults["Table_COLR VarFWord constants test 2"] = (VarFWord._packedSize == 6)
-testResults["Table_COLR VarFWord constants test 3"] = (VarFWord._fieldNames == ("coordinate", "varOuterIndex", "varInnerIndex"))
-testResults["Table_COLR VarFWord constants test 4"] = (VarFWord._numPackedValues == 3)
+testResults["Table_COLR VarFWord constants test 3"] = (VarFWord._numPackedValues == 3)
+testResults["Table_COLR VarFWord constants test 4"] = (VarFWord._fieldNames == ("coordinate", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarFWord constants test 5"] = (VarFWord._fieldTypes == (int, int, int))
+
 x = VarFWord(-24, 17, 23)
 testResults["Table_COLR VarFWord constructor test 1"] = (type(x) == VarFWord and type(x.coordinate) == int and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
 testResults["Table_COLR VarFWord constructor test 2"] = (x.coordinate == -24 and x.varOuterIndex == 17 and x.varInnerIndex == 23)
 try:
-    x = VarFWord(24, -17, 23)
+    x = VarFWord(24, -17)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarFWord constructor test 3"] = result
 try:
-    x = VarFWord(24, 17, -23)
+    x = VarFWord(24.0, 17, 23)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarFWord constructor test 4"] = result
+try:
+    x = VarFWord(24, -17, 23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFWord constructor test 5"] = result
+try:
+    x = VarFWord(24, 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarFWord constructor test 6"] = result
+
+x = VarFWord(-24, 17, 23)
 testResults["Table_COLR VarFWord __repr__ test"] = (x.__repr__() == "{'coordinate': -24, 'varOuterIndex': 17, 'varInnerIndex': 23}")
+
+
+# tests for VarUFWord
 
 testResults["Table_COLR VarUFWord constants test 1"] = (VarUFWord._packedFormat == ">3H")
 testResults["Table_COLR VarUFWord constants test 2"] = (VarUFWord._packedSize == 6)
-testResults["Table_COLR VarUFWord constants test 3"] = (VarUFWord._fieldNames == ("distance", "varOuterIndex", "varInnerIndex"))
-testResults["Table_COLR VarUFWord constants test 4"] = (VarUFWord._numPackedValues == 3)
+testResults["Table_COLR VarUFWord constants test 3"] = (VarUFWord._numPackedValues == 3)
+testResults["Table_COLR VarUFWord constants test 4"] = (VarUFWord._fieldNames == ("distance", "varOuterIndex", "varInnerIndex"))
+testResults["Table_COLR VarUFWord constants test 5"] = (VarUFWord._fieldTypes == (int, int, int))
+
 x = VarUFWord(24, 17, 23)
 testResults["Table_COLR VarUFWord constructor test 1"] = (type(x) == VarUFWord and type(x.distance) == int and type(x.varOuterIndex) == int and type(x.varInnerIndex) == int)
 testResults["Table_COLR VarUFWord constructor test 2"] = (x.distance == 24 and x.varOuterIndex == 17 and x.varInnerIndex == 23)
 try:
-    x = VarUFWord(-24, 17, 23)
+    x = VarUFWord(24, 17)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarUFWord constructor test 3"] = result
 try:
-    x = VarUFWord(24, -17, 23)
+    x = VarUFWord(-24, 17, 23)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarUFWord constructor test 4"] = result
 try:
-    x = VarUFWord(24, 17, -23)
+    x = VarUFWord(24, -17, 23)
 except:
     result = True
 else:
     result = False
 testResults["Table_COLR VarUFWord constructor test 5"] = result
+try:
+    x = VarUFWord(24, 17, -23)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR VarUFWord constructor test 6"] = result
+
+x = VarUFWord(24, 17, 23)
 testResults["Table_COLR VarUFWord __repr__ test"] = (x.__repr__() == "{'distance': 24, 'varOuterIndex': 17, 'varInnerIndex': 23}")
+
+
+# tests for Affine2x2
+
+testResults["Table_COLR Affine2x2 constants test 1"] = (Affine2x2._packedFormat == ">L2HL2HL2HL2H")
+testResults["Table_COLR Affine2x2 constants test 2"] = (Affine2x2._packedSize == (VarFixed._packedSize * 4))
+testResults["Table_COLR Affine2x2 constants test 3"] = (Affine2x2._numPackedValues == 12)
+testResults["Table_COLR Affine2x2 constants test 4"] = (Affine2x2._fieldNames == ("xx", "xy", "yx", "yy"))
+testResults["Table_COLR Affine2x2 constants test 5"] = (Affine2x2._fieldTypes == (VarFixed, VarFixed, VarFixed, VarFixed))
+
+x = VarFixed(Fixed.createFixedFromUint32(0x1_8000), 2, 17)
+try:
+    y = Affine2x2(x, x, x)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR Affine2x2 constructor test 1"] = result
+y = Affine2x2(x, x, x, x)
+result = (type(y) == Affine2x2 and type(y.xx) == VarFixed and type(y.xy) == VarFixed and type(y.yx) == VarFixed and type(y.yy) == VarFixed)
+testResults["Table_COLR Affine2x2 constructor test 2"] = result
+result = (y.xx.value._rawBytes == b'\x00\01\x80\x00' and y.xx.varOuterIndex == 2 and y.xx.varInnerIndex == 17)
+testResults["Table_COLR Affine2x2 constructor test 3"] = result
+
+result = (y.__repr__() == "{'xx': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'xy': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yx': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yy': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}}")
+testResults["Table_COLR Affine2x2 __repr__ test"] = result
+
+# tryReadFromFile
+buffer = b'\x00\x01\x80\x00'
+try:
+    x = Affine2x2.tryReadFromFile(buffer)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR Affine2x2 tryReadFromFile test 1"] = result
+buffer = b'\x00\x01\x00\x00\x00\x02\x00\x17\x00\x00\x00\x00\x00\x00\x01\x17\xff\xff\x00\x00\x00\x04\x02\x17\x00\x01\xC0\x00\x00\x02\x00\x42\x00\x00'
+#\x00\x01\x00\x00\x00\x02\x00\x17
+#\x00\x00\x00\x00\x00\x00\x01\x17
+#\xff\xff\x00\x00\x00\x04\x02\x17
+#\x00\x01\xc0\x00\x00\x02\x00\x42
+x = Affine2x2.tryReadFromFile(buffer)
+result = (type(x) == Affine2x2)
+result &=(x.xx.value._rawBytes == b'\x00\x01\x00\x00' and x.xx.varOuterIndex == 2 and x.xx.varInnerIndex == 0x17)
+result &=(x.xy.value._rawBytes == b'\x00\x00\x00\x00' and x.xy.varOuterIndex == 0 and x.xy.varInnerIndex == 0x117)
+result &=(x.yx.value._rawBytes == b'\xff\xff\x00\x00' and x.yx.varOuterIndex == 4 and x.yx.varInnerIndex == 0x217)
+result &=(x.yy.value._rawBytes == b'\x00\x01\xc0\x00' and x.yy.varOuterIndex == 2 and x.yy.varInnerIndex == 0x42)
+testResults["Table_COLR Affine2x2 tryReadFromFile test 2"] = result
 
 
 # tests for ColorIndex
 
 testResults["ColorIndex constants test 1"] = (ColorIndex._packedFormat == ">HH2H")
 testResults["ColorIndex constants test 2"] = (ColorIndex._packedSize == 8)
-testResults["ColorIndex constants test 3"] = (ColorIndex._fieldNames == ("paletteIndex", "alpha"))
-testResults["ColorIndex constants test 4"] = (ColorIndex._numPackedValues == 4)
+testResults["ColorIndex constants test 3"] = (ColorIndex._numPackedValues == 4)
+testResults["ColorIndex constants test 4"] = (ColorIndex._fieldNames == ("paletteIndex", "alpha"))
+testResults["ColorIndex constants test 5"] = (ColorIndex._fieldTypes == (int, VarF2Dot14))
 
 # constructor tests -- arg validations
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
 try:
-    y = ColorIndex(-24, x)
+    y = ColorIndex(24)
 except:
     result = True
 else:
@@ -1405,6 +1650,20 @@ except:
 else:
     result = False
 testResults["Table_COLR ColorIndex constructor test 2"] = result
+try:
+    y = ColorIndex(24.0, x)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex constructor test 3"] = result
+try:
+    y = ColorIndex(-24, x)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorIndex constructor test 4"] = result
 
 # alpha out of range [0, 1]
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), 1, 3)
@@ -1447,19 +1706,27 @@ testResults["Table_COLR ColorIndex interpretUnpackedValues test 2"] = result
 
 testResults["ColorStop constants test 1"] = (ColorStop._packedFormat == ">H2HHH2H")
 testResults["ColorStop constants test 2"] = (ColorStop._packedSize == 14)
-testResults["ColorStop constants test 3"] = (ColorStop._fieldNames == ("stopOffset", "color"))
-testResults["ColorStop constants test 4"] = (ColorStop._numPackedValues == 7)
+testResults["ColorStop constants test 3"] = (ColorStop._numPackedValues == 7)
+testResults["ColorStop constants test 4"] = (ColorStop._fieldNames == ("stopOffset", "color"))
+testResults["ColorStop constants test 5"] = (ColorStop._fieldTypes == (VarF2Dot14, ColorIndex))
 
 # arg validations
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x1000), 1, 3)
 y = ColorIndex(24, x)
+try:
+    z = ColorStop(x)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorStop constructor test 1"] = result
 try:
     z = ColorStop(24, y)
 except:
     result = True
 else:
     result = False
-testResults["Table_COLR ColorStop constructor test 1"] = result
+testResults["Table_COLR ColorStop constructor test 2"] = result
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
 try:
     z = ColorStop(x, 24)
@@ -1467,7 +1734,7 @@ except:
     result = True
 else:
     result = False
-testResults["Table_COLR ColorStop constructor test 2"] = result
+testResults["Table_COLR ColorStop constructor test 3"] = result
 
 # stopOffset out of range [0, 1]
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
@@ -1479,7 +1746,7 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Table_COLR ColorStop constructor test 3"] = result
+testResults["Table_COLR ColorStop constructor test 4"] = result
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 1, 3)
 y = ColorIndex(24, x)
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0xC001), 1, 3)
@@ -1489,16 +1756,17 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Table_COLR ColorStop constructor test 4"] = result
+testResults["Table_COLR ColorStop constructor test 5"] = result
 
 # good args
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x1000), 1, 3)
 y = ColorIndex(24, x)
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), 0, 4)
 z = ColorStop(x, y)
-testResults["Table_COLR ColorStop constructor test 5"] = (type(z.stopOffset) == VarF2Dot14 and type(z.color) == ColorIndex)
-testResults["Table_COLR ColorStop constructor test 6"] = (z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
-testResults["Table_COLR ColorStop constructor test 7"] = (z.color.paletteIndex == 24 and z.color.alpha.value == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+testResults["Table_COLR ColorStop constructor test 6"] = (type(z.stopOffset) == VarF2Dot14 and type(z.color) == ColorIndex)
+testResults["Table_COLR ColorStop constructor test 7"] = (z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
+testResults["Table_COLR ColorStop constructor test 8"] = (z.color.paletteIndex == 24 and z.color.alpha.value == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+
 result = z.__repr__() == "{'stopOffset': {'value': 0.75, 'varOuterIndex': 0, 'varInnerIndex': 4}, 'color': {'paletteIndex': 24, 'alpha': {'value': 0.25, 'varOuterIndex': 1, 'varInnerIndex': 3}}}"
 testResults["Table_COLR ColorStop __repr__ test"] = result
 
@@ -1592,7 +1860,6 @@ testResults["Table_COLR.tryReadFromFile test 11"] = result
 """
 Still need tests for
     - ColorLine
-    - Affine2x2
     - PaintFormat1
     - PaintFormat2
     - PaintFormat3
@@ -1610,7 +1877,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 412
+assert len(testResults) == 463
 
 print()
 print("{:<55} {:<}".format("Test", "result"))

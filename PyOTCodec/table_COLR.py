@@ -187,12 +187,16 @@ class BaseGlyphRecord:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 3
     _fieldNames = ("glyphID", "firstLayerIndex", "numLayers")
+    _fieldTypes = (int, int, int)
     _defaultValues = (0, 0, 0)
 
     def __init__(self, *args):
-        assert len(args) == 3
-        for f, v in zip(BaseGlyphRecord._fieldNames, args):
-            setattr(self, f, v)
+        initializeStruct(self, *args)
+        assert (self.glyphID >= 0 and self.firstLayerIndex >= 0 and self.numLayers >= 0)
+
+
+# End of BaseGlyphRecord
+
 
 
 class BaseGlyphRecordsArray:
@@ -247,12 +251,14 @@ class LayerRecord:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 2
     _fieldNames = ("glyphID", "paletteIndex")
+    _fieldTypes = (int, int)
     _defaultValues = (0, 0)
 
     def __init__(self, *args):
-        assert len(args) == 2
-        for f, v in zip(LayerRecord._fieldNames, args):
-            setattr(self, f, v)
+        initializeStruct(self, *args)
+        assert (self.glyphID >= 0 and self.paletteIndex >= 0)
+
+# End of LayerRecord
 
 
 
@@ -296,6 +302,45 @@ class LayerRecordsArray:
 
 
 
+class BaseGlyphV1Record:
+
+    _packedFormat = ">HL"
+    """Structure:
+        (big endian)                >
+        glyphID         uint16      H
+        layersV1Offset  Offset32    L
+    """
+    _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2
+    _fieldNames = ("glyphID", "layersV1Offset")
+    _fieldTypes = (int, int)
+    _defaults = (0, 0)
+
+    def __init__(self, *args):
+        initializeStruct(self, *args)
+        assert (self.glyphID >= 0 and self.layersV1Offset >= 0)
+
+# End of class BaseGlyphV1Record
+
+
+
+class LayerV1Record:
+
+    _packedFormat = ">HL"
+    _packedSize = struct.calcsize(_packedFormat)
+    _numPackedValues = 2
+    _fieldNames = ("glyphID", "paintOffset")
+    _fieldTypes = (int, int)
+    _defaults = (0, 0)
+
+    def __init__(self, *args):
+        initializeStruct(self, *args)
+        assert (self.glyphID >= 0 and self.paintOffset >= 0)
+
+# End of class LayerV1Record
+
+
+
 class VarFixed:
     """Representation of OpenType Fixed type combined with an ItemVariationStore index."""
 
@@ -309,13 +354,12 @@ class VarFixed:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = Fixed._numPackedValues + 2
     _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
+    _fieldTypes = (Fixed, int, int)
 
 
     def __init__(self, value:Fixed, varOuterIndex:int, varInnerIndex:int):
-        assert type(value) == Fixed and varOuterIndex >= 0 and varInnerIndex >= 0
-        self.value = value
-        self.varOuterIndex = varOuterIndex
-        self.varInnerIndex = varInnerIndex
+        initializeStruct(self, value, varOuterIndex, varInnerIndex)
+        assert self.varOuterIndex >= 0 and self.varInnerIndex >= 0
 
 
     @staticmethod
@@ -348,13 +392,13 @@ class VarF2Dot14:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = F2Dot14._numPackedValues + 2
     _fieldNames = ("value", "varOuterIndex", "varInnerIndex")
+    _fieldTypes = (F2Dot14, int, int)
 
 
     def __init__(self, value:F2Dot14, varOuterIndex:int, varInnerIndex:int):
-        assert type(value) == F2Dot14 and varOuterIndex >= 0 and varInnerIndex >= 0
-        self.value = value
-        self.varOuterIndex = varOuterIndex
-        self.varInnerIndex = varInnerIndex
+        initializeStruct(self, value, varOuterIndex, varInnerIndex)
+        assert self.varOuterIndex >= 0 and self.varInnerIndex >= 0
+
 
     @staticmethod
     def interpretUnpackedValues(*vals):
@@ -379,13 +423,13 @@ class VarFWord:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 3
     _fieldNames = ("coordinate", "varOuterIndex", "varInnerIndex")
+    _fieldTypes = (int, int, int)
 
 
     def __init__(self, coordinate, varOuterIndex, varInnerIndex):
-        assert (varOuterIndex >= 0 and varInnerIndex >= 0)
-        self.coordinate = coordinate
-        self.varOuterIndex = varOuterIndex
-        self.varInnerIndex = varInnerIndex
+        initializeStruct(self, coordinate, varOuterIndex, varInnerIndex)
+        assert self.varOuterIndex >= 0 and self.varInnerIndex >= 0
+
 
     def __repr__(self):
         return {"coordinate": self.coordinate, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
@@ -401,13 +445,13 @@ class VarUFWord:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 3
     _fieldNames = ("distance", "varOuterIndex", "varInnerIndex")
+    _fieldTypes = (int, int, int)
 
 
     def __init__(self, distance, varOuterIndex, varInnerIndex):
-        assert (distance >= 0 and varOuterIndex >= 0 and varInnerIndex >= 0)
-        self.distance = distance
-        self.varOuterIndex = varOuterIndex
-        self.varInnerIndex = varInnerIndex
+        initializeStruct(self, distance, varOuterIndex, varInnerIndex)
+        assert self.distance >= 0 and self.varOuterIndex >= 0 and self.varInnerIndex >= 0
+
 
     def __repr__(self):
         return {"distance": self.distance, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
@@ -427,14 +471,11 @@ class Affine2x2:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = VarFixed._numPackedValues * 4
     _fieldNames = ("xx", "xy", "yx", "yy")
+    _fieldTypes = (VarFixed, VarFixed, VarFixed, VarFixed)
 
 
     def __init__(self, xx:VarFixed, xy:VarFixed, yx:VarFixed, yy:VarFixed):
-        assert (type(xx) == VarFixed and type(xy) == VarFixed and type(yx) == VarFixed and type(yy) == VarFixed)
-        self.xx = xx
-        self.xy = xy
-        self.yx = yx
-        self.yy = yy
+        initializeStruct(self, xx, xy, yx, yy)
 
 
     def tryReadFromFile(fileBytes):
@@ -470,14 +511,14 @@ class ColorIndex:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 1 + VarF2Dot14._numPackedValues
     _fieldNames = ("paletteIndex", "alpha")
+    _fieldTypes = (int, VarF2Dot14)
 
 
     def __init__(self, paletteIndex:int, alpha:VarF2Dot14):
-        assert (type(alpha) == VarF2Dot14 and paletteIndex >= 0)
+        initializeStruct(self, paletteIndex, alpha)
+        assert self.paletteIndex >= 0
         if alpha.value.value < 0 or alpha.value.value > 1:
             raise OTCodecError(f"The alpha argument is invalid: value must be in the range [0, 1].")
-        self.paletteIndex = paletteIndex
-        self.alpha = alpha
 
 
     @staticmethod
@@ -510,14 +551,13 @@ class ColorStop:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = VarF2Dot14._numPackedValues + ColorIndex._numPackedValues
     _fieldNames = ("stopOffset", "color")
+    _fieldTypes = (VarF2Dot14, ColorIndex)
 
 
     def __init__(self, stopOffset:VarF2Dot14, color:ColorIndex):
-        assert (type(stopOffset) == VarF2Dot14 and type(color) == ColorIndex)
+        initializeStruct(self, stopOffset, color)
         if stopOffset.value.value < 0 or stopOffset.value.value > 1:
             raise OTCodecError(f"The stopOffset argument is invalid: value must be in the range [0, 1].")
-        self.stopOffset = stopOffset
-        self.color = color
 
 
     @staticmethod
@@ -551,6 +591,7 @@ class ColorLine:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 2
     _fieldNames = ("extend", "numStops")
+    _fieldTypes = (int, int)
     _defaultValues = (0, 0)
 
 
@@ -610,6 +651,7 @@ class PaintFormat1:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 1 + ColorIndex._numPackedValues
     _fieldNames = ("format", "color")
+    _fieldTypes = (int, ColorIndex)
     
 
     def tryReadFromFile(fileBytes):
@@ -637,6 +679,7 @@ class PaintFormat1:
 
 class PaintFormat2:
     
+    # header format (not including ColorLine subtable)
     _packedFormat = concatFormatStrings(
         ">HL", 
         VarFWord._packedFormat, 
@@ -660,6 +703,7 @@ class PaintFormat2:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 2 + VarFWord._numPackedValues * 6
     _fieldNames = ("format", "colorLineOffset", "x0", "y0", "x1", "y1", "x2", "y2")
+    _fieldTypes = (int, int, VarFWord, VarFWord, VarFWord, VarFWord, VarFWord, VarFWord)
 
 
     def tryReadFromFile(fileBytes):
@@ -717,6 +761,7 @@ class PaintFormat3:
     _packedSize = struct.calcsize(_packedFormat)
     _numPackedValues = 2 + VarFWord._numPackedValues * 4 + VarUFWord._numPackedValues * 2
     _fieldNames = ("format", "colorLineOffset", "x0", "y0", "x1", "y1", "radius0", "radius1", "transformOffset")
+    _fieldTypes = (int, int, VarFWord, VarFWord, VarFWord, VarFWord, VarUFWord, VarUFWord, int)
 
 
     def tryReadFromFile(fileBytes):
@@ -760,32 +805,13 @@ class PaintFormat3:
 
 
 
-class BaseGlyphV1Record:
-
-    _packedFormat = ">HL"
-    """Structure:
-        (big endian)                >
-        glyphID         uint16      H
-        layersV1Offset  Offset32    L
-    """
-    _packedSize = struct.calcsize(_packedFormat)
-    _numPackedValues = 2
-    _fieldNames = ("glyphID", "layersV1Offset")
-    _defaults = (0, 0)
-
-    def __init__(self, *args):
-        assert len(args) == 2
-        for f, v in zip(BaseGlyphV1Record._fieldNames, args):
-            setattr(self, f, v)
-
-
-
 class BaseGlyphV1List:
 
     #format/size for List header (not for contained array, which is variable)
     _packedFormat = ">L"
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("numBaseGlyphV1Records",)
+    _fieldTypes = (int,)
     _defaultValues = (0)
 
     # format/size for records
@@ -865,25 +891,12 @@ class BaseGlyphV1List:
 
 
 
-class LayerV1Record:
-
-    _packedFormat = ">HL"
-    _packedSize = struct.calcsize(_packedFormat)
-    _numPackedValues = 2
-    _fieldNames = ("glyphID", "paintOffset")
-    _defaults = (0, 0)
-
-    def __init__(self, *args):
-        assert len(args) == 2
-        for f, v in zip(LayerV1Record._fieldNames, args):
-            setattr(self, f, v)
-
-
 class LayersV1:
 
     _packedFormat = ">L"
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("numLayerV1Records",)
+    _fieldTypes = (int,)
     _defaultValues = (0)
 
     # format/size for records

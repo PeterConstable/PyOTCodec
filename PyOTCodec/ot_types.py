@@ -398,6 +398,28 @@ def concatFormatStrings(*args):
 
 
 
+def initializeStruct(object, *args):
+    """Initialize objects of arbitrary types.
+
+    The type of the object must be a defined class and
+    have tuple class attributes "_fieldNames" and "_fieldTypes".
+    The number of args, _fieldNames elements and _fieldTypes
+    elements must be the same. The args types must match
+    _fieldTypes.
+    
+    The field members must be single objects. A field
+    member can be a list or other container type: it will
+    be treated like a single object.
+    """
+    recordClass = type(object)
+    assert len(recordClass._fieldNames) == len(recordClass._fieldTypes)
+    assert len(args) == len(recordClass._fieldNames)
+    for t, a in zip(recordClass._fieldTypes, args):
+        assert type(a) == t
+    for f, a in zip(recordClass._fieldNames, args):
+        setattr(object, f, a)
+
+
 def createNewRecordsArray(numRecords, fields, defaults):
     """Return a list of record dicts with default values.
 
