@@ -435,6 +435,62 @@ def createNewRecordsArray(numRecords, fields, defaults):
 # End of createNewRecordsArray
 
 
+def assertIsWellDefinedStruct(structClass):
+    """Asserts a set of requirements used for several classes."""
+
+    assert type(structClass) == type
+    assert hasattr(structClass, "_packedFormat") and type(structClass._packedFormat) == str and len(structClass._packedFormat) > 0
+    assert hasattr(structClass, "_packedSize") and type(structClass._packedSize) == int
+    assert structClass._packedSize == struct.calcsize(structClass._packedFormat)
+    assert hasattr(structClass, "_fieldNames") and type(structClass._fieldNames) == tuple and len(structClass._fieldNames) > 0
+    for f in structClass._fieldNames:
+        assert type(f) == str
+    assert hasattr(structClass, "_fieldTypes") and type(structClass._fieldTypes) == tuple and len(structClass._fieldTypes) > 0
+    for t in structClass._fieldTypes:
+        assert type(t) == type
+    assert len(structClass._fieldNames) == len(structClass._fieldTypes)
+
+
+
+def createNewRecordsArray2(recordClass, numRecords):
+    """Returns a list of objects of the specified type with default values."""
+
+    assertIsWellDefinedStruct(recordClass)
+
+    assert hasattr(recordClass, "_defaults") and (len(recordClass._defaults) == len(recordClass._fieldNames))
+    for v, t in zip(recordClass._defaults, recordClass._fieldTypes):
+        assert type(v) == t
+    
+    return [ recordClass(*recordClass._defaults) for i in range(numRecords)]
+
+
+
+def tryReadRecordsArrayFromBuffer2(buffer, recordClass, numRecords, arrayName):
+    """Takes a byte sequence and returns a list of objects of the indicated type
+    read from the buffer.
+
+    Assumes that the types for the recordClass constructor parameters are all
+    basic types supported by struct.unpack() and that exactly match the
+    recordClass._packedFormat static attribute. (None of the values returned
+    by struct.unpack() require re-interpretation before calling the constructor.
+    """
+
+    assertIsWellDefinedStruct(recordClass)
+
+    arrayLength = numRecords * recordClass._packedSize
+    if len(buffer) < arrayLength:
+        raise OTCodecError(f"The file data is not long enough to read the {arrayName} array.")
+
+    # iter_unpack will return an iterator over the records array, which
+    # can then be used in a comprehension
+    unpack_iter = struct.iter_unpack(recordClass._packedFormat, buffer[:arrayLength])
+
+    return [
+        recordClass(*vals)
+        for vals in itertools.islice(unpack_iter, numRecords)
+        ]
+
+
 
 def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayName):
     """Takes a byte sequence and returns a list of record dicts with

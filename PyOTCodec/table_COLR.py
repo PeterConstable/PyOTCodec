@@ -139,17 +139,21 @@ class Table_COLR:
         # BaseGlyphRecords array
         colr.baseGlyphRecords = []
         if colr.baseGlyphRecordsOffset > 0:
-            colr.baseGlyphRecords = BaseGlyphRecordsArray.tryReadFromFile(
+            colr.baseGlyphRecords = tryReadRecordsArrayFromBuffer2(
                 tableBytes[colr.baseGlyphRecordsOffset: ],
-                colr.numBaseGlyphRecords
+                BaseGlyphRecord,
+                colr.numBaseGlyphRecords,
+                "baseGlyphRecords"
                 )
 
         # LayerRecords array
         colr.layerRecords = []
         if colr.layerRecordsOffset > 0:
-            colr.layerRecords = LayerRecordsArray.tryReadFromFile(
-                tableBytes[colr.layerRecordsOffset:],
-                colr.numLayerRecords
+            colr.layerRecords = tryReadRecordsArrayFromBuffer2(
+                tableBytes[colr.layerRecordsOffset: ],
+                LayerRecord,
+                colr.numLayerRecords,
+                "layerRecords"
                 )
 
         # version 1 data
@@ -199,47 +203,6 @@ class BaseGlyphRecord:
 
 
 
-class BaseGlyphRecordsArray:
-    # The OT spec doesn't define the array as its own struct type, but a class
-    # with static methods is used to contain related functionality.
-
-    _packedFormat = ">3H"
-    _packedSize = struct.calcsize(_packedFormat)
-
-    _fieldNames = ("glyphID", "firstLayerIndex", "numLayers")
-    _defaultValues = (0, 0, 0)
-
-
-    @staticmethod
-    def createNew_BaseGlyphRecordsArray(numRecords):
-        """Returns a list of BaseGlyphRecord dicts with default values."""
-
-        return createNewRecordsArray(
-            numRecords,
-            BaseGlyphRecordsArray._fieldNames, 
-            BaseGlyphRecordsArray._defaultValues
-            )
-
-
-    @staticmethod
-    def tryReadFromFile(fileBytes, numRecords):
-        """Takes a byte sequence that comprises the BaseGlyphRecords array from
-        the font file and returns a list of BaseGlyphRecord dicts read from the 
-        byte sequence."""
-
-        # ot_types.tryReadRecordsArrayFromBuffer will validated array fits within fileBytes
-        return tryReadRecordsArrayFromBuffer(
-            fileBytes, 
-            numRecords,
-            BaseGlyphRecordsArray._packedFormat,
-            BaseGlyphRecordsArray._fieldNames,
-            "BaseGlyphRecords"
-            )
-
-# End of class BaseGlyphRecordsArray
-
-
-
 class LayerRecord:
 
     _packedFormat = ">2H"
@@ -259,46 +222,6 @@ class LayerRecord:
         assert (self.glyphID >= 0 and self.paletteIndex >= 0)
 
 # End of LayerRecord
-
-
-
-class LayerRecordsArray:
-    # The OT spec doesn't define the array as its own struct type, but a class
-    # with static methods is used to contain related functionality.
-
-    _packedFormat = ">2H"
-    _packedSize = struct.calcsize(_packedFormat)
-
-    _fieldNames = ("glyphID", "paletteIndex")
-    _defaultValues = (0, 0)
-
-
-    @staticmethod
-    def createNew_layerRecordsArray(numRecords):
-        """Returns a list of LayerRecord dicts with default values."""
-
-        return createNewRecordsArray(
-            numRecords,
-            LayerRecordsArray._fieldNames, 
-            LayerRecordsArray._defaultValues
-            )
-
-
-    @staticmethod
-    def tryReadFromFile(fileBytes, numRecords):
-        """Takes a byte sequence that begins at the LayerRecords array and
-        returns a list of LayerRecord dicts read from the byte sequence."""
-
-        # ot_types.tryReadRecordsArrayFromFile will validated array fits within fileBytes
-        return tryReadRecordsArrayFromBuffer(
-            fileBytes, 
-            numRecords,
-            LayerRecordsArray._packedFormat,
-            LayerRecordsArray._fieldNames,
-            "LayerRecords"
-            )
-
-# End of class BaseGlyphRecordsArray
 
 
 
@@ -483,12 +406,11 @@ class Affine2x2:
         if len(fileBytes) < Affine2x2._packedSize:
             raise OTCodecError("The data is not long enough to read the Affine2x2 table.")
 
-        vals = struct.unpack(Affine2x2._packedFormat, fileBytes[:Affine2x2._packedSize])
-        tableVals = []
-        for i in range(4):
-            tableVals.append(
-                VarFixed(*VarFixed.interpretUnpackedValues(*vals[i * VarFixed._numPackedValues: (i + 1) * VarFixed._numPackedValues]))
-                )
+        unpack_iter = struct.iter_unpack(VarFixed._packedFormat, fileBytes[:Affine2x2._packedSize])
+        tableVals = [
+            VarFixed(*VarFixed.interpretUnpackedValues(*vals))
+            for vals in itertools.islice(unpack_iter, 4)
+            ]
         return Affine2x2(*tableVals)
 
 
@@ -868,16 +790,15 @@ class BaseGlyphV1List:
         # get records array
         if bgV1List.numBaseGlyphV1Records > 0:
 
-            bgV1List.baseGlyphV1Records = tryReadRecordsArrayFromBuffer(
+            bgV1List.baseGlyphV1Records = tryReadRecordsArrayFromBuffer2(
                 fileBytes[BaseGlyphV1List._packedSize:],
+                BaseGlyphV1Record,
                 bgV1List.numBaseGlyphV1Records,
-                BaseGlyphV1List._baseGlyphV1Record_format,
-                BaseGlyphV1List._baseGlyphV1Record_fields,
-                "BaseGlyphV1Records"
+                "baseGlyphV1Records"
                 )
 
             # get corresponding LayerV1 tables
-            offsets = [d["layersV1Offset"] for d in bgV1List.baseGlyphV1Records]
+            offsets = [rec.layersV1Offset for rec in bgV1List.baseGlyphV1Records]
             bgV1List.layerV1Tables = tryReadSubtablesFromBuffer(
                 fileBytes,
                 LayersV1,
@@ -897,7 +818,7 @@ class LayersV1:
     _packedSize = struct.calcsize(_packedFormat)
     _fieldNames = ("numLayerV1Records",)
     _fieldTypes = (int,)
-    _defaultValues = (0)
+    _defaultValues = (0,)
 
     # format/size for records
     _layerV1Record_format = ">HL"
@@ -944,16 +865,15 @@ class LayersV1:
             setattr(layersV1, k, v)
 
         # get records array
-        layersV1.layerV1Records = tryReadRecordsArrayFromBuffer(
+        layersV1.layerV1Records = tryReadRecordsArrayFromBuffer2(
             fileBytes[LayersV1._packedSize:],
+            LayerV1Record,
             layersV1.numLayerV1Records,
-            LayersV1._layerV1Record_format,
-            LayersV1._layerV1Record_fields,
             "LayerV1Records"
             )
 
         # get corresponding Paint tables
-        offsets = [d["paintOffset"] for d in layersV1.layerV1Records]
+        offsets = [rec.paintOffset for rec in layersV1.layerV1Records]
         paintClasses = {1: PaintFormat1, 2: PaintFormat2, 3: PaintFormat3}
         layersV1.paintTableFormats, layersV1.paintTables = tryReadMultiFormatSubtablesFromBuffer(
             fileBytes,

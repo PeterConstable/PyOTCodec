@@ -506,6 +506,360 @@ result &= (recordsArray[2]["foo"] == 17 and recordsArray[3]["bar"] == 42)
 testResults["createNewRecordsArray test"] = result
 
 
+
+# tests for ot_types.assertIsWellDefinedStruct
+
+# arg not a class
+try:
+    x = assertIsWellDefinedStruct(42)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 1"] = result
+
+# class missing "_packedFormat" string
+class test_Class:
+    _packedSize = 0
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 2"] = result
+
+class test_Class:
+    _packedFormat = 0
+    _packedSize = 0
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 3"] = result
+
+# class missing "_packedSize" int
+class test_Class:
+    _packedFormat = ">H"
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 4"] = result
+
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = "abc"
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 5"] = result
+
+# _packedSize doesn't match _packedFormat
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 4
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 6"] = result
+
+# class missing "_fieldNames" tuple
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 7"] = result
+
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = "test1, test2"
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 8"] = result
+
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", 42)
+    _fieldTypes = (int, float)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 9"] = result
+
+# class missing "_fieldTypes" tuple
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 10"] = result
+
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1",)
+    _fieldTypes = int
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 11"] = result
+
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, 42)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 12"] = result
+
+# count mis-match between _fieldNames, _fieldTypes 
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int,)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = True
+else:
+    result = False
+testResults["assertIsWellDefinedStruct test 13"] = result
+
+# good class defin
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, int)
+try:
+    x = assertIsWellDefinedStruct(test_Class)
+except:
+    result = False
+else:
+    result = True
+testResults["assertIsWellDefinedStruct test 14"] = result
+
+
+# tests for createNewRecordsArray2
+numRecs = 5
+
+# class missing "_defaults"
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+
+    def __init__(self, *args):
+        pass
+
+try:
+    x = createNewRecordsArray2(test_Class, numRecs)
+except:
+    result = True
+else:
+    result = False
+testResults["createNewRecordsArray2 test 1"] = result
+
+# count mis-match between _defaults, _fieldTypes
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+    _defaults = (0, 0, 0)
+
+    def __init__(self, *args):
+        pass
+
+try:
+    x = createNewRecordsArray2(test_Class, numRecs)
+except:
+    result = True
+else:
+    result = False
+testResults["createNewRecordsArray2 test 2"] = result
+
+# mis-match between defaults, types
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+    _defaults = (2.0, 4.0)
+
+    def __init__(self, *args):
+        pass
+
+try:
+    x = createNewRecordsArray2(test_Class, numRecs)
+except:
+    result = True
+else:
+    result = False
+testResults["createNewRecordsArray2 test 3"] = result
+
+# missing __init__()
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+    _defaults = (2, 4.0)
+try:
+    x = createNewRecordsArray2(test_Class, numRecs)
+except:
+    result = True
+else:
+    result = False
+testResults["createNewRecordsArray2 test 4"] = result
+
+# __init__() with wrong arg count
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+    _defaults = (2, 4.0)
+
+    def __init__(self, args):
+        pass
+
+try:
+    x = createNewRecordsArray2(test_Class, numRecs)
+except:
+    result = True
+else:
+    result = False
+testResults["createNewRecordsArray2 test 5"] = result
+
+# good class def'n
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+    _defaults = (2, 4.0)
+
+    def __init__(self, arg1, arg2):
+        pass
+
+try:
+    x = createNewRecordsArray2(test_Class, numRecs)
+except:
+    result = False
+else:
+    result = True
+testResults["createNewRecordsArray2 test 6"] = result
+
+class test_Class:
+    _packedFormat = ">H"
+    _packedSize = 2
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, float)
+    _defaults = (2, 4.0)
+
+    def __init__(self, *args):
+        for f, a in zip(test_Class._fieldNames, args):
+            setattr(self, f, a)
+
+x = createNewRecordsArray2(test_Class, numRecs)
+result = (type(x) == list and len(x) == numRecs)
+testResults["createNewRecordsArray2 test 7"] = result
+result = (type(x[0]) == test_Class and list(vars(x[0])) == list(test_Class._fieldNames))
+testResults["createNewRecordsArray2 test 8"] = result
+result = (type(x[0].test1) == test_Class._fieldTypes[0] and type(x[0].test2) == test_Class._fieldTypes[1])
+result &= (x[0].test1 == 2 and x[0].test2 == 4.0)
+testResults["createNewRecordsArray2 test 9"] = result
+
+
+# tests for tryReadRecordsArrayFromBuffer2
+
+class test_Class:
+    _packedFormat = ">hL"
+    _packedSize = struct.calcsize(_packedFormat)
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, int)
+
+    def __init__(self, *args):
+        self.test1, self.test2 = args
+
+numRecs = 5
+arrayName = "testArray"
+
+# insufficient buffer size
+buffer = b'\x40\x00\x40'
+
+try:
+    x = tryReadRecordsArrayFromBuffer2(buffer, test_Class, numRecs, arrayName)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["tryReadRecordsArrayFromBuffer2 test 1"] = result
+
+# good buffer
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\x00\x72\x00\x00\x40\x00\x40\x72\x00\x00\xfc\x09\x73\x72\x00\x00\x40\x00\x40\x72\x00\x00\x72\x8c\x85\x72\x32\x50'
+x = tryReadRecordsArrayFromBuffer2(buffer, test_Class, numRecs, arrayName)
+result = (type(x) == list and len(x) == numRecs and type(x[0]) == test_Class)
+testResults["tryReadRecordsArrayFromBuffer2 test 2"] = result
+result = (x[0].test1 == 0x4000 and x[0].test2 == 0x4072_0000)
+result &= (x[3].test1 == -1015 and x[3].test2 == 0x7372_0000)
+testResults["tryReadRecordsArrayFromBuffer2 test 3"] = result
+
+
+
 # tests for tryReadRecordsArrayFromBuffer
 
 buffer = b'\x40\x00\x40'
@@ -1367,29 +1721,6 @@ result = (x.glyphID == 2 and x.paintOffset == 17)
 testResults["LayerV1Record constructor test 6"] = result
 
 
-# test BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray
-recArray = BaseGlyphRecordsArray.createNew_BaseGlyphRecordsArray(4)
-result = True
-result &= (len(recArray) == 4)
-record = recArray[0]
-result &= (len(record) == 3)
-keys = list(record)
-result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
-result &= (record["glyphID"] == 0 and record["firstLayerIndex"] == 0 and record["numLayers"] == 0)
-testResults["BaseGlyphRecordsArray.createNew test"] = result
-
-# test LayerRecordsArray.createNew_LayerRecordsArray
-recArray = LayerRecordsArray.createNew_layerRecordsArray(4)
-result = True
-result &= (len(recArray) == 4)
-record = recArray[0]
-result &= (len(record) == 2)
-keys = list(record)
-result &= ("glyphID" in keys and "paletteIndex" in keys)
-result &= (record["glyphID"] == 0 and record["paletteIndex"] == 0)
-testResults["LayerRecordsArray.createNew test"] = result
-
-
 # tests for VarFixed
 
 testResults["Table_COLR VarFixed constants test 1"] = (VarFixed._packedFormat == (Fixed._packedFormat + "2H"))
@@ -1779,6 +2110,7 @@ result = (type(x) == ColorStop and x.stopOffset.value.value == 0.75 and x.color.
 testResults["Table_COLR ColorStop interpretUnpackedValues test 2"] = result
 
 
+
 # test COLR constructor
 colr = Table_COLR()
 testResults["Table_COLR constructor test 1"] = (type(colr) == Table_COLR)
@@ -1827,29 +2159,37 @@ for k, v in expected:
         result = False
         break
 testResults["Table_COLR.tryReadFromFile test 3"] = result
+
 recordsArray = colr.baseGlyphRecords
 testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordsArray) == 288)
+
 record = recordsArray[3]
-keys = list(record)
-result = (len(record) == 3)
-result &= ("glyphID" in keys and "firstLayerIndex" in keys and "numLayers" in keys)
+fields = list(vars(record))
+result = (len(fields) == 3)
+result &= ("glyphID" in fields and "firstLayerIndex" in fields and "numLayers" in fields)
 testResults["Table_COLR.tryReadFromFile test 5"] = result
-result = (record["glyphID"] == 3 and record["firstLayerIndex"] == 6 and record["numLayers"] == 2)
+
+result = (record.glyphID == 3 and record.firstLayerIndex == 6 and record.numLayers == 2)
 testResults["Table_COLR.tryReadFromFile test 6"] = result
+
 record = recordsArray[174]
-result = (record["glyphID"] == 174 and record["firstLayerIndex"] == 348 and record["numLayers"] == 2)
+result = (record.glyphID == 174 and record.firstLayerIndex == 348 and record.numLayers == 2)
 testResults["Table_COLR.tryReadFromFile test 7"] = result
+
 recordsArray = colr.layerRecords
 testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordsArray) == 576)
+
 record = recordsArray[6]
-keys = list(record)
-result = (len(record) == 2)
-result &= ("glyphID" in keys and "paletteIndex" in keys)
+fields = list(vars(record))
+result = (len(fields) == 2)
+result &= ("glyphID" in fields and "paletteIndex" in fields)
 testResults["Table_COLR.tryReadFromFile test 9"] = result
-result = (record["glyphID"] == 452 and record["paletteIndex"] == 0)
+
+result = (record.glyphID == 452 and record.paletteIndex == 0)
 testResults["Table_COLR.tryReadFromFile test 10"] = result
+
 record = recordsArray[401]
-result = (record["glyphID"] == 451 and record["paletteIndex"] == 1)
+result = (record.glyphID == 451 and record.paletteIndex == 1)
 testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 
@@ -1877,7 +2217,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 463
+assert len(testResults) == 487
 
 print()
 print("{:<55} {:<}".format("Test", "result"))
