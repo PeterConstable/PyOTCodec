@@ -665,7 +665,7 @@ else:
     result = False
 testResults["assertIsWellDefinedStruct test 13"] = result
 
-# good class defin
+# good class definition
 class test_Class:
     _packedFormat = ">H"
     _packedSize = 2
@@ -851,7 +851,16 @@ testResults["tryReadRecordsArrayFromBuffer test 3"] = result
 
 # tests for tryReadComplexRecordsArrayFromBuffer
 
-class test_tryReadCPRA:
+class test_Class:
+    _packedFormat = ">h3H"
+    _packedSize = struct.calcsize(_packedFormat)
+    _fieldNames = ("test1", "test2")
+    _fieldTypes = (int, Fixed)
+
+    def __init__(self, *args):
+        for f, a in zip(test_Class._fieldNames, args):
+            setattr(self, f, a)
+
     @staticmethod
     def interpretUnpackedValues(*args):
         # will receive ">hHHH"; reinterpret as (int32, Fixed)
@@ -859,26 +868,33 @@ class test_tryReadCPRA:
         y = Fixed.createFixedFromUint32((args[2] << 16) + args[3])
         return x, y
 
-buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56'
 numRecs = 3
-fmt = ">hHHH"
-fields = ("test1", "test2")
-name = "Test"
+arrayName = "testArray"
+
+# buffer too short
+buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56'
 try:
-    x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, test_tryReadCPRA, name)
+    x = tryReadComplexRecordsArrayFromBuffer(buffer, test_Class, numRecs, arrayName)
 except OTCodecError:
     result = True
 else:
     result = False
 testResults["tryReadComplexRecordsArrayFromBuffer test 1"] = result
+
+# buffer good
 buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\xC0\x00\x40\x32\xC0\x00\x40\x32\x40\x00\x40\x72\x00\x00\x80\x56\x7f\xff\x7f\xff\x7f\xff\x7f\xff'
-x = tryReadComplexRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, test_tryReadCPRA, name)
-result = (type(x) == list and len(x) == 3 and type(x[0]) == dict and len(x[0]) == len(fields) and list(x[0]) == list(fields))
+x = tryReadComplexRecordsArrayFromBuffer(buffer, test_Class, numRecs, arrayName)
+result = (type(x) == list and len(x) == 3 and type(x[0]) == test_Class)
 testResults["tryReadComplexRecordsArrayFromBuffer test 2"] = result
-result = (x[0]['test1'] == 0x40004072 and type(x[0]['test2']) == Fixed and x[0]['test2']._rawBytes == b'\x00\x00\x80\x56')
+
+fields = list(vars(x[0]))
+result = (len(fields) == len(test_Class._fieldNames) and fields == list(test_Class._fieldNames))
 testResults["tryReadComplexRecordsArrayFromBuffer test 3"] = result
-result = (x[1]['test1'] == -1073725390 and x[1]['test2']._rawBytes == b'\xC0\x00\x40\x32')
+
+result = (x[0].test1 == 0x40004072 and type(x[0].test2) == Fixed and x[0].test2._rawBytes == b'\x00\x00\x80\x56')
 testResults["tryReadComplexRecordsArrayFromBuffer test 4"] = result
+result = (x[1].test1 == -1073725390 and x[1].test2._rawBytes == b'\xC0\x00\x40\x32')
+testResults["tryReadComplexRecordsArrayFromBuffer test 5"] = result
 
 
 # tests for tryReadSubtablesFromBuffer
@@ -2284,7 +2300,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 504
+assert len(testResults) == 505
 
 print()
 print("{:<55} {:<}".format("Test", "result"))

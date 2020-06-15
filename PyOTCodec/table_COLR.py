@@ -550,10 +550,8 @@ class ColorLine:
         if colorLine.numStops > 0:
             colorLine.colorStops = tryReadComplexRecordsArrayFromBuffer(
                 fileBytes[ColorLine._packedSize:],
-                colorLine.numStops,
-                ColorStop._packedFormat,
-                ColorStop._fieldNames,
                 ColorStop,
+                colorLine.numStops,
                 "colorStops"
                 )
 

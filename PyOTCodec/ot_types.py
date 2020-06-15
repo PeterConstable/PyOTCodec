@@ -418,6 +418,8 @@ def initializeStruct(object, *args):
         assert type(a) == t
     for f, a in zip(recordClass._fieldNames, args):
         setattr(object, f, a)
+# End of initializeStruct
+
 
 
 def assertIsWellDefinedStruct(structClass):
@@ -434,6 +436,7 @@ def assertIsWellDefinedStruct(structClass):
     for t in structClass._fieldTypes:
         assert type(t) == type
     assert len(structClass._fieldNames) == len(structClass._fieldTypes)
+# End of assertIsWellDefinedStruct
 
 
 
@@ -447,6 +450,7 @@ def createNewRecordsArray(recordClass, numRecords):
         assert type(v) == t
     
     return [ recordClass(*recordClass._defaults) for i in range(numRecords)]
+# End of createNewRecordsArray
 
 
 
@@ -474,15 +478,16 @@ def tryReadRecordsArrayFromBuffer(buffer, recordClass, numRecords, arrayName):
         recordClass(*vals)
         for vals in itertools.islice(unpack_iter, numRecords)
         ]
+# End of tryReadRecordsArrayFromBuffer
 
 
 
 def tryReadComplexRecordsArrayFromBuffer(
-        buffer, numRecords, format, fieldNames, recordClass, arrayName
+        buffer, recordClass, numRecords, arrayName
         ):
-    """Takes a byte sequence and returns a list of record dicts with
-    the specified format read from the byte sequence.
-
+    """Takes a byte sequence and returns a list of record objects of the
+    specified type read from the byte sequence.
+    
     This is used for records that contain defined structures, not
     just basic binary types supported in struct.unpack(). For records
     comprised only of basic types, use tryReadRecordsArrayFromBuffer.
@@ -490,36 +495,26 @@ def tryReadComplexRecordsArrayFromBuffer(
     The buffer argument is assumed start at the first record and end at the
     end of the array.
 
-    The format parameter is a string of the type needed for struct.unpack,
-    indicating the raw binary format in the file.
-
-    The fieldNames parameter is a sequence of names of the record fields,
-    in order. Some or all of these fields can be defined, complex data
-    types.
-
     The record class is assumed to have a static interpretUnpackedValues()
     method that takes the raw values returned by struct.unpack() and
     returns a tuple of the higher-level values for the given record type.
     The number of elements in the tuple must be the same as the number
     of field names.
-
-    Each dict represents a record from the file and has the names in
-    fieldNames as keys.
     """
 
-    recordLength = struct.calcsize(format)
-    if len(buffer) < numRecords * recordLength:
+    assertIsWellDefinedStruct(recordClass)
+
+    arrayLength = numRecords * recordClass._packedSize
+    if len(buffer) < arrayLength:
         raise OTCodecError(f"The file data is not long enough to read the {arrayName} array.")
 
     # iter_unpack will return an iterator over the records array
-    unpack_iter = struct.iter_unpack(format, buffer[:numRecords * recordLength])
+    unpack_iter = struct.iter_unpack(recordClass._packedFormat, buffer[:arrayLength])
 
-    # using a dict comprehension nested within a list comprehension
     return [
-        {k: v for k, v in zip(fieldNames, recordClass.interpretUnpackedValues(*vals))}
+        recordClass(*recordClass.interpretUnpackedValues(*vals))
         for vals in itertools.islice(unpack_iter, numRecords)
         ]
-
 # End of tryReadComplexRecordsArrayFromBuffer
 
 
