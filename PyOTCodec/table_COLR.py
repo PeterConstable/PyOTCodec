@@ -139,7 +139,7 @@ class Table_COLR:
         # BaseGlyphRecords array
         colr.baseGlyphRecords = []
         if colr.baseGlyphRecordsOffset > 0:
-            colr.baseGlyphRecords = tryReadRecordsArrayFromBuffer2(
+            colr.baseGlyphRecords = tryReadRecordsArrayFromBuffer(
                 tableBytes[colr.baseGlyphRecordsOffset: ],
                 BaseGlyphRecord,
                 colr.numBaseGlyphRecords,
@@ -149,7 +149,7 @@ class Table_COLR:
         # LayerRecords array
         colr.layerRecords = []
         if colr.layerRecordsOffset > 0:
-            colr.layerRecords = tryReadRecordsArrayFromBuffer2(
+            colr.layerRecords = tryReadRecordsArrayFromBuffer(
                 tableBytes[colr.layerRecordsOffset: ],
                 LayerRecord,
                 colr.numLayerRecords,
@@ -755,9 +755,8 @@ class BaseGlyphV1List:
         bgV1List.baseGlyphV1Records = []
         if numRecords > 0:
             bgV1List.baseGlyphV1Records = createNewRecordsArray(
-                numRecords,
-                BaseGlyphV1List._baseGlyphV1Record_fields,
-                BaseGlyphV1List._baseGlyphV1Record_defaults
+                BaseGlyphV1Record,
+                numRecords
                 )
 
         return bgV1List
@@ -790,7 +789,7 @@ class BaseGlyphV1List:
         # get records array
         if bgV1List.numBaseGlyphV1Records > 0:
 
-            bgV1List.baseGlyphV1Records = tryReadRecordsArrayFromBuffer2(
+            bgV1List.baseGlyphV1Records = tryReadRecordsArrayFromBuffer(
                 fileBytes[BaseGlyphV1List._packedSize:],
                 BaseGlyphV1Record,
                 bgV1List.numBaseGlyphV1Records,
@@ -835,13 +834,12 @@ class LayersV1:
         corresponding array of LayersV1 subtables is created."""
 
         layersV1 = LayersV1()
-        layersV1.numRecords = numRecords
+        layersV1.numLayerV1Records = numRecords
         layersV1.layerV1Records = []
         if numRecords > 0:
             layersV1.layerV1Records = createNewRecordsArray(
-                numRecords,
-                LayersV1._fieldNames,
-                LayersV1._defaultValues
+                LayerV1Record,
+                numRecords
                 )
 
         return layersV1
@@ -865,7 +863,7 @@ class LayersV1:
             setattr(layersV1, k, v)
 
         # get records array
-        layersV1.layerV1Records = tryReadRecordsArrayFromBuffer2(
+        layersV1.layerV1Records = tryReadRecordsArrayFromBuffer(
             fileBytes[LayersV1._packedSize:],
             LayerV1Record,
             layersV1.numLayerV1Records,

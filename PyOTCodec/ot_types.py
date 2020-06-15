@@ -420,21 +420,6 @@ def initializeStruct(object, *args):
         setattr(object, f, a)
 
 
-def createNewRecordsArray(numRecords, fields, defaults):
-    """Return a list of record dicts with default values.
-
-    Records are represented as dicts, with the field names as keys.
-    The array is a list of these dicts.
-    """
-
-    # Using a dict comprehension nested inside a list comprehension
-
-    return [ {k: v for k,v in zip(fields, defaults)} 
-          for i in range(numRecords)
-        ]
-# End of createNewRecordsArray
-
-
 def assertIsWellDefinedStruct(structClass):
     """Asserts a set of requirements used for several classes."""
 
@@ -452,7 +437,7 @@ def assertIsWellDefinedStruct(structClass):
 
 
 
-def createNewRecordsArray2(recordClass, numRecords):
+def createNewRecordsArray(recordClass, numRecords):
     """Returns a list of objects of the specified type with default values."""
 
     assertIsWellDefinedStruct(recordClass)
@@ -465,7 +450,7 @@ def createNewRecordsArray2(recordClass, numRecords):
 
 
 
-def tryReadRecordsArrayFromBuffer2(buffer, recordClass, numRecords, arrayName):
+def tryReadRecordsArrayFromBuffer(buffer, recordClass, numRecords, arrayName):
     """Takes a byte sequence and returns a list of objects of the indicated type
     read from the buffer.
 
@@ -489,40 +474,6 @@ def tryReadRecordsArrayFromBuffer2(buffer, recordClass, numRecords, arrayName):
         recordClass(*vals)
         for vals in itertools.islice(unpack_iter, numRecords)
         ]
-
-
-
-def tryReadRecordsArrayFromBuffer(buffer, numRecords, format, fieldNames, arrayName):
-    """Takes a byte sequence and returns a list of record dicts with
-    the specified format read from the byte sequence.
-
-    The buffer argument is assumed start at the first record and end at the
-    end of the array.
-
-    The format parameter is a string of the type needed for struct.unpack,
-    indicating the binary format in the file. The fieldNames parameter is a
-    sequence of names of the record fields, in order. The number of names
-    is assumed to match the number of values in the format.
-
-    Each dict represents a record from the file and has the names in
-    fieldNames as keys.
-    """
-
-    recordLength = struct.calcsize(format)
-    if len(buffer) < numRecords * recordLength:
-        raise OTCodecError(f"The file data is not long enough to read the {arrayName} array.")
-
-    # iter_unpack will return an iterator over the records array, which
-    # can then be used in a comprehension
-    unpack_iter = struct.iter_unpack(format, buffer[:numRecords * recordLength])
-
-    # using a dict comprehension nested within a list comprehension
-    return [ 
-        {k: v for k,v in zip(fieldNames, vals)}
-        for vals in itertools.islice(unpack_iter, numRecords)
-    ]
-
-# End of tryReadRecordsArrayFromBuffer
 
 
 

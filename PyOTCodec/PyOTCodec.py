@@ -496,17 +496,6 @@ testResults["concatFormatStrings test 12"] = (concatFormatStrings(">abc", ">def"
 testResults["concatFormatStrings test 13"] = (concatFormatStrings(">abc", ">def", ">ghi") == ">abcdefghi")
 
 
-# tests for ot_types.createNewRecordsArray
-
-recordsArray = createNewRecordsArray(4, ("foo", "bar"), (17, 42))
-result = True
-result &= (len(recordsArray) == 4)
-result &= ("foo" in list(recordsArray[0]) and "bar" in list(recordsArray[1]))
-result &= (recordsArray[2]["foo"] == 17 and recordsArray[3]["bar"] == 42)
-testResults["createNewRecordsArray test"] = result
-
-
-
 # tests for ot_types.assertIsWellDefinedStruct
 
 # arg not a class
@@ -691,7 +680,7 @@ else:
 testResults["assertIsWellDefinedStruct test 14"] = result
 
 
-# tests for createNewRecordsArray2
+# tests for createNewRecordsArray
 numRecs = 5
 
 # class missing "_defaults"
@@ -705,12 +694,12 @@ class test_Class:
         pass
 
 try:
-    x = createNewRecordsArray2(test_Class, numRecs)
+    x = createNewRecordsArray(test_Class, numRecs)
 except:
     result = True
 else:
     result = False
-testResults["createNewRecordsArray2 test 1"] = result
+testResults["createNewRecordsArray test 1"] = result
 
 # count mis-match between _defaults, _fieldTypes
 class test_Class:
@@ -724,12 +713,12 @@ class test_Class:
         pass
 
 try:
-    x = createNewRecordsArray2(test_Class, numRecs)
+    x = createNewRecordsArray(test_Class, numRecs)
 except:
     result = True
 else:
     result = False
-testResults["createNewRecordsArray2 test 2"] = result
+testResults["createNewRecordsArray test 2"] = result
 
 # mis-match between defaults, types
 class test_Class:
@@ -743,12 +732,12 @@ class test_Class:
         pass
 
 try:
-    x = createNewRecordsArray2(test_Class, numRecs)
+    x = createNewRecordsArray(test_Class, numRecs)
 except:
     result = True
 else:
     result = False
-testResults["createNewRecordsArray2 test 3"] = result
+testResults["createNewRecordsArray test 3"] = result
 
 # missing __init__()
 class test_Class:
@@ -758,12 +747,12 @@ class test_Class:
     _fieldTypes = (int, float)
     _defaults = (2, 4.0)
 try:
-    x = createNewRecordsArray2(test_Class, numRecs)
+    x = createNewRecordsArray(test_Class, numRecs)
 except:
     result = True
 else:
     result = False
-testResults["createNewRecordsArray2 test 4"] = result
+testResults["createNewRecordsArray test 4"] = result
 
 # __init__() with wrong arg count
 class test_Class:
@@ -777,12 +766,12 @@ class test_Class:
         pass
 
 try:
-    x = createNewRecordsArray2(test_Class, numRecs)
+    x = createNewRecordsArray(test_Class, numRecs)
 except:
     result = True
 else:
     result = False
-testResults["createNewRecordsArray2 test 5"] = result
+testResults["createNewRecordsArray test 5"] = result
 
 # good class def'n
 class test_Class:
@@ -796,12 +785,12 @@ class test_Class:
         pass
 
 try:
-    x = createNewRecordsArray2(test_Class, numRecs)
+    x = createNewRecordsArray(test_Class, numRecs)
 except:
     result = False
 else:
     result = True
-testResults["createNewRecordsArray2 test 6"] = result
+testResults["createNewRecordsArray test 6"] = result
 
 class test_Class:
     _packedFormat = ">H"
@@ -814,17 +803,17 @@ class test_Class:
         for f, a in zip(test_Class._fieldNames, args):
             setattr(self, f, a)
 
-x = createNewRecordsArray2(test_Class, numRecs)
+x = createNewRecordsArray(test_Class, numRecs)
 result = (type(x) == list and len(x) == numRecs)
-testResults["createNewRecordsArray2 test 7"] = result
+testResults["createNewRecordsArray test 7"] = result
 result = (type(x[0]) == test_Class and list(vars(x[0])) == list(test_Class._fieldNames))
-testResults["createNewRecordsArray2 test 8"] = result
+testResults["createNewRecordsArray test 8"] = result
 result = (type(x[0].test1) == test_Class._fieldTypes[0] and type(x[0].test2) == test_Class._fieldTypes[1])
 result &= (x[0].test1 == 2 and x[0].test2 == 4.0)
-testResults["createNewRecordsArray2 test 9"] = result
+testResults["createNewRecordsArray test 9"] = result
 
 
-# tests for tryReadRecordsArrayFromBuffer2
+# tests for tryReadRecordsArrayFromBuffer
 
 class test_Class:
     _packedFormat = ">hL"
@@ -842,44 +831,22 @@ arrayName = "testArray"
 buffer = b'\x40\x00\x40'
 
 try:
-    x = tryReadRecordsArrayFromBuffer2(buffer, test_Class, numRecs, arrayName)
-except OTCodecError:
-    result = True
-else:
-    result = False
-testResults["tryReadRecordsArrayFromBuffer2 test 1"] = result
-
-# good buffer
-buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\x00\x72\x00\x00\x40\x00\x40\x72\x00\x00\xfc\x09\x73\x72\x00\x00\x40\x00\x40\x72\x00\x00\x72\x8c\x85\x72\x32\x50'
-x = tryReadRecordsArrayFromBuffer2(buffer, test_Class, numRecs, arrayName)
-result = (type(x) == list and len(x) == numRecs and type(x[0]) == test_Class)
-testResults["tryReadRecordsArrayFromBuffer2 test 2"] = result
-result = (x[0].test1 == 0x4000 and x[0].test2 == 0x4072_0000)
-result &= (x[3].test1 == -1015 and x[3].test2 == 0x7372_0000)
-testResults["tryReadRecordsArrayFromBuffer2 test 3"] = result
-
-
-
-# tests for tryReadRecordsArrayFromBuffer
-
-buffer = b'\x40\x00\x40'
-numRecs = 5
-fmt = ">hL"
-fields = ("test1", "test2")
-name = "Test"
-try:
-    x = tryReadRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, name)
+    x = tryReadRecordsArrayFromBuffer(buffer, test_Class, numRecs, arrayName)
 except OTCodecError:
     result = True
 else:
     result = False
 testResults["tryReadRecordsArrayFromBuffer test 1"] = result
+
+# good buffer
 buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\x00\x72\x00\x00\x40\x00\x40\x72\x00\x00\xfc\x09\x73\x72\x00\x00\x40\x00\x40\x72\x00\x00\x72\x8c\x85\x72\x32\x50'
-x = tryReadRecordsArrayFromBuffer(buffer, numRecs, fmt, fields, name)
-result = (type(x) == list and len(x) == 5 and type(x[0]) == dict and list(x[0]) == ["test1", "test2"])
+x = tryReadRecordsArrayFromBuffer(buffer, test_Class, numRecs, arrayName)
+result = (type(x) == list and len(x) == numRecs and type(x[0]) == test_Class)
 testResults["tryReadRecordsArrayFromBuffer test 2"] = result
-result = (x[0]["test1"] == 0x4000 and x[0]["test2"] == 0x4072_0000 and x[3]["test1"] == -1015 and x[3]["test2"] == 0x7372_0000)
+result = (x[0].test1 == 0x4000 and x[0].test2 == 0x4072_0000)
+result &= (x[3].test1 == -1015 and x[3].test2 == 0x7372_0000)
 testResults["tryReadRecordsArrayFromBuffer test 3"] = result
+
 
 
 # tests for tryReadComplexRecordsArrayFromBuffer
@@ -1549,6 +1516,14 @@ testResults["Table_fmtx.tryReadFromFile test 3"] = result
 
 # test BaseGlyphRecord
 
+try:
+    assertIsWellDefinedStruct(BaseGlyphRecord)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR BaseGlyphRecord definition test"] = result
+
 testResults["Table_COLR BaseGlyphRecord constants test 1"] = (BaseGlyphRecord._packedFormat == ">3H")
 testResults["Table_COLR BaseGlyphRecord constants test 2"] = (BaseGlyphRecord._packedSize == 6)
 testResults["Table_COLR BaseGlyphRecord constants test 3"] = (BaseGlyphRecord._numPackedValues == 3)
@@ -1561,45 +1536,53 @@ except:
     result = True
 else:
     result = False
-testResults["BaseGlyphRecord constructor test 1"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 1"] = result
 try:
     x = BaseGlyphRecord(2.0, 4, 17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphRecord constructor test 2"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 2"] = result
 try:
     x = BaseGlyphRecord(-2, 4, 17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphRecord constructor test 3"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 3"] = result
 try:
     x = BaseGlyphRecord(2, -4, 17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphRecord constructor test 4"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 4"] = result
 try:
     x = BaseGlyphRecord(2, 4, -17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphRecord constructor test 5"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 5"] = result
 x = BaseGlyphRecord(2, 4, 17)
 result = (type(x) == BaseGlyphRecord)
 for f in BaseGlyphRecord._fieldNames:
     result &= hasattr(x, f)
-testResults["BaseGlyphRecord constructor test 6"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 6"] = result
 result = (x.glyphID == 2 and x.firstLayerIndex == 4 and x.numLayers == 17)
-testResults["BaseGlyphRecord constructor test 7"] = result
+testResults["Table_COLR BaseGlyphRecord constructor test 7"] = result
 
 
 # tests for LayerRecord
+
+try:
+    assertIsWellDefinedStruct(LayerRecord)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR LayerRecord definition test"] = result
 
 testResults["Table_COLR LayerRecord constants test 1"] = (LayerRecord._packedFormat == ">2H")
 testResults["Table_COLR LayerRecord constants test 2"] = (LayerRecord._packedSize == 4)
@@ -1613,115 +1596,151 @@ except:
     result = True
 else:
     result = False
-testResults["LayerRecord constructor test 1"] = result
+testResults["Table_COLR LayerRecord constructor test 1"] = result
 try:
     x = LayerRecord(2.0, 17)
 except:
     result = True
 else:
     result = False
-testResults["LayerRecord constructor test 2"] = result
+testResults["Table_COLR LayerRecord constructor test 2"] = result
 try:
     x = LayerRecord(-2, 17)
 except:
     result = True
 else:
     result = False
-testResults["LayerRecord constructor test 3"] = result
+testResults["Table_COLR LayerRecord constructor test 3"] = result
 try:
     x = LayerRecord(2, -17)
 except:
     result = True
 else:
     result = False
-testResults["LayerRecord constructor test 4"] = result
+testResults["Table_COLR LayerRecord constructor test 4"] = result
 x = LayerRecord(2, 17)
 result = (type(x) == LayerRecord)
 for f in LayerRecord._fieldNames:
     result &= hasattr(x, f)
-testResults["LayerRecord constructor test 5"] = result
+testResults["Table_COLR LayerRecord constructor test 5"] = result
 result = (x.glyphID == 2 and x.paletteIndex == 17)
-testResults["LayerRecord constructor test 6"] = result
+testResults["Table_COLR LayerRecord constructor test 6"] = result
 
 
 # tests for BaseGlyphV1Record
+try:
+    assertIsWellDefinedStruct(BaseGlyphV1Record)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR BaseGlyphV1Record definition test"] = result
+
+testResults["Table_COLR BaseGlyphV1Record constants test 1"] = (BaseGlyphV1Record._packedFormat == ">HL")
+testResults["Table_COLR BaseGlyphV1Record constants test 2"] = (BaseGlyphV1Record._packedSize == 6)
+testResults["Table_COLR BaseGlyphV1Record constants test 3"] = (BaseGlyphV1Record._numPackedValues == 2)
+testResults["Table_COLR BaseGlyphV1Record constants test 4"] = (BaseGlyphV1Record._fieldNames == ("glyphID", "layersV1Offset"))
+testResults["Table_COLR BaseGlyphV1Record constants test 5"] = (BaseGlyphV1Record._fieldTypes == (int, int))
+
 try:
     x = BaseGlyphV1Record(2)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphV1Record constructor test 1"] = result
+testResults["Table_COLR BaseGlyphV1Record constructor test 1"] = result
 try:
     x = BaseGlyphV1Record(2.0, 17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphV1Record constructor test 2"] = result
+testResults["Table_COLR BaseGlyphV1Record constructor test 2"] = result
 try:
     x = BaseGlyphV1Record(-2, 17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphV1Record constructor test 3"] = result
+testResults["Table_COLR BaseGlyphV1Record constructor test 3"] = result
 try:
     x = BaseGlyphV1Record(2, -17)
 except:
     result = True
 else:
     result = False
-testResults["BaseGlyphV1Record constructor test 4"] = result
+testResults["Table_COLR BaseGlyphV1Record constructor test 4"] = result
 
 x = BaseGlyphV1Record(2, 17)
 result = (type(x) == BaseGlyphV1Record)
 for f in BaseGlyphV1Record._fieldNames:
     result &= hasattr(x, f)
-testResults["BaseGlyphV1Record constructor test 5"] = result
+testResults["Table_COLR BaseGlyphV1Record constructor test 5"] = result
 result = (x.glyphID == 2 and x.layersV1Offset == 17)
-testResults["BaseGlyphV1Record constructor test 6"] = result
+testResults["Table_COLR BaseGlyphV1Record constructor test 6"] = result
 
 
 # tests for LayerV1Record
+try:
+    assertIsWellDefinedStruct(LayerV1Record)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR LayerV1Record definition test"] = result
+
+testResults["Table_COLR LayerV1Record constants test 1"] = (LayerV1Record._packedFormat == ">HL")
+testResults["Table_COLR LayerV1Record constants test 2"] = (LayerV1Record._packedSize == 6)
+testResults["Table_COLR LayerV1Record constants test 3"] = (LayerV1Record._numPackedValues == 2)
+testResults["Table_COLR LayerV1Record constants test 4"] = (LayerV1Record._fieldNames == ("glyphID", "paintOffset"))
+testResults["Table_COLR LayerV1Record constants test 5"] = (LayerV1Record._fieldTypes == (int, int))
+
 try:
     x = LayerV1Record(2)
 except:
     result = True
 else:
     result = False
-testResults["LayerV1Record constructor test 1"] = result
+testResults["Table_COLR LayerV1Record constructor test 1"] = result
 try:
     x = LayerV1Record(2.0, 17)
 except:
     result = True
 else:
     result = False
-testResults["LayerV1Record constructor test 2"] = result
+testResults["Table_COLR LayerV1Record constructor test 2"] = result
 try:
     x = LayerV1Record(-2, 17)
 except:
     result = True
 else:
     result = False
-testResults["LayerV1Record constructor test 3"] = result
+testResults["Table_COLR LayerV1Record constructor test 3"] = result
 try:
     x = LayerV1Record(2, -17)
 except:
     result = True
 else:
     result = False
-testResults["LayerV1Record constructor test 4"] = result
+testResults["Table_COLR LayerV1Record constructor test 4"] = result
 x = LayerV1Record(2, 17)
 result = (type(x) == LayerV1Record)
 for f in LayerV1Record._fieldNames:
     result &= hasattr(x, f)
-testResults["LayerV1Record constructor test 5"] = result
+testResults["Table_COLR LayerV1Record constructor test 5"] = result
 result = (x.glyphID == 2 and x.paintOffset == 17)
-testResults["LayerV1Record constructor test 6"] = result
+testResults["Table_COLR LayerV1Record constructor test 6"] = result
 
 
 # tests for VarFixed
+
+try:
+    assertIsWellDefinedStruct(VarFixed)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR VarFixed definition test"] = result
 
 testResults["Table_COLR VarFixed constants test 1"] = (VarFixed._packedFormat == (Fixed._packedFormat + "2H"))
 testResults["Table_COLR VarFixed constants test 2"] = (VarFixed._packedSize == 8)
@@ -1773,6 +1792,14 @@ testResults["Table_COLR VarFixed interpretUnpackedValues test 3"] = (type(x) == 
 
 # tests for VarF2Dot14
 
+try:
+    assertIsWellDefinedStruct(VarF2Dot14)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR VarF2Dot14 definition test"] = result
+
 testResults["Table_COLR VarF2Dot14 constants test 1"] = (VarF2Dot14._packedFormat == (F2Dot14._packedFormat + "2H"))
 testResults["Table_COLR VarF2Dot14 constants test 2"] = (VarF2Dot14._packedSize == 6)
 testResults["Table_COLR VarF2Dot14 constants test 3"] = (VarF2Dot14._numPackedValues == 3)
@@ -1823,6 +1850,14 @@ testResults["Table_COLR VarF2Dot14 interpretUnpackedValues test 3"] = (type(x) =
 
 # tests for VarFWord
 
+try:
+    assertIsWellDefinedStruct(VarFWord)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR VarFWord definition test"] = result
+
 testResults["Table_COLR VarFWord constants test 1"] = (VarFWord._packedFormat == ">h2H")
 testResults["Table_COLR VarFWord constants test 2"] = (VarFWord._packedSize == 6)
 testResults["Table_COLR VarFWord constants test 3"] = (VarFWord._numPackedValues == 3)
@@ -1867,6 +1902,14 @@ testResults["Table_COLR VarFWord __repr__ test"] = (x.__repr__() == "{'coordinat
 
 # tests for VarUFWord
 
+try:
+    assertIsWellDefinedStruct(VarUFWord)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR VarUFWord definition test"] = result
+
 testResults["Table_COLR VarUFWord constants test 1"] = (VarUFWord._packedFormat == ">3H")
 testResults["Table_COLR VarUFWord constants test 2"] = (VarUFWord._packedSize == 6)
 testResults["Table_COLR VarUFWord constants test 3"] = (VarUFWord._numPackedValues == 3)
@@ -1910,6 +1953,14 @@ testResults["Table_COLR VarUFWord __repr__ test"] = (x.__repr__() == "{'distance
 
 
 # tests for Affine2x2
+
+try:
+    assertIsWellDefinedStruct(Affine2x2)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR Affine2x2 definition test"] = result
 
 testResults["Table_COLR Affine2x2 constants test 1"] = (Affine2x2._packedFormat == ">L2HL2HL2HL2H")
 testResults["Table_COLR Affine2x2 constants test 2"] = (Affine2x2._packedSize == (VarFixed._packedSize * 4))
@@ -1958,6 +2009,14 @@ testResults["Table_COLR Affine2x2 tryReadFromFile test 2"] = result
 
 
 # tests for ColorIndex
+
+try:
+    assertIsWellDefinedStruct(ColorIndex)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR ColorIndex definition test"] = result
 
 testResults["ColorIndex constants test 1"] = (ColorIndex._packedFormat == ">HH2H")
 testResults["ColorIndex constants test 2"] = (ColorIndex._packedSize == 8)
@@ -2034,6 +2093,14 @@ testResults["Table_COLR ColorIndex interpretUnpackedValues test 2"] = result
 
 
 # tests for ColorStop
+
+try:
+    assertIsWellDefinedStruct(ColorIndex)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR ColorStop definition test"] = result
 
 testResults["ColorStop constants test 1"] = (ColorStop._packedFormat == ">H2HHH2H")
 testResults["ColorStop constants test 2"] = (ColorStop._packedSize == 14)
@@ -2217,7 +2284,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 487
+assert len(testResults) == 504
 
 print()
 print("{:<55} {:<}".format("Test", "result"))
