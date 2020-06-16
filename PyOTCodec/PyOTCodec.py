@@ -899,7 +899,7 @@ testResults["tryReadComplexRecordsArrayFromBuffer test 5"] = result
 
 # tests for tryReadSubtablesFromBuffer
 
-class test_tryReadSTFB:
+class test_Class:
     _format = ">hH"
     _size = struct.calcsize(_format)
     _fields = ("field1", "field2")
@@ -910,13 +910,13 @@ class test_tryReadSTFB:
 
     @staticmethod
     def tryReadFromFile(fileBytes):
-        vals = struct.unpack(test_tryReadSTFB._format, fileBytes[:test_tryReadSTFB._size])
-        return test_tryReadSTFB(*vals)
+        vals = struct.unpack(test_Class._format, fileBytes[:test_Class._size])
+        return test_Class(*vals)
 
 buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56'
 offsets = (20,)
 try:
-    x = tryReadSubtablesFromBuffer(buffer, test_tryReadSTFB, offsets)
+    x = tryReadSubtablesFromBuffer(buffer, test_Class, offsets)
 except OTCodecError:
     result = True
 else:
@@ -925,9 +925,9 @@ testResults["tryReadSubtablesFromBuffer test 1"] = result
 
 buffer = b'\x40\x00\x40\x72\x00\x00\x80\x56\xC0\x00\x40\x32\xC0\x00\x40\x32\x40\x00\x40\x72\x00\x00\x80\x56\x7f\xff\x7f\xff\x7f\xff\x7f\xff'
 offsets = (2, 8, 14)
-x = tryReadSubtablesFromBuffer(buffer, test_tryReadSTFB, offsets)
-results = (type(x) == list and len(x) == 3 and type(x[0]) == test_tryReadSTFB)
-results &= (list(x[0].__dict__) == list(test_tryReadSTFB._fields))
+x = tryReadSubtablesFromBuffer(buffer, test_Class, offsets)
+results = (type(x) == list and len(x) == 3 and type(x[0]) == test_Class)
+results &= (list(x[0].__dict__) == list(test_Class._fields))
 testResults["tryReadSubtablesFromBuffer test 2"] = result
 
 results = (x[0].field1 == 0x4072 and x[0].field2 == 0)
@@ -937,6 +937,207 @@ testResults["tryReadSubtablesFromBuffer test 3"] = result
 
 
 # tests for tryReadMultiFormatSubtablesFromBuffer
+
+# arg validations:
+
+buffer = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+subtableOffsets = (2, 4)
+
+# 2nd arg not dict
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, 42, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 1"] = result
+
+# 2nd arg is dict, but with non-int key
+class test_Class:
+    _packedFormat = ">HL"
+    _packedSize = 6
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        pass
+
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1.0:test_Class}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 2"] = result
+
+
+# 2nd arg is dict, but not of classes
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:42}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 3"] = result
+
+# class without _fieldNames
+class test_Class:
+    _packedFormat = ">HL"
+    _packedSize = 6
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        pass
+
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 4"] = result
+
+# first name in _fieldNames not "format"
+class test_Class:
+    _packedFormat = ">HL"
+    _packedSize = 6
+    _fieldNames = ("format_x", "test1")
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        pass
+
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 5"] = result
+
+# subtableOffsets not list or tuple
+class test_Class:
+    _packedFormat = ">HL"
+    _packedSize = 6
+    _fieldNames = ("format", "test1")
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        pass
+
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, 2)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 6"] = result
+
+# subtable offset not int >= 0
+subtableOffsets = (5.5, )
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 7"] = result
+
+subtableOffsets = (-2, )
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 8"] = result
+
+# buffer too short to read format
+buffer = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+subtableOffsets = (8, )
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 9"] = result
+
+# bad class: missing tryReadFromFile method
+class test_Class:
+    _packedFormat = ">HL"
+    _packedSize = 6
+    _fieldNames = ("format", "test1")
+
+buffer = b'\x00\x00\x00\x00\x00\x00\x00\x01\x01\x00\x00\x00'
+subtableOffsets = (6, )
+try:
+    x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+except:
+    result = True
+else:
+    result = False
+testResults["tryReadMultiFormatSubtablesFromBuffer test 10"] = result
+
+# returns tuple of two lists (formats, subtables)
+buffer = b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00'
+subtableOffsets = (6, )
+x = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+result = (type(x) == tuple and len(x) == 2 and type(x[0]) == list and type(x[1]) == list)
+testResults["tryReadMultiFormatSubtablesFromBuffer test 11"] = result
+
+# for format not in subtableClasses, format list includes format, but subtable list has None
+buffer = b'\x00\x00\x00\x00\x00\x00\x01\x03\x00\x00\x00'
+subtableOffsets = (6, )
+x, y = tryReadMultiFormatSubtablesFromBuffer(buffer, {1:test_Class}, subtableOffsets)
+result = (type(x[0]) == int and x[0] == 259 and y[0] == None)
+testResults["tryReadMultiFormatSubtablesFromBuffer test 12"] = result
+
+# distinct formats: expected types with expected values
+class test_Class1:
+    _packedFormat = ">HH"
+    _packedSize = struct.calcsize(_packedFormat)
+    _fieldNames = ("format", "test1")
+
+    def __init__(self, *args):
+        for f, a in zip(test_Class1._fieldNames, args):
+            setattr(self, f, a)
+        assert self.format == 1
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        vals = struct.unpack(test_Class1._packedFormat, fileBytes[:test_Class1._packedSize])
+        return test_Class1(*vals)
+
+class test_Class2:
+    _packedFormat = ">3H"
+    _packedSize = struct.calcsize(_packedFormat)
+    _fieldNames = ("format", "test1", "test2")
+
+    def __init__(self, *args):
+        for f, a in zip(test_Class2._fieldNames, args):
+            setattr(self, f, a)
+        assert self.format == 2
+
+    @staticmethod
+    def tryReadFromFile(fileBytes):
+        vals = struct.unpack(test_Class2._packedFormat, fileBytes[:test_Class2._packedSize])
+        return test_Class2(*vals)
+
+buffer = b'\x00\x00\x00\x02\x04\x32\x00\x01\xCC\x00\x01\x05\x07\xCC\xCC\x00\x01\x60\x98\xf0\xf1\xf2'
+# st 0: \x00\x02\x04\x32\x00\x01
+# st 1: \x00\x01\x05\x07
+# st 2: \x00\x01\x60\x98
+subtableClasses = {1: test_Class1, 2: test_Class2}
+subtableOffsets = (2, 9, 15)
+
+x, y = tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses, subtableOffsets)
+result = (len(x) == 3 and x == [2, 1, 1])
+result &= (len(y) == 3 and type(y[0]) == test_Class2 and type(y[1]) == test_Class1 and type(y[2]) == test_Class1)
+testResults["tryReadSubtablesFromBuffer test 13"] = result
+result = (y[0].format == 2 and y[0].test1 == 0x0432 and y[0].test2 == 1)
+result &= (y[1].format == 1 and y[1].test1 == 0x0507)
+result &= (y[2].format == 1 and y[2].test1 == 0x6098)
+testResults["tryReadMultiFormatSubtablesFromBuffer test 14"] = result
 
 
 
@@ -2286,7 +2487,6 @@ Still need tests for
     - PaintFormat1
     - PaintFormat2
     - PaintFormat3
-    - tryReadMultiFormatSubtablesFromBuffer
     - LayersV1
     - BaseGlyphV1List
     - COLR V1
@@ -2300,7 +2500,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 505
+assert len(testResults) == 519
 
 print()
 print("{:<55} {:<}".format("Test", "result"))

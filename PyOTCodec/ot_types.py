@@ -537,7 +537,7 @@ def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
         if offset > bufferLength:
             raise OTCodecError(f"Offset to {subtableClass.__name__} table is past the end of the data.")
 
-        assert type(offset) == int
+        assert (type(offset) == int and offset > 0)
         subtables.append(
             subtableClass.tryReadFromFile(buffer[offset:])
             )
@@ -547,7 +547,7 @@ def tryReadSubtablesFromBuffer(buffer, subtableClass, subtableOffsets):
 
 
 
-def tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses, subtableOffsets):
+def tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses:dict, subtableOffsets:tuple):
     """Takes a byte sequence and returns a list of objects of the
     specified subtable types read from the byte sequence.
 
@@ -570,21 +570,28 @@ def tryReadMultiFormatSubtablesFromBuffer(buffer, subtableClasses, subtableOffse
     method that takes a buffer and returns an object of that class.
     """
 
+    assert type(subtableClasses) == dict
+    for format in subtableClasses.keys():
+        assert type(format) == int
+    for class_ in subtableClasses.values():
+        assert type(class_) == type
+        assert (hasattr(class_, "_fieldNames") and class_._fieldNames[0] == "format")
+    assert isinstance(subtableOffsets, (list, tuple))
+
     bufferLength = len(buffer)
     subtables = []
     formats = []
 
     for offset in subtableOffsets:
+        assert (type(offset) == int and offset >= 0)
         if offset + 2 > bufferLength:
             raise OTCodecError(f"Subtable offset is past the end of the data.")
-        assert type(offset) == int
 
         # Before reading the subtable, we must peek to determine its format.
         format, = struct.unpack(">H", buffer[offset : offset + 2])
         formats.append(format)
         if format in subtableClasses:
             class_ = subtableClasses[format]
-            assert isinstance(class_, type)
             subtables.append(
                 class_.tryReadFromFile(buffer[offset:])
                 )
