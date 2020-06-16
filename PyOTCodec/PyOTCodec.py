@@ -2319,13 +2319,13 @@ else:
     result = True
 testResults["Table_COLR ColorStop definition test"] = result
 
-testResults["ColorStop constants test 1"] = (ColorStop._packedFormat == ">H2HHH2H")
-testResults["ColorStop constants test 2"] = (ColorStop._packedSize == 14)
-testResults["ColorStop constants test 3"] = (ColorStop._numPackedValues == 7)
-testResults["ColorStop constants test 4"] = (ColorStop._fieldNames == ("stopOffset", "color"))
-testResults["ColorStop constants test 5"] = (ColorStop._fieldTypes == (VarF2Dot14, ColorIndex))
+testResults["Table_COLR ColorStop constants test 1"] = (ColorStop._packedFormat == ">H2HHH2H")
+testResults["Table_COLR ColorStop constants test 2"] = (ColorStop._packedSize == 14)
+testResults["Table_COLR ColorStop constants test 3"] = (ColorStop._numPackedValues == 7)
+testResults["Table_COLR ColorStop constants test 4"] = (ColorStop._fieldNames == ("stopOffset", "color"))
+testResults["Table_COLR ColorStop constants test 5"] = (ColorStop._fieldTypes == (VarF2Dot14, ColorIndex))
 
-# arg validations
+# constructor arg validations
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x1000), 1, 3)
 y = ColorIndex(24, x)
 try:
@@ -2392,6 +2392,79 @@ testResults["Table_COLR ColorStop interpretUnpackedValues test 1"] = result
 x = ColorStop(*ColorStop.interpretUnpackedValues(0x3000, 0, 4, 24, 0x1000, 1, 3))
 result = (type(x) == ColorStop and x.stopOffset.value.value == 0.75 and x.color.paletteIndex == 24)
 testResults["Table_COLR ColorStop interpretUnpackedValues test 2"] = result
+
+
+# tests for ColorLine
+
+try:
+    assertIsWellDefinedStruct(ColorLine)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR ColorLine definition test"] = result
+
+testResults["Table_COLR ColorLine constants test 1"] = (ColorLine._packedFormat == ">2H")
+testResults["Table_COLR ColorLine constants test 2"] = (ColorLine._packedSize == 4)
+testResults["Table_COLR ColorLine constants test 3"] = (ColorLine._numPackedValues == 2)
+testResults["Table_COLR ColorLine constants test 4"] = (ColorLine._fieldNames == ("extend", "numStops"))
+testResults["Table_COLR ColorLine constants test 5"] = (ColorLine._fieldTypes == (int, int))
+
+# constructor, createNew_ColorLine
+x = ColorLine()
+testResults["Table_COLR ColorLine constructor test"] = (len(vars(x)) == 0)
+
+x = ColorLine.createNew_ColorLine()
+testResults["Table_COLR ColorLine createNew_ColorLine test"] = (vars(x) == {'extend': 0, 'numStops': 0})
+
+# tryReadFromFile
+
+# buffer too short for header
+buffer = b'\x00\x00'
+try:
+    x = ColorLine.tryReadFromFile(buffer)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorLine tryReadFromFile test 1"] = result
+
+# header but no stops
+buffer = b'\x00\x02\x00\x00'
+x = ColorLine.tryReadFromFile(buffer)
+result = (type(x) == ColorLine and vars(x) == {'extend': 2, 'numStops': 0, 'colorStops': []})
+testResults["Table_COLR ColorLine tryReadFromFile test 2"] = result
+
+# buffer too short for stops array
+buffer = b'\x00\x00\x00\x01' b'\x00\x00'
+try:
+    x = ColorLine.tryReadFromFile(buffer)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorLine tryReadFromFile test 3"] = result
+
+buffer = b'\x00\x00' b'\x00\x02' b'\x10\x00\x00\x02\x03\x00\x00\x15\x01\x00\x00\x03\x00\x07' + \
+    b'\x38\x00\x01\x21\x00\xc2\x01\x42\x00\xff\x0d\x34\x21\x22'
+# extend: \x00\x00
+# numStops: \x00\x02
+# ColorStop 0: \x10\x00 \x00\x02 \x03\x00 + \x00\x15 \x01\x00 \x00\x03 \x00\x07
+# ColorStop 1: \x38\x00 \x01\x21 \x00\xc2 + \x01\x42 \x00\xff \x0d\x34 \x21\x22
+x = ColorLine.tryReadFromFile(buffer)
+result = (x.extend == 0 and x.numStops == 2)
+result &= (type(x.colorStops) == list and len(x.colorStops) == 2)
+result &= (type(x.colorStops[0]) == ColorStop and type(x.colorStops[1]) == ColorStop)
+testResults["Table_COLR ColorLine tryReadFromFile test 4"] = result
+y = x.colorStops[0]
+result = (y.stopOffset.value == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
+result &= (y.color.paletteIndex == 21 and y.color.alpha.value._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
+testResults["Table_COLR ColorLine tryReadFromFile test 5"] = result
+y = x.colorStops[1]
+result = (y.stopOffset.value == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
+result &= (y.color.paletteIndex == 0x142 and y.color.alpha.value._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
+testResults["Table_COLR ColorLine tryReadFromFile test 6"] = result
+
 
 
 
@@ -2483,7 +2556,6 @@ testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 """
 Still need tests for
-    - ColorLine
     - PaintFormat1
     - PaintFormat2
     - PaintFormat3
@@ -2500,7 +2572,7 @@ f = notoHW_COLR1_rev2
 # Tests completed; report results.
 print()
 print("Number of test results:", len(testResults))
-assert len(testResults) == 519
+assert len(testResults) == 533
 
 print()
 print("{:<55} {:<}".format("Test", "result"))

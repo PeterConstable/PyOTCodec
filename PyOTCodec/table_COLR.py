@@ -573,7 +573,7 @@ class PaintFormat1:
     _fieldNames = ("format", "color")
     _fieldTypes = (int, ColorIndex)
     
-
+    @staticmethod
     def tryReadFromFile(fileBytes):
 
         if len(fileBytes) < PaintFormat1._packedSize:
@@ -734,13 +734,6 @@ class BaseGlyphV1List:
     _fieldTypes = (int,)
     _defaultValues = (0)
 
-    # format/size for records
-    _baseGlyphV1Record_format = ">HL"
-    _baseGlyphV1Record_size = struct.calcsize(_baseGlyphV1Record_format)
-    _baseGlyphV1Record_fields = ("glyphID", "layersV1Offset")
-    _baseGlyphV1Record_defaults = (0, 0)
-
-
     @staticmethod
     def createNew_BaseGlyphV1List(numRecords):
         """Returns a BaseGlyphV1List object initialized with default values.
@@ -816,13 +809,6 @@ class LayersV1:
     _fieldNames = ("numLayerV1Records",)
     _fieldTypes = (int,)
     _defaultValues = (0,)
-
-    # format/size for records
-    _layerV1Record_format = ">HL"
-    _layerV1Record_size = struct.calcsize(_layerV1Record_format)
-    _layerV1Record_fields = ("glyphID", "paintOffset")
-    _layerV1Record_defaults = (0, 0)
-
 
     @staticmethod
     def createNew_LayersV1(numRecords):
