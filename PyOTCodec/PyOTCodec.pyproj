@@ -11,6 +11,14 @@
     <OutputPath>.</OutputPath>
     <Name>PyOTCodec</Name>
     <RootNamespace>PyOTCodec</RootNamespace>
+    <TestFramework>none</TestFramework>
+    <UnitTestPattern>test*.py</UnitTestPattern>
+    <UnitTestRootDirectory>.</UnitTestRootDirectory>
+    <LaunchProvider>Standard Python launcher</LaunchProvider>
+    <InterpreterArguments>
+    </InterpreterArguments>
+    <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
+    <CommandLineArguments>tests</CommandLineArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -21,6 +29,9 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="baseTypes.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ot_file.py">
       <SubType>Code</SubType>
     </Compile>
@@ -34,6 +45,33 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodec.py" />
+    <Compile Include="PyOTCodecTests\test_ot_file.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_ot_font.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_ot_types.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_setup.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_table_COLR.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_table_fmtx.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_table_head.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_table_hhea.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_table_maxp.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="table_COLR.py">
       <SubType>Code</SubType>
     </Compile>
@@ -49,6 +87,12 @@
     <Compile Include="table_maxp.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="PyOTCodecTests\test_all_tests.py">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="PyOTCodecTests\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\Python Tools\Microsoft.PythonTools.targets" />
   <!-- Uncomment the CoreCompile target to enable the Build command in
