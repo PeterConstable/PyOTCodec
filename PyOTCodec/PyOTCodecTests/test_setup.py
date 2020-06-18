@@ -32,10 +32,10 @@ def printTestResultSummary(heading:str, testResults:dict, skippedTests:list):
     print()
     print(f"{heading}:")
     print()
-    print("{:<55} {:<}".format("Test", "result"))
-    print("===============================================================")
+    print("{:<65} {:<}".format("Test", "result"))
+    print("=========================================================================")
     for k, v in testResults.items():
-        print(f"{k:<55} {'Pass' if v else '!! FAIL !!'}")
+        print(f"{k:<65} {'Pass' if v else '!! FAIL !!'}")
     print()
     print(f"Number of test cases: {numTestResults}")
     print(f"Number of tests failing: {numFailures}")

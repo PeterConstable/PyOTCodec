@@ -21,6 +21,8 @@ testBytes1 = ( b'\x02\x0F\x37\xDC\x9A'
                b'\x03\x3a'
                b'\xa9\x28\xbd\xf1'
                b'\xc2\x34\x9d\xe0\xc2\x34\x9d\xe0'
+               b'\x87\xe4\x79'
+               b'\xf0\x00\x80\x00'
                b'\xB2'
                )
 testbio = BytesIO(testBytes1)
@@ -30,22 +32,31 @@ testbio = BytesIO(testBytes1)
 # tests for file read methods
 #-------------------------------------------------------------
 
-from ot_baseTypes import _readRawBytes
-testResults["baseTypes file read test 1 (_readRawBytes)"] = _readRawBytes(testbio, 5) == b'\x02\x0F\x37\xDC\x9A'
-testResults["baseTypes file read test 2 (int8.readFromBytesIO)"] = int8.readFromBytesIO(testbio) == -94 # \xA2
-testResults["baseTypes file read test 3 (uint8.readFromBytesIO)"] = uint8.readFromBytesIO(testbio) == 0x0F
-testResults["baseTypes file read test 4 (int16.readFromBytesIO)"] = int16.readFromBytesIO(testbio) == -6180 # \xE7\xDC
-testResults["baseTypes file read test 5 (uint16.readFromBytesIO)"] = uint16.readFromBytesIO(testbio) == 0x9A02
-testResults["baseTypes file read test 6 (int32.readFromBytesIO)"] = int32.readFromBytesIO(testbio) == -1087906662 # \xBF\x27\xDC\x9A
-testResults["baseTypes file read test 7 (uint32.readFromBytesIO)"] = uint32.readFromBytesIO(testbio) == 0xB20F37DC
-testResults["baseTypes file read test 8 (int64.readFromBytesIO)"] = int64.readFromBytesIO(testbio) == -7349294909316519972 # \x9A\x02\x0F\x37\xDC\x9A\x27\xDC
-testResults["baseTypes file read test 9 (uint64.readFromBytesIO)"] = uint64.readFromBytesIO(testbio) == 0x27DC_9AB2_0F37_DC9A
+from ot_baseTypes import _tryReadRawBytes
+try:
+    x = _tryReadRawBytes(BytesIO(b'\x42\x42\x42'), 4)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["baseTypes file read test 1 (_tryReadRawBytes)"] = result
+testResults["baseTypes file read test 2 (_tryReadRawBytes)"] = _tryReadRawBytes(testbio, 5) == b'\x02\x0F\x37\xDC\x9A'
+testResults["baseTypes file read test 3 (int8.tryReadFromBytesIO)"] = int8.tryReadFromBytesIO(testbio) == -94 # \xA2
+testResults["baseTypes file read test 4 (uint8.tryReadFromBytesIO)"] = uint8.tryReadFromBytesIO(testbio) == 0x0F
+testResults["baseTypes file read test 5 (int16.tryReadFromBytesIO)"] = int16.tryReadFromBytesIO(testbio) == -6180 # \xE7\xDC
+testResults["baseTypes file read test 6 (uint16.tryReadFromBytesIO)"] = uint16.tryReadFromBytesIO(testbio) == 0x9A02
+testResults["baseTypes file read test 7 (int32.tryReadFromBytesIO)"] = int32.readFromBytesIO(testbio) == -1087906662 # \xBF\x27\xDC\x9A
+testResults["baseTypes file read test 8 (uint32.tryReadFromBytesIO)"] = uint32.tryReadFromBytesIO(testbio) == 0xB20F37DC
+testResults["baseTypes file read test 9 (int64.tryReadFromBytesIO)"] = int64.tryReadFromBytesIO(testbio) == -7349294909316519972 # \x9A\x02\x0F\x37\xDC\x9A\x27\xDC
+testResults["baseTypes file read test 10 (uint64.tryReadFromBytesIO)"] = uint64.readFromBytesIO(testbio) == 0x27DC_9AB2_0F37_DC9A
 
-testResults["baseTypes file read test 10 (FWord.readFromBytesIO)"] = FWord.readFromBytesIO(testbio) == -11,628 # \xd2\x94
-testResults["baseTypes file read test 11 (UFWord.readFromBytesIO)"] = UFWord.readFromBytesIO(testbio) == 0x92cf
-testResults["baseTypes file read test 12 (Offset16.readFromBytesIO)"] = Offset16.readFromBytesIO(testbio) == 0x033a
-testResults["baseTypes file read test 13 (Offset32.readFromBytesIO)"] = Offset32.readFromBytesIO(testbio) == 0xa928_bdf1
-testResults["baseTypes file read test 14 (LongDateTime.readFromBytesIO)"] = LongDateTime.readFromBytesIO(testbio) == -4452760542906114592 # \xc2\x34\x9d\xe0\xc2\x34\x9d\xe0
+testResults["baseTypes file read test 11 (FWord.tryReadFromBytesIO)"] = FWord.tryReadFromBytesIO(testbio) == -11628 # \xd2\x94
+testResults["baseTypes file read test 12 (UFWord.tryReadFromBytesIO)"] = UFWord.tryReadFromBytesIO(testbio) == 0x92cf
+testResults["baseTypes file read test 13 (Offset16.tryReadFromBytesIO)"] = Offset16.tryReadFromBytesIO(testbio) == 0x033a
+testResults["baseTypes file read test 14 (Offset32.tryReadFromBytesIO)"] = Offset32.tryReadFromBytesIO(testbio) == 0xa928_bdf1
+testResults["baseTypes file read test 15 (LongDateTime.tryReadFromBytesIO)"] = LongDateTime.tryReadFromBytesIO(testbio) == -4452760542906114592 # \xc2\x34\x9d\xe0\xc2\x34\x9d\xe0
+testResults["baseTypes file read test 16 (uint24.tryReadFromBytesIO)"] = uint24.tryReadFromBytesIO(testbio) == 0x87_e479
+testResults["baseTypes file read test 17 (Fixed.tryReadFromBytesIO)"] = Fixed.tryReadFromBytesIO(testbio)._rawBytes == b'\xf0\x00\x80\x00'
 
 
 #-------------------------------------------------------------
@@ -55,8 +66,8 @@ testResults["baseTypes file read test 14 (LongDateTime.readFromBytesIO)"] = Long
 
 result = hasattr(otTypeCategory, 'BASIC')
 result &= hasattr(otTypeCategory, 'BASIC_OT_SPECIAL')
-result &= hasattr(otTypeCategory, 'BASIC_FIXED_STRUCT')
-result &= hasattr(otTypeCategory, 'BASIC_VARIABLE_STRUCT')
+result &= hasattr(otTypeCategory, 'FIXED_LENGTH_BASIC_STRUCT')
+result &= hasattr(otTypeCategory, 'VAR_LENGTH_BASIC_STRUCT')
 testResults["baseTypes otTypeCategory constants test"] = result
 
 
@@ -170,6 +181,10 @@ testResults["baseTypes assertIsWellDefinedOTType test 8"] = result
 
 
 
+#=============================================================
+#  otTypeCategory.BASIC types
+#=============================================================
+
 #-------------------------------------------------------------
 # tests for int8
 #-------------------------------------------------------------
@@ -180,7 +195,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes int8 definition test"] = result
+testResults["baseTypes int8 definition test 1"] = result
+
+testResults["baseTypes int8 definition test 2"] = (int8.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes int8 definition test 3"] = (int8.PACKED_FORMAT == ">b")
+testResults["baseTypes int8 definition test 4"] = (int8.PACKED_SIZE == 1)
 
 # constructor requires int argument in range [-128, 127]
 try:
@@ -213,7 +232,7 @@ testResults["baseTypes int8 constructor test 4"] = isinstance(x, int)
 result = (type(x) == int8 and type(y) == int8 and (x + y) == -1)
 testResults["baseTypes int8 constructor test 5"] = result
 
-
+# see above for test of tryReadFromBytesIO
 
 
 #-------------------------------------------------------------
@@ -226,7 +245,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes uint8 definition test"] = result
+testResults["baseTypes uint8 definition test 1"] = result
+
+testResults["baseTypes uint8 definition test 2"] = (uint8.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes uint8 definition test 3"] = (uint8.PACKED_FORMAT == ">B")
+testResults["baseTypes uint8 definition test 4"] = (uint8.PACKED_SIZE == 1)
 
 # constructor requires int argument in range [0, 255]
 try:
@@ -259,6 +282,8 @@ testResults["baseTypes uint8 constructor test 4"] = isinstance(x, int)
 result = (type(x) == uint8 and type(y) == uint8 and (x + y) == 255)
 testResults["baseTypes uint8 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for int16
@@ -270,7 +295,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes int16 definition test"] = result
+testResults["baseTypes int16 definition test 1"] = result
+
+testResults["baseTypes int16 definition test 2"] = (int16.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes int16 definition test 3"] = (int16.PACKED_FORMAT == ">h")
+testResults["baseTypes int16 definition test 4"] = (int16.PACKED_SIZE == 2)
 
 # constructor requires int argument in range [-(0x8000), 0x7fff]
 try:
@@ -303,6 +332,8 @@ testResults["baseTypes int16 constructor test 4"] = isinstance(x, int)
 result = (type(x) == int16 and type(y) == int16 and (x + y) == -1)
 testResults["baseTypes int16 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for FWord
@@ -314,7 +345,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes FWord definition test"] = result
+testResults["baseTypes FWord definition test 1"] = result
+
+testResults["baseTypes FWord definition test 2"] = (FWord.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes FWord definition test 3"] = (FWord.PACKED_FORMAT == ">h")
+testResults["baseTypes FWord definition test 4"] = (FWord.PACKED_SIZE == 2)
 
 # constructor requires int argument in range [-(0x8000), 0x7fff]
 try:
@@ -347,6 +382,8 @@ testResults["baseTypes FWord constructor test 4"] = isinstance(x, int16)
 result = (type(x) == FWord and type(y) == FWord and (x + y) == -1)
 testResults["baseTypes FWord constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for uint16
@@ -358,7 +395,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes uint16 definition test"] = result
+testResults["baseTypes uint16 definition test 1"] = result
+
+testResults["baseTypes uint16 definition test 2"] = (uint16.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes uint16 definition test 3"] = (uint16.PACKED_FORMAT == ">H")
+testResults["baseTypes uint16 definition test 4"] = (uint16.PACKED_SIZE == 2)
 
 # constructor requires int argument in range [0, 0xffff]
 try:
@@ -391,6 +432,8 @@ testResults["baseTypes uint16 constructor test 4"] = isinstance(x, int)
 result = (type(x) == uint16 and type(y) == uint16 and (x + y) == 0xffff)
 testResults["baseTypes uint16 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for UFWord
@@ -402,7 +445,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes UFWord definition test"] = result
+testResults["baseTypes UFWord definition test 1"] = result
+
+testResults["baseTypes UFWord definition test 2"] = (UFWord.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes UFWord definition test 3"] = (UFWord.PACKED_FORMAT == ">H")
+testResults["baseTypes UFWord definition test 4"] = (UFWord.PACKED_SIZE == 2)
 
 # constructor requires int argument in range [0, 0xffff]
 try:
@@ -435,6 +482,8 @@ testResults["baseTypes UFWord constructor test 4"] = isinstance(x, uint16)
 result = (type(x) == UFWord and type(y) == UFWord and (x + y) == 0xffff)
 testResults["baseTypes UFWord constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for Offset16
@@ -446,7 +495,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes Offset16 definition test"] = result
+testResults["baseTypes Offset16 definition test 1"] = result
+
+testResults["baseTypes Offset16 definition test 2"] = (Offset16.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes Offset16 definition test 3"] = (Offset16.PACKED_FORMAT == ">H")
+testResults["baseTypes Offset16 definition test 4"] = (Offset16.PACKED_SIZE == 2)
 
 # constructor requires int argument in range [0, 0xffff]
 try:
@@ -479,6 +532,7 @@ testResults["baseTypes Offset16 constructor test 4"] = isinstance(x, uint16)
 result = (type(x) == Offset16 and type(y) == Offset16 and (x + y) == 0xffff)
 testResults["baseTypes Offset16 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
 
 
 #-------------------------------------------------------------
@@ -491,7 +545,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes int32 definition test"] = result
+testResults["baseTypes int32 definition test 1"] = result
+
+testResults["baseTypes int32 definition test 2"] = (int32.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes int32 definition test 3"] = (int32.PACKED_FORMAT == ">l")
+testResults["baseTypes int32 definition test 4"] = (int32.PACKED_SIZE == 4)
 
 # constructor requires int argument in range [-0x8000_0000, 0x7fff_ffff]
 try:
@@ -524,6 +582,8 @@ testResults["baseTypes int32 constructor test 4"] = isinstance(x, int)
 result = (type(x) == int32 and type(y) == int32 and (x + y) == -1)
 testResults["baseTypes int32 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for uint32
@@ -535,7 +595,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes uint32 definition test"] = result
+testResults["baseTypes uint32 definition test 1"] = result
+
+testResults["baseTypes uint32 definition test 2"] = (uint32.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes uint32 definition test 3"] = (uint32.PACKED_FORMAT == ">L")
+testResults["baseTypes uint32 definition test 4"] = (uint32.PACKED_SIZE == 4)
 
 # constructor requires int argument in range [0, 0xffff_ffff]
 try:
@@ -568,6 +632,8 @@ testResults["baseTypes uint32 constructor test 4"] = isinstance(x, int)
 result = (type(x) == uint32 and type(y) == uint32 and (x + y) == 0xffff_ffff)
 testResults["baseTypes uint32 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for Offset32
@@ -579,7 +645,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes Offset32 definition test"] = result
+testResults["baseTypes Offset32 definition test 1"] = result
+
+testResults["baseTypes Offset32 definition test 2"] = (Offset32.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes Offset32 definition test 3"] = (Offset32.PACKED_FORMAT == ">L")
+testResults["baseTypes Offset32 definition test 4"] = (Offset32.PACKED_SIZE == 4)
 
 # constructor requires int argument in range [0, 0xffff_ffff]
 try:
@@ -612,6 +682,8 @@ testResults["baseTypes Offset32 constructor test 4"] = isinstance(x, uint32)
 result = (type(x) == Offset32 and type(y) == Offset32 and (x + y) == 0xffff_ffff)
 testResults["baseTypes Offset32 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for int64
@@ -623,7 +695,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes int64 definition test"] = result
+testResults["baseTypes int64 definition test 1"] = result
+
+testResults["baseTypes int64 definition test 2"] = (int64.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes int64 definition test 3"] = (int64.PACKED_FORMAT == ">q")
+testResults["baseTypes int64 definition test 4"] = (int64.PACKED_SIZE == 8)
 
 # constructor requires int argument in range [-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff]
 try:
@@ -656,6 +732,8 @@ testResults["baseTypes int64 constructor test 4"] = isinstance(x, int)
 result = (type(x) == int64 and type(y) == int64 and (x + y) == -1)
 testResults["baseTypes int64 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for LongDateTime
@@ -667,7 +745,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes LongDateTime definition test"] = result
+testResults["baseTypes LongDateTime definition test 1"] = result
+
+testResults["baseTypes LongDateTime definition test 2"] = (LongDateTime.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes LongDateTime definition test 3"] = (LongDateTime.PACKED_FORMAT == ">q")
+testResults["baseTypes LongDateTime definition test 4"] = (LongDateTime.PACKED_SIZE == 8)
 
 # constructor requires int argument in range [-0x8000_0000_0000_0000, 0x7fff_ffff_ffff_ffff]
 try:
@@ -700,6 +782,8 @@ testResults["baseTypes LongDateTime constructor test 4"] = isinstance(x, int64)
 result = (type(x) == LongDateTime and type(y) == LongDateTime and (x + y) == -1)
 testResults["baseTypes LongDateTime constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
+
 
 #-------------------------------------------------------------
 # tests for uint64
@@ -711,7 +795,11 @@ except:
     result = False
 else:
     result = True
-testResults["baseTypes uint64 definition test"] = result
+testResults["baseTypes uint64 definition test 1"] = result
+
+testResults["baseTypes uint64 definition test 2"] = (uint64.TYPE_CATEGORY == otTypeCategory.BASIC)
+testResults["baseTypes uint64 definition test 3"] = (uint64.PACKED_FORMAT == ">Q")
+testResults["baseTypes uint64 definition test 4"] = (uint64.PACKED_SIZE == 8)
 
 # constructor requires int argument in range [0, 0xffff_ffff_ffff_ffff]
 try:
@@ -744,7 +832,390 @@ testResults["baseTypes uint64 constructor test 4"] = isinstance(x, int)
 result = (type(x) == uint64 and type(y) == uint64 and (x + y) == 0xffff_ffff_ffff_ffff)
 testResults["baseTypes uint64 constructor test 5"] = result
 
+# see above for test of tryReadFromBytesIO
 
+
+
+#=============================================================
+#  otTypeCategory.BASIC_OT_SPECIAL types
+#=============================================================
+
+#-------------------------------------------------------------
+# tests for uint24
+#-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(uint24)
+except:
+    result = False
+else:
+    result = True
+testResults["baseTypes uint24 definition test 1"] = result
+
+testResults["baseTypes uint24 definition test 2"] = (uint24.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes uint24 definition test 3"] = (uint24.PACKED_FORMAT == ">3B")
+testResults["baseTypes uint24 definition test 4"] = (uint24.PACKED_SIZE == 3)
+testResults["baseTypes uint24 definition test 5"] = (uint24.NUM_PACKED_VALUES == 3)
+
+# constructor requires int argument in range [0, 0xffff_ffff_ffff]
+try:
+    x = uint24()
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 constructor test 1"] = result
+
+try:
+    x = uint24(-1)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 constructor test 2"] = result
+
+try:
+    x = uint24(0x1_0000_0000_0000)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 constructor test 3"] = result
+
+x = uint24(0)
+y = uint24(0xffff_ffff_ffff)
+testResults["baseTypes uint24 constructor test 4"] = isinstance(x, int)
+result = (type(x) == uint24 and type(y) == uint24 and (x + y) == 0xffff_ffff_ffff)
+testResults["baseTypes uint24 constructor test 5"] = result
+
+# createFromUnpackedValues
+
+# wrong number of args
+try:
+    x = uint24.createFromUnpackedValues(0x42, 0xac)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 createFromUnpackedValues test 1"] = result
+
+try:
+    x = uint24.createFromUnpackedValues(0x42, 0xac, 0x87, 0xe2)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 createFromUnpackedValues test 2"] = result
+
+# wrong arg type
+try:
+    x = uint24.createFromUnpackedValues(42, 4.2, 42)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 createFromUnpackedValues test 3"] = result
+
+# good ars
+x = uint24.createFromUnpackedValues(0x42, 0xac, 0x87)
+result = (type(x) == uint24 and x == 0x42_ac87)
+testResults["baseTypes uint24 createFromUnpackedValues test 4"] = result
+
+# see above for test of tryReadFromBytesIO
+
+
+#-------------------------------------------------------------
+# tests for Fixed
+#-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(Fixed)
+except:
+    result = False
+else:
+    result = True
+testResults["baseTypes Fixed definition test 1"] = result
+
+testResults["baseTypes Fixed definition test 2"] = (Fixed.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes Fixed definition test 3"] = (Fixed.PACKED_FORMAT == ">L")
+testResults["baseTypes Fixed definition test 4"] = (Fixed.PACKED_SIZE == 4)
+testResults["baseTypes Fixed definition test 5"] = (Fixed.NUM_PACKED_VALUES == 1)
+
+# constructor
+
+# arg must be bytearray or bytes
+try:
+    Fixed(None)
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed constructor test 1"] = result
+try:
+    Fixed(123)
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed constructor test 2"] = result
+
+# arg length must be 4 bytes
+try:
+    Fixed(b'\x00\x01')
+except TypeError:
+    result = True
+else:
+    result = False
+try:
+    Fixed(b'\x00\x01\x02\x03\x04')
+except TypeError:
+    result &= True
+else:
+    result &= False
+testResults["baseTypes Fixed constructor test 3"] = result
+
+# good args
+testResults["baseTypes Fixed constructor test 4"] = (type(Fixed(bytearray([0,1,0,0]))) == Fixed)
+testResults["baseTypes Fixed constructor test 5"] = (type(Fixed(bytes(b'\xF0\x00\x80\x00'))) == Fixed)
+testResults["baseTypes Fixed constructor test 6"] = (Fixed(b'\xF0\x00\x80\x00') == -4095.5)
+testResults["baseTypes Fixed constructor test 7"] = (-4095.5 == Fixed(b'\xF0\x00\x80\x00'))
+
+# Fixed.createFromUnpackedValues: arg must be between 0 and 0xffff_ffff
+try:
+    Fixed.createFromUnpackedValues(-1)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed.createFromUnpackedValues test 1"] = result
+try:
+    Fixed.createFromUnpackedValues(0x1_FFFF_FFFF)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed.createFromUnpackedValues test 2"] = result
+
+f = Fixed.createFromUnpackedValues(0x0001_8000)
+testResults["baseTypes Fixed.createFromUnpackedValues test 3"] = (f == 1.5)
+f = Fixed.createFromUnpackedValues(0xF000_8000)
+testResults["baseTypes Fixed.createFromUnpackedValues test 4"] = (f == -4095.5)
+f = Fixed.createFromUnpackedValues(0x0001_5000)
+testResults["baseTypes Fixed.createFromUnpackedValues test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+
+# Fixed.createFixedFromUint32: arg must be between 0 and 0xffff_ffff
+try:
+    Fixed.createFixedFromUint32(-1)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed.createFixedFromUint32 test 1"] = result
+try:
+    Fixed.createFixedFromUint32(0x1_FFFF_FFFF)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed.createFixedFromUint32 test 2"] = result
+
+f = Fixed.createFixedFromUint32(0x0001_8000)
+testResults["baseTypes Fixed.createFixedFromUint32 test 3"] = (f == 1.5)
+f = Fixed.createFixedFromUint32(0xF000_8000)
+testResults["baseTypes Fixed.createFixedFromUint32 test 4"] = (f == -4095.5)
+f = Fixed.createFixedFromUint32(0x0001_5000)
+testResults["baseTypes Fixed.createFixedFromUint32 test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+
+# see above for test of tryReadFromBytesIO
+
+# Fixed.createFixedFromFloat
+try:
+    Fixed.createFixedFromFloat(-40000)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed.createFixedFromFloat test 1"] = result
+try:
+    Fixed.createFixedFromFloat(40000)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Fixed.createFixedFromFloat test 2"] = result
+
+f = Fixed.createFixedFromFloat(1.5)
+testResults["baseTypes Fixed.createFixedFromFloat test 3"] = (f._rawBytes == bytes(b'\x00\x01\x80\x00'))
+f = Fixed.createFixedFromFloat(-4095.75)
+testResults["baseTypes Fixed.createFixedFromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00\x40\x00'))
+f = Fixed.createFixedFromFloat(1.3125)
+testResults["baseTypes Fixed.createFixedFromFloat test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+
+# Fixed ==
+f = Fixed(b'\xF0\x00\x80\x00')
+testResults["baseTypes Fixed __eq__ test 1"] = (Fixed(b'\xF0\x00\x80\x00') == f)
+testResults["baseTypes Fixed __eq__ test 2"] = (f == Fixed(b'\xF0\x00\x80\x00'))
+testResults["baseTypes Fixed __eq__ test 3"] = (f != Fixed(b'\x00\x00\x00\x00'))
+testResults["baseTypes Fixed __eq__ test 4"] = (f == bytearray(b'\xF0\x00\x80\x00'))
+testResults["baseTypes Fixed __eq__ test 5"] = (f == bytes(b'\xF0\x00\x80\x00'))
+testResults["baseTypes Fixed __eq__ test 6"] = (f == -4095.5)
+f = Fixed(b'\xF0\x00\x00\x00')
+testResults["baseTypes Fixed __eq__ test 7"] = (f == -4096)
+testResults["baseTypes Fixed __eq__ test 8"] = (f == 0xF000_0000)
+
+# Fixed misc
+f = Fixed(b'\xF0\x00\x80\x00')
+testResults["Fixed members test 1"] = (f.mantissa == -4096)
+testResults["Fixed members test 2"] = (f.fraction == 0x8000)
+testResults["Fixed members test 3"] = (f.getFixedAsUint32() == 0xF0008000)
+testResults["Fixed members test 4"] = (f.__str__() == "-4095.5")
+testResults["Fixed members test 5"] = (f.__repr__() == "-4095.5")
+f = Fixed(b'\x00\x02\x50\x00')
+testResults["Fixed members test 6"] = (f.fixedTableVersion == 2.5)
+
+
+
+#-------------------------------------------------------------
+# tests for F2Dot14
+#-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(F2Dot14)
+except:
+    result = False
+else:
+    result = True
+testResults["baseTypes F2Dot14 definition test 1"] = result
+
+testResults["baseTypes F2Dot14 definition test 2"] = (F2Dot14.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes F2Dot14 definition test 3"] = (F2Dot14.PACKED_FORMAT == ">H")
+testResults["baseTypes F2Dot14 definition test 4"] = (F2Dot14.PACKED_SIZE == 2)
+testResults["baseTypes F2Dot14 definition test 5"] = (F2Dot14.NUM_PACKED_VALUES == 1)
+
+# constructor tests
+
+# arg must be bytearray or bytes
+try:
+    F2Dot14(None)
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14 constructor test 1"] = result
+try:
+    F2Dot14(123)
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14 constructor test 2"] = result
+
+# arg length must be 2 bytes
+try:
+    F2Dot14(b'\x01')
+except TypeError:
+    result = True
+else:
+    result = False
+try:
+    F2Dot14(b'\x00\x01\x02')
+except TypeError:
+    result &= True
+else:
+    result &= False
+testResults["baseTypes F2Dot14 constructor test 3"] = result
+
+# good args
+testResults["baseTypes F2Dot14 constructor test 4"] = (type(F2Dot14(bytearray([0,1]))) == F2Dot14)
+testResults["baseTypes F2Dot14 constructor test 5"] = (type(F2Dot14(bytes(b'\xF0\x00'))) == F2Dot14)
+testResults["baseTypes F2Dot14 constructor test 6"] = (F2Dot14(b'\xF0\x00') == -0.25)
+
+
+# Fixed.createFromUnpackedValues: arg must be between 0 and 0xffff
+try:
+    F2Dot14.createFromUnpackedValues(-1)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 1"] = result
+try:
+    F2Dot14.createFromUnpackedValues(0x1_0000)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 2"] = result
+
+f = F2Dot14.createFromUnpackedValues(0x6000)
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 3"] = (f == 1.5)
+f = F2Dot14.createFromUnpackedValues(0xF000)
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 4"] = (f == -0.25)
+f = F2Dot14.createFromUnpackedValues(0x3c01)
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
+
+# Fixed.createF2Dot14FromUint16: arg must be between 0 and 0xffff
+try:
+    F2Dot14.createF2Dot14FromUint16(-1)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.createF2Dot14FromUint16 test 1"] = result
+try:
+    F2Dot14.createF2Dot14FromUint16(0x1_0000)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.createF2Dot14FromUint16 test 2"] = result
+
+f = F2Dot14.createF2Dot14FromUint16(0x6000)
+testResults["baseTypes F2Dot14.createF2Dot14FromUint16 test 3"] = (f == 1.5)
+f = F2Dot14.createF2Dot14FromUint16(0xF000)
+testResults["baseTypes F2Dot14.createF2Dot14FromUint16 test 4"] = (f == -0.25)
+f = F2Dot14.createF2Dot14FromUint16(0x3c01)
+testResults["baseTypes F2Dot14.createF2Dot14FromUint16 test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
+
+# F2Dot14.createF2Dot14FromFloat
+try:
+    F2Dot14.createF2Dot14FromFloat(-4)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 1"] = result
+try:
+    F2Dot14.createF2Dot14FromFloat(4)
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 2"] = result
+
+f = F2Dot14.createF2Dot14FromFloat(1.5)
+testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 3"] = (f._rawBytes == bytes(b'\x60\x00'))
+f = F2Dot14.createF2Dot14FromFloat(-0.25)
+testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 4"] = (f._rawBytes == bytes(b'\xF0\x00'))
+f = F2Dot14.createF2Dot14FromFloat(1.3125)
+testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 5"] = (f._rawBytes == bytes(b'\x54\x00'))
+
+# F2Dot14 ==
+f = F2Dot14(b'\xF0\x80')
+testResults["baseTypes F2Dot14 __eq__ test 1"] = (F2Dot14(b'\xF0\x80') == f)
+testResults["baseTypes F2Dot14 __eq__ test 2"] = (f == F2Dot14(b'\xF0\x80'))
+testResults["baseTypes F2Dot14 __eq__ test 3"] = (f != F2Dot14(b'\x00\x00'))
+testResults["baseTypes F2Dot14 __eq__ test 4"] = (f == bytearray(b'\xF0\x80'))
+testResults["baseTypes F2Dot14 __eq__ test 5"] = (f == bytes(b'\xF0\x80'))
+testResults["baseTypes F2Dot14 __eq__ test 6"] = (f == -0.2421875)
+
+# F2Dot14 misc
+f = F2Dot14(b'\xB0\x00')
+testResults["baseTypes F2Dot14 members test 1"] = (f.mantissa == -2)
+testResults["baseTypes F2Dot14 members test 2"] = (f.fraction == 0x3000)
+testResults["baseTypes F2Dot14 members test 3"] = (f.getF2Dot14AsUint16() == 0xB000)
+testResults["baseTypes F2Dot14 members test 4"] = (f.__str__() == "-1.25")
+testResults["baseTypes F2Dot14 members test 5"] = (f.__repr__() == "-1.25")
 
 
 
@@ -756,6 +1227,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 101
+assert numTestResults == 235
 
 printTestResultSummary("Tests for table_maxp", testResults, skippedTests)

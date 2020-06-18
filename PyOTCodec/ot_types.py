@@ -148,7 +148,7 @@ class Fixed:
         big-endian order, as would occur in a font file.
         """
         if type(fixedBytes) != bytearray and type(fixedBytes) != bytes:
-            raise OTCodecError("The fixedBytes argument must be bytearray or bytes.")
+            raise TypeError("The fixedBytes argument must be bytearray or bytes.")
         if len(fixedBytes) != 4:
             raise OTCodecError("The fixedBytes argument must be 4 bytes in length.")
         
