@@ -15,7 +15,10 @@ def runAllTests():
 
 if __name__ == '__main__':
     import sys
-    if len(sys.argv) > 1 and sys.argv[1] == "tests":
-        runAllTests()
+    if len(sys.argv) > 1:
+        if sys.argv[1] == "alltests":
+            runAllTests()
+        elif sys.argv[1] == "baseTypes":
+            import PyOTCodecTests.test_ot_baseTypes
     else:
         print("Welcome to PyOTCodec")

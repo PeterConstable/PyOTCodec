@@ -11,14 +11,14 @@
     <OutputPath>.</OutputPath>
     <Name>PyOTCodec</Name>
     <RootNamespace>PyOTCodec</RootNamespace>
-    <TestFramework>none</TestFramework>
+    <TestFramework>Pytest</TestFramework>
     <UnitTestPattern>test*.py</UnitTestPattern>
     <UnitTestRootDirectory>.</UnitTestRootDirectory>
     <LaunchProvider>Standard Python launcher</LaunchProvider>
     <InterpreterArguments>
     </InterpreterArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <CommandLineArguments>tests</CommandLineArguments>
+    <CommandLineArguments>baseTypes</CommandLineArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -29,7 +29,7 @@
     <EnableUnmanagedDebugging>false</EnableUnmanagedDebugging>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="baseTypes.py">
+    <Compile Include="ot_baseTypes.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="ot_file.py">
@@ -45,6 +45,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodec.py" />
+    <Compile Include="PyOTCodecTests\test_ot_baseTypes.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PyOTCodecTests\test_ot_file.py">
       <SubType>Code</SubType>
     </Compile>
