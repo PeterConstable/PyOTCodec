@@ -23,6 +23,8 @@ testBytes1 = ( b'\x02\x0F\x37\xDC\x9A'
                b'\xc2\x34\x9d\xe0\xc2\x34\x9d\xe0'
                b'\x87\xe4\x79'
                b'\xf0\x00\x80\x00'
+               b'\xf6\x42'
+               b'\x48\x49\x4a\x4b'
                b'\xB2'
                )
 testbio = BytesIO(testBytes1)
@@ -57,6 +59,8 @@ testResults["baseTypes file read test 14 (Offset32.tryReadFromBytesIO)"] = Offse
 testResults["baseTypes file read test 15 (LongDateTime.tryReadFromBytesIO)"] = LongDateTime.tryReadFromBytesIO(testbio) == -4452760542906114592 # \xc2\x34\x9d\xe0\xc2\x34\x9d\xe0
 testResults["baseTypes file read test 16 (uint24.tryReadFromBytesIO)"] = uint24.tryReadFromBytesIO(testbio) == 0x87_e479
 testResults["baseTypes file read test 17 (Fixed.tryReadFromBytesIO)"] = Fixed.tryReadFromBytesIO(testbio)._rawBytes == b'\xf0\x00\x80\x00'
+testResults["baseTypes file read test 18 (F2Dot14.tryReadFromBytesIO)"] = F2Dot14.tryReadFromBytesIO(testbio)._rawBytes == b'\xf6\x42'
+testResults["baseTypes file read test 19 (Tag.tryReadFromBytesIO)"] = Tag.tryReadFromBytesIO(testbio)._rawBytes == b'\x48\x49\x4a\x4b'
 
 
 #-------------------------------------------------------------
@@ -1026,7 +1030,24 @@ testResults["baseTypes Fixed.createFixedFromUint32 test 4"] = (f == -4095.5)
 f = Fixed.createFixedFromUint32(0x0001_5000)
 testResults["baseTypes Fixed.createFixedFromUint32 test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
 
-# see above for test of tryReadFromBytesIO
+
+# tests for Fixed.tryReadFromBytesIO
+# also see above for test of tryReadFromBytesIO
+testbio = BytesIO(testBytes1)
+f = Fixed.tryReadFromBytesIO(testbio)
+testResults["Fixed.tryReadFromBytesIO test 1"] = (type(f) == Fixed)
+testResults["Fixed.tryReadFromBytesIO test 2"] = (f.getFixedAsUint32() == 0x020F37DC)
+f = Fixed.tryReadFromBytesIO(testbio)
+testResults["Fixed.tryReadFromBytesIO test 3"] = (f.getFixedAsUint32() == 0x9AA20FE7)
+testbio.seek(-1, 2) #from end of stream
+try:
+    f = Fixed.tryReadFromBytesIO(testbio)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["Fixed.tryReadFromBytesIO test 4"] = result
+
 
 # Fixed.createFixedFromFloat
 try:
@@ -1131,7 +1152,7 @@ testResults["baseTypes F2Dot14 constructor test 5"] = (type(F2Dot14(bytes(b'\xF0
 testResults["baseTypes F2Dot14 constructor test 6"] = (F2Dot14(b'\xF0\x00') == -0.25)
 
 
-# Fixed.createFromUnpackedValues: arg must be between 0 and 0xffff
+# F2Dot14.createFromUnpackedValues: arg must be between 0 and 0xffff
 try:
     F2Dot14.createFromUnpackedValues(-1)
 except ValueError:
@@ -1154,7 +1175,7 @@ testResults["baseTypes F2Dot14.createFromUnpackedValues test 4"] = (f == -0.25)
 f = F2Dot14.createFromUnpackedValues(0x3c01)
 testResults["baseTypes F2Dot14.createFromUnpackedValues test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
 
-# Fixed.createF2Dot14FromUint16: arg must be between 0 and 0xffff
+# F2Dot14.createF2Dot14FromUint16: arg must be between 0 and 0xffff
 try:
     F2Dot14.createF2Dot14FromUint16(-1)
 except ValueError:
@@ -1200,7 +1221,23 @@ testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 4"] = (f._rawBytes ==
 f = F2Dot14.createF2Dot14FromFloat(1.3125)
 testResults["baseTypes F2Dot14.createF2Dot14FromFloat test 5"] = (f._rawBytes == bytes(b'\x54\x00'))
 
-# F2Dot14 ==
+# tests for F2Dot14.tryReadFromBytesIO
+testbio = BytesIO(testBytes1)
+f = F2Dot14.tryReadFromBytesIO(testbio)
+testResults["baseTypes F2Dot14.tryReadFromBytesIO test 1"] = (type(f) == F2Dot14)
+testResults["baseTypes F2Dot14.tryReadFromBytesIO test 2"] = (f.getF2Dot14AsUint16() == 0x020F)
+f = F2Dot14.tryReadFromBytesIO(testbio)
+testResults["baseTypes F2Dot14.tryReadFromBytesIO test 3"] = (f.getF2Dot14AsUint16() == 0x37DC)
+testbio.seek(-1, 2) #from end of stream
+try:
+    f = F2Dot14.tryReadFromBytesIO(testbio)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["baseTypes F2Dot14.tryReadFromBytesIO test 4"] = result
+
+# F2Dot14 __eq__
 f = F2Dot14(b'\xF0\x80')
 testResults["baseTypes F2Dot14 __eq__ test 1"] = (F2Dot14(b'\xF0\x80') == f)
 testResults["baseTypes F2Dot14 __eq__ test 2"] = (f == F2Dot14(b'\xF0\x80'))
@@ -1218,6 +1255,124 @@ testResults["baseTypes F2Dot14 members test 4"] = (f.__str__() == "-1.25")
 testResults["baseTypes F2Dot14 members test 5"] = (f.__repr__() == "-1.25")
 
 
+#-------------------------------------------------------------
+# tests for Tag
+#-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(Tag)
+except:
+    result = False
+else:
+    result = True
+testResults["baseTypes Tag definition test 1"] = result
+
+testResults["baseTypes Tag definition test 2"] = (Tag.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes Tag definition test 3"] = (Tag.PACKED_FORMAT == ">4s")
+testResults["baseTypes Tag definition test 4"] = (Tag.PACKED_SIZE == 4)
+testResults["baseTypes Tag definition test 5"] = (Tag.NUM_PACKED_VALUES == 1)
+
+# constructor tests
+
+# argument other than str, bytes or bytearray
+try:
+    Tag([0,1,0,0])
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag constructor test 1"] = result
+
+# argument with invalid characters (out of range 0 - 127)
+try:
+    Tag("ab¡c")
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag constructor test 2"] = result
+try:
+    Tag(b'\x61\xa1\x20\x20')
+except ValueError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag constructor test 3"] = result
+
+x = Tag(b'\x00\x01') # pad with 0x00
+testResults["baseTypes Tag constructor test 4"] = (x == b'\x00\x01\x00\x00')
+x = Tag(b'\x61\x62\x63\x64')
+testResults["baseTypes Tag constructor test 5"] = (x == "abcd")
+x = Tag("ab") # pad with space
+testResults["baseTypes Tag constructor test 6"] = (x == "ab  ")
+x = Tag("abcd")
+testResults["baseTypes Tag constructor test 7"] = (x == "abcd")
+
+# Tag.createFromUnpackedValues: bytearray or bytes, length 4
+try:
+    Tag.createFromUnpackedValues(1)
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag.createFromUnpackedValues test 1"] = result
+
+try:
+    Tag.createFromUnpackedValues(b'\x00')
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag.createFromUnpackedValues test 2"] = result
+
+try:
+    Tag.createFromUnpackedValues(b'\x00\x01\x02\x03\x04')
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag.createFromUnpackedValues test 3"] = result
+
+x = Tag.createFromUnpackedValues(b'\x68\x69\x6a\x6b')
+result = (type(x) == Tag and x == 'hijk')
+testResults["baseTypes Tag.createFromUnpackedValues test 4"] = result
+
+# tests for Tag.tryReadFromBytesIO
+testbio = BytesIO(b'\x61\x63\x65\x67\x48\x49\x4a\x4b\x00\x00\x01\x02\x03')
+x = Tag.tryReadFromBytesIO(testbio)
+testResults["baseTypes Tag.tryReadFromBytesIO test 1"] = (type(x) == Tag)
+testResults["baseTypes Tag.tryReadFromBytesIO test 2"] = (x._rawBytes == b'\x61\x63\x65\x67')
+x = Tag.tryReadFromBytesIO(testbio)
+testResults["baseTypes Tag.tryReadFromBytesIO test 3"] = (x._rawBytes == b'\x48\x49\x4a\x4b')
+testbio.seek(-1, 2) #from end of stream
+try:
+    x = Tag.tryReadFromBytesIO(testbio)
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["baseTypes Tag.tryReadFromBytesIO test 4"] = result
+
+
+# Tag __eq__, __ne__
+x = Tag("abcd")
+testResults["baseTypes Tag methods test 1"] = (x == Tag("abcd"))
+testResults["baseTypes Tag methods test 2"] = (Tag("abcd") == x)
+testResults["baseTypes Tag methods test 3"] = (x != Tag("abce"))
+testResults["baseTypes Tag methods test 4"] = (x == b'\x61\x62\x63\x64')
+testResults["baseTypes Tag methods test 5"] = (x != b'\x61\x62\x63\x65')
+testResults["baseTypes Tag methods test 6"] = (x == "abcd")
+testResults["baseTypes Tag methods test 7"] = (x != "abce")
+testResults["baseTypes Tag methods test 8"] = (x.__hash__() == str.__hash__("abcd"))
+
+# Tag validations
+testResults["baseTypes Tag validation test 1"] = Tag.validateTag("abcd") == 0
+testResults["baseTypes Tag validation test 2"] = Tag.validateTag("abc") == 0x01
+testResults["baseTypes Tag validation test 3"] = Tag.validateTag("abcde") == 0x01
+testResults["baseTypes Tag validation test 4"] = Tag.validateTag("ab€c") == 0x02
+testResults["baseTypes Tag validation test 5"] = Tag.validateTag("ab c") == 0x04
+testResults["baseTypes Tag validation test 6"] = Tag.validateTag(" €c") == 0x07
+
 
 
 
@@ -1227,6 +1382,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 235
+assert numTestResults == 279
 
 printTestResultSummary("Tests for table_maxp", testResults, skippedTests)

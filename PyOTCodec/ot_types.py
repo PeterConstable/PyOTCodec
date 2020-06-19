@@ -74,7 +74,7 @@ class Tag(str):
         """
 
         if tag == None:
-            raise OTCodecError("Invalid argument: None")
+            raise TypeError("Invalid argument: None")
 
         # Recognize exceptional sfntVersion tag:
         if tag == b'\x00\x01\x00\x00':

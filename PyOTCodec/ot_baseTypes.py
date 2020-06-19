@@ -1,6 +1,7 @@
 from enum import Enum
 from io import BytesIO
 import math
+import re
 import struct
 
 
@@ -81,6 +82,12 @@ def assertIsWellDefinedOTType(className):
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
         # no additional validations are feasible
+        pass
+    if className.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL:
+        assert hasattr(className, 'NUM_PACKED_VALUES')
+        assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
+        assert hasattr(className, 'createFromUnpackedValues')
+        assert callable(className.createFromUnpackedValues)
         pass
 
 
@@ -502,6 +509,117 @@ class F2Dot14(float):
 
 
 
-class tag:
-    pass
+class Tag(str):
 
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">4s"
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
+    
+    def __new__(cls, tagContent):
+        """ Accept bytes, bytearray or string."""
+
+        if isinstance(tagContent, bytes) or isinstance(tagContent, bytearray):
+            # take 4 bytes; if less than 4 pad with 0x00
+            tmp = tagContent + bytearray([0,0,0,0])
+            tmp = tmp[:4]
+        elif isinstance(tagContent, str):
+            # take 4 characters; if less than 4 pad with spaces
+            tmp = tagContent + 4 * "\u0020"
+            tmp = tmp[:4]
+            # verify only 0x00 to 0xFF by trying to encode as ASCII
+            # this will raise a UnicodeError if any out of range characters
+        else:
+            raise TypeError("Tag can only be constructed from str, bytearray or bytes.")
+
+        try:
+            tag, bytes_ = cls._getTagAndBytes(tmp)
+        except UnicodeEncodeError:
+            raise ValueError("Tag can only have ASCII characters (byte values < 128).")
+        tag = super().__new__(cls, tag)
+        tag._rawBytes = bytes_
+
+        return tag
+
+    @staticmethod
+    def _getTagAndBytes(content):
+        if isinstance(content, (bytearray, bytes)):
+            bytes_ = content
+            tag = content.decode("ascii")
+        else:
+            tag = content
+            bytes_ = content.encode("ascii")
+        return tag, bytes_
+
+    @staticmethod
+    def createFromUnpackedValues(val):
+        # more stringent validation than in constructor
+        if not isinstance(val, (bytearray, bytes)) or len(val) != 4:
+            raise TypeError('The val argument must be bytearray or bytes with length of four.')
+        return Tag(val)
+
+    @staticmethod
+    def tryReadFromBytesIO(fileBytesIO:BytesIO):
+        bytes_ = _tryReadRawBytes(fileBytesIO, Tag.PACKED_SIZE)
+        return Tag(bytes_)
+
+    def toBytes(self):
+        return self._rawBytes
+
+    def __ne__(self, other):
+        """Compare to tag bytearray, bytes or string"""
+        return not self.__eq__(other)
+
+    def __eq__(self, other):
+        """Compare to tag bytearray, bytes or string"""
+        if isinstance(other, Tag):
+            return self._rawBytes == other._rawBytes
+        elif isinstance(other, (bytearray, bytes)):
+            return self._rawBytes == other
+        elif isinstance(other, str):
+            return super().__eq__(other)
+        else:
+            return False
+
+    # Implementation of __hash__ is needed so that a Tag can be used as a dict key
+    def __hash__(self):
+        return str.__hash__(self)
+
+    @staticmethod
+    def validateTag(tag):
+        """Check if a tag string is a valid OpenType tag. Returns an error code.
+
+        OpenType tags must be 4 characters long. They can only include 
+        ASCII 0x20 to 0x7E, and spaces can only be trailing. The sfnt
+        version tag 0x0100 is the one exception to these rules, and
+        b'\x00\x01\x00\x00' will be accepted. 
+
+        The method returns an error code with flags:
+            0x00: valid tag string
+            0x01: wrong length
+            0x02: out of range characters
+            0x04: non-trailing spaces
+        """
+
+        if tag == None:
+            raise TypeError("Invalid argument: None")
+
+        # Recognize exceptional sfntVersion tag:
+        if tag == b'\x00\x01\x00\x00':
+            return 0
+
+        errors = 0
+
+        # Test against normal rules
+
+        if len(tag) != 4:
+            errors += 0x01
+        for c in tag:
+            if ord(c) < 0x20 or ord(c) > 0x7E:
+                errors += 0x02
+
+        # check for non-trailing spaces: remove all spaces and compare with rstrip
+        if re.sub(" ", "", tag) != tag.rstrip():
+            errors += 0x04
+        
+        return errors
