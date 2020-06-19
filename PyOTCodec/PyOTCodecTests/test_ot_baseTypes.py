@@ -107,7 +107,7 @@ testResults["baseTypes assertIsWellDefinedOTType test 2"] = result
 # BASIC
 
 # missing PACKED_FORMAT, wrong type, or not starting with '>'
-class testClass:
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     pass
 try:
@@ -118,7 +118,7 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 3"] = result
 
-class testClass:
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = 42
     pass
@@ -130,7 +130,7 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 4"] = result
 
-class testClass:
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = "x"
     pass
@@ -144,7 +144,7 @@ testResults["baseTypes assertIsWellDefinedOTType test 5"] = result
 
 
 # missing PACKED_SIZE, wrong type, or not correct value
-class testClass:
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     pass
@@ -156,7 +156,7 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 6"] = result
 
-class testClass:
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 'x'
@@ -169,7 +169,7 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 7"] = result
 
-class testClass:
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 4
@@ -182,6 +182,88 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 8"] = result
 
+# BASIC not a sub-class of int
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 9"] = result
+
+
+
+#-------------------------------------------------------------
+# Tests for concatFormatStrings
+#-------------------------------------------------------------
+
+# tests for concatFormatStrings
+try:
+    x = concatFormatStrings(None)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 1"] = result
+try:
+    x = concatFormatStrings(42)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 2"] = result
+try:
+    x = concatFormatStrings(42, "abc")
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 3"] = result
+try:
+    x = concatFormatStrings("abc", 42)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 4"] = result
+try:
+    x = concatFormatStrings("abc", "def", 42, "ghi")
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 5"] = result
+try:
+    x = concatFormatStrings("@abc", "def")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 6"] = result
+try:
+    x = concatFormatStrings(">abc", "@def")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 7"] = result
+try:
+    x = concatFormatStrings(">abc", ">def", "@ghi")
+except OTCodecError:
+    result = True
+else:
+    result = False
+testResults["baseTypes concatFormatStrings test 8"] = result
+testResults["baseTypes concatFormatStrings test 9"] = (concatFormatStrings("abc") == "abc")
+testResults["baseTypes concatFormatStrings test 10"] = (concatFormatStrings(">abc", "def") == ">abcdef")
+testResults["baseTypes concatFormatStrings test 11"] = (concatFormatStrings(">abc", ">def") == ">abcdef")
+testResults["baseTypes concatFormatStrings test 12"] = (concatFormatStrings(">abc", ">def", "ghi") == ">abcdefghi")
+testResults["baseTypes concatFormatStrings test 13"] = (concatFormatStrings(">abc", ">def", ">ghi") == ">abcdefghi")
 
 
 
@@ -857,18 +939,26 @@ else:
 testResults["baseTypes uint24 definition test 1"] = result
 
 testResults["baseTypes uint24 definition test 2"] = (uint24.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
-testResults["baseTypes uint24 definition test 3"] = (uint24.PACKED_FORMAT == ">3B")
+testResults["baseTypes uint24 definition test 3"] = (uint24.PACKED_FORMAT == ">3s")
 testResults["baseTypes uint24 definition test 4"] = (uint24.PACKED_SIZE == 3)
-testResults["baseTypes uint24 definition test 5"] = (uint24.NUM_PACKED_VALUES == 3)
+testResults["baseTypes uint24 definition test 5"] = (uint24.NUM_PACKED_VALUES == 1)
 
 # constructor requires int argument in range [0, 0xffff_ffff_ffff]
 try:
     x = uint24()
-except:
+except TypeError:
     result = True
 else:
     result = False
 testResults["baseTypes uint24 constructor test 1"] = result
+
+try:
+    x = uint24(24.3)
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 constructor test 2"] = result
 
 try:
     x = uint24(-1)
@@ -876,7 +966,7 @@ except:
     result = True
 else:
     result = False
-testResults["baseTypes uint24 constructor test 2"] = result
+testResults["baseTypes uint24 constructor test 3"] = result
 
 try:
     x = uint24(0x1_0000_0000_0000)
@@ -884,46 +974,43 @@ except:
     result = True
 else:
     result = False
-testResults["baseTypes uint24 constructor test 3"] = result
+testResults["baseTypes uint24 constructor test 4"] = result
 
 x = uint24(0)
 y = uint24(0xffff_ffff_ffff)
-testResults["baseTypes uint24 constructor test 4"] = isinstance(x, int)
+testResults["baseTypes uint24 constructor test 5"] = isinstance(x, int)
 result = (type(x) == uint24 and type(y) == uint24 and (x + y) == 0xffff_ffff_ffff)
-testResults["baseTypes uint24 constructor test 5"] = result
+testResults["baseTypes uint24 constructor test 6"] = result
+
+# constructor accepts bytearray / bytes argument of length 3
+try:
+    x = uint24(b'\x42\xac')
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 constructor test 7"] = result
+
+try:
+    x = uint24(b'\x42\xac\x87\x32')
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["baseTypes uint24 constructor test 8"] = result
+
+x = uint24(b'\x42\xac\x87')
+result = (type(x) == uint24 and x == 0x42_ac87)
+testResults["baseTypes uint24 constructor test 9"] = result
+
 
 # createFromUnpackedValues
 
-# wrong number of args
-try:
-    x = uint24.createFromUnpackedValues(0x42, 0xac)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes uint24 createFromUnpackedValues test 1"] = result
-
-try:
-    x = uint24.createFromUnpackedValues(0x42, 0xac, 0x87, 0xe2)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes uint24 createFromUnpackedValues test 2"] = result
-
-# wrong arg type
-try:
-    x = uint24.createFromUnpackedValues(42, 4.2, 42)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes uint24 createFromUnpackedValues test 3"] = result
-
-# good ars
-x = uint24.createFromUnpackedValues(0x42, 0xac, 0x87)
+buffer = b'\x42\xac\x87'
+val, = struct.unpack(uint24.PACKED_FORMAT, buffer)
+x = uint24.createFromUnpackedValues(val)
 result = (type(x) == uint24 and x == 0x42_ac87)
-testResults["baseTypes uint24 createFromUnpackedValues test 4"] = result
+testResults["baseTypes uint24 createFromUnpackedValues test 1"] = result
 
 # see above for test of tryReadFromBytesIO
 
@@ -941,7 +1028,7 @@ else:
 testResults["baseTypes Fixed definition test 1"] = result
 
 testResults["baseTypes Fixed definition test 2"] = (Fixed.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
-testResults["baseTypes Fixed definition test 3"] = (Fixed.PACKED_FORMAT == ">L")
+testResults["baseTypes Fixed definition test 3"] = (Fixed.PACKED_FORMAT == ">4s")
 testResults["baseTypes Fixed definition test 4"] = (Fixed.PACKED_SIZE == 4)
 testResults["baseTypes Fixed definition test 5"] = (Fixed.NUM_PACKED_VALUES == 1)
 
@@ -985,29 +1072,23 @@ testResults["baseTypes Fixed constructor test 6"] = (Fixed(b'\xF0\x00\x80\x00') 
 testResults["baseTypes Fixed constructor test 7"] = (-4095.5 == Fixed(b'\xF0\x00\x80\x00'))
 
 # Fixed.createFromUnpackedValues: arg must be between 0 and 0xffff_ffff
-try:
-    Fixed.createFromUnpackedValues(-1)
-except ValueError:
-    result = True
-else:
-    result = False
-testResults["baseTypes Fixed.createFromUnpackedValues test 1"] = result
-try:
-    Fixed.createFromUnpackedValues(0x1_FFFF_FFFF)
-except ValueError:
-    result = True
-else:
-    result = False
-testResults["baseTypes Fixed.createFromUnpackedValues test 2"] = result
 
-f = Fixed.createFromUnpackedValues(0x0001_8000)
-testResults["baseTypes Fixed.createFromUnpackedValues test 3"] = (f == 1.5)
-f = Fixed.createFromUnpackedValues(0xF000_8000)
-testResults["baseTypes Fixed.createFromUnpackedValues test 4"] = (f == -4095.5)
-f = Fixed.createFromUnpackedValues(0x0001_5000)
-testResults["baseTypes Fixed.createFromUnpackedValues test 5"] = (f._rawBytes == bytes(b'\x00\x01\x50\x00'))
+buffer = b'\x00\x01\x80\x00'
+val, = struct.unpack(Fixed.PACKED_FORMAT, buffer)
+x = Fixed.createFromUnpackedValues(val)
+testResults["baseTypes Fixed.createFromUnpackedValues test 1"] = (x == 1.5)
 
-# Fixed.createFixedFromUint32: arg must be between 0 and 0xffff_ffff
+buffer = b'\xf0\x00\x80\x00'
+val, = struct.unpack(Fixed.PACKED_FORMAT, buffer)
+x = Fixed.createFromUnpackedValues(val)
+testResults["baseTypes Fixed.createFromUnpackedValues test 2"] = (x == -4095.5)
+
+buffer = b'\x00\x01\x50\x00'
+val, = struct.unpack(Fixed.PACKED_FORMAT, buffer)
+x = Fixed.createFromUnpackedValues(val)
+testResults["baseTypes Fixed.createFromUnpackedValues test 3"] = (x._rawBytes == bytes(b'\x00\x01\x50\x00'))
+
+# Fixed.createFixedFromUint32
 try:
     Fixed.createFixedFromUint32(-1)
 except ValueError:
@@ -1035,10 +1116,10 @@ testResults["baseTypes Fixed.createFixedFromUint32 test 5"] = (f._rawBytes == by
 # also see above for test of tryReadFromBytesIO
 testbio = BytesIO(testBytes1)
 f = Fixed.tryReadFromBytesIO(testbio)
-testResults["Fixed.tryReadFromBytesIO test 1"] = (type(f) == Fixed)
-testResults["Fixed.tryReadFromBytesIO test 2"] = (f.getFixedAsUint32() == 0x020F37DC)
+testResults["baseTypes Fixed.tryReadFromBytesIO test 1"] = (type(f) == Fixed)
+testResults["baseTypes Fixed.tryReadFromBytesIO test 2"] = (f.getFixedAsUint32() == 0x020F37DC)
 f = Fixed.tryReadFromBytesIO(testbio)
-testResults["Fixed.tryReadFromBytesIO test 3"] = (f.getFixedAsUint32() == 0x9AA20FE7)
+testResults["baseTypes Fixed.tryReadFromBytesIO test 3"] = (f.getFixedAsUint32() == 0x9AA20FE7)
 testbio.seek(-1, 2) #from end of stream
 try:
     f = Fixed.tryReadFromBytesIO(testbio)
@@ -1046,7 +1127,7 @@ except OTCodecError:
     result = True
 else:
     result = False
-testResults["Fixed.tryReadFromBytesIO test 4"] = result
+testResults["baseTypes Fixed.tryReadFromBytesIO test 4"] = result
 
 
 # Fixed.createFixedFromFloat
@@ -1086,13 +1167,13 @@ testResults["baseTypes Fixed __eq__ test 8"] = (f == 0xF000_0000)
 
 # Fixed misc
 f = Fixed(b'\xF0\x00\x80\x00')
-testResults["Fixed members test 1"] = (f.mantissa == -4096)
-testResults["Fixed members test 2"] = (f.fraction == 0x8000)
-testResults["Fixed members test 3"] = (f.getFixedAsUint32() == 0xF0008000)
-testResults["Fixed members test 4"] = (f.__str__() == "-4095.5")
-testResults["Fixed members test 5"] = (f.__repr__() == "-4095.5")
+testResults["baseTypes Fixed members test 1"] = (f.mantissa == -4096)
+testResults["baseTypes Fixed members test 2"] = (f.fraction == 0x8000)
+testResults["baseTypes Fixed members test 3"] = (f.getFixedAsUint32() == 0xF0008000)
+testResults["baseTypes Fixed members test 4"] = (f.__str__() == "-4095.5")
+testResults["baseTypes Fixed members test 5"] = (f.__repr__() == "-4095.5")
 f = Fixed(b'\x00\x02\x50\x00')
-testResults["Fixed members test 6"] = (f.fixedTableVersion == 2.5)
+testResults["baseTypes Fixed members test 6"] = (f.fixedTableVersion == 2.5)
 
 
 
@@ -1109,7 +1190,7 @@ else:
 testResults["baseTypes F2Dot14 definition test 1"] = result
 
 testResults["baseTypes F2Dot14 definition test 2"] = (F2Dot14.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
-testResults["baseTypes F2Dot14 definition test 3"] = (F2Dot14.PACKED_FORMAT == ">H")
+testResults["baseTypes F2Dot14 definition test 3"] = (F2Dot14.PACKED_FORMAT == ">2s")
 testResults["baseTypes F2Dot14 definition test 4"] = (F2Dot14.PACKED_SIZE == 2)
 testResults["baseTypes F2Dot14 definition test 5"] = (F2Dot14.NUM_PACKED_VALUES == 1)
 
@@ -1152,28 +1233,21 @@ testResults["baseTypes F2Dot14 constructor test 5"] = (type(F2Dot14(bytes(b'\xF0
 testResults["baseTypes F2Dot14 constructor test 6"] = (F2Dot14(b'\xF0\x00') == -0.25)
 
 
-# F2Dot14.createFromUnpackedValues: arg must be between 0 and 0xffff
-try:
-    F2Dot14.createFromUnpackedValues(-1)
-except ValueError:
-    result = True
-else:
-    result = False
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 1"] = result
-try:
-    F2Dot14.createFromUnpackedValues(0x1_0000)
-except ValueError:
-    result = True
-else:
-    result = False
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 2"] = result
+# F2Dot14.createFromUnpackedValues
+buffer = b'\x60\x00'
+val, = struct.unpack(F2Dot14.PACKED_FORMAT, buffer)
+x = F2Dot14.createFromUnpackedValues(val)
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 1"] = (x == 1.5)
 
-f = F2Dot14.createFromUnpackedValues(0x6000)
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 3"] = (f == 1.5)
-f = F2Dot14.createFromUnpackedValues(0xF000)
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 4"] = (f == -0.25)
-f = F2Dot14.createFromUnpackedValues(0x3c01)
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 5"] = (f._rawBytes == bytes(b'\x3c\x01'))
+buffer = b'\xf0\x00'
+val, = struct.unpack(F2Dot14.PACKED_FORMAT, buffer)
+x = F2Dot14.createFromUnpackedValues(val)
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 2"] = (x == -0.25)
+
+buffer = b'\x3c\x01'
+val, = struct.unpack(F2Dot14.PACKED_FORMAT, buffer)
+x = F2Dot14.createFromUnpackedValues(val)
+testResults["baseTypes F2Dot14.createFromUnpackedValues test 3"] = (x._rawBytes == bytes(b'\x3c\x01'))
 
 # F2Dot14.createF2Dot14FromUint16: arg must be between 0 and 0xffff
 try:
@@ -1382,6 +1456,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 279
+assert numTestResults == 290
 
-printTestResultSummary("Tests for table_maxp", testResults, skippedTests)
+printTestResultSummary("Tests for ot_baseTypes", testResults, skippedTests)

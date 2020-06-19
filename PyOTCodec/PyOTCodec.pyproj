@@ -18,7 +18,7 @@
     <InterpreterArguments>
     </InterpreterArguments>
     <EnableNativeCodeDebugging>False</EnableNativeCodeDebugging>
-    <CommandLineArguments>baseTypes</CommandLineArguments>
+    <CommandLineArguments>structs</CommandLineArguments>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)' == 'Debug' ">
     <DebugSymbols>true</DebugSymbols>
@@ -38,6 +38,9 @@
     <Compile Include="ot_font.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="ot_structs.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="ot_table.py">
       <SubType>Code</SubType>
     </Compile>
@@ -52,6 +55,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodecTests\test_ot_font.py">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="PyOTCodecTests\test_ot_structs.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodecTests\test_ot_types.py">

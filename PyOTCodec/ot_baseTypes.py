@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from enum import Enum
 from io import BytesIO
 import math
@@ -10,31 +11,34 @@ class OTCodecError(Exception): pass
 
 class otTypeCategory(Enum):
     BASIC = 0 
-        # BASIC: a built-in, non-container type -- int, float or str -- 
-        # or a sub-class (e.g., int8), or one of the OT types Tag, 
-        # Fixed, F2Dot14
-        # Characteristics:
-        #   - has PACKED_FORMAT and PACKED_SIZE "static" members
-        #   - does not have FIELD_NAMES or FIELD_TYPES members
-        #   - has a constructor function that takes unpacked value directly
-        #   - returns the same value directly
-
-    BASIC_OT_SPECIAL = 1
-        # BASIC_OT_SPECIAL: Tag, Fixed, F2Dot14, uint24. Unpacked values
-        # require some reinterpretation.
+        # BASIC: a defined sub-class of int (e.g., int8).
+        #
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
-        #  - does not have FIELD_NAMES or FIELD_TYPES members
-        #  - does not have a constructor function that takes unpacked value directly
+        #  - does not have FIELDS member
+        #  - has a constructor function that takes unpacked value directly,
+        #    and that value is an instance of the base class
+        #  - returns the same value directly
+
+    BASIC_OT_SPECIAL = 1
+        # BASIC_OT_SPECIAL: Tag, Fixed, F2Dot14, uint24. Type is not directly
+        # supported by struct module, and so unpacked values require some
+        # reinterpretation.
+        #
+        # Characteristics:
         #  - has a base type str (Tag), float (Fixed, F2Dot24) or int (uint24)
-        #  - has a constructor that accepts the base type
+        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - does not have FIELDS member
+        #  - has a constructor function that takes unpacked value directly
+        #  - constructor may or may not accept the base type
         #  - has a createFromUnpackedValues static method
         #  - returns the base type directly
 
     FIXED_LENGTH_BASIC_STRUCT = 2
         # FIXED_LENGTH_BASIC_STRUCT: a struct that has two or more members of BASIC, 
-        # BASIC_OT_SPECIAL or BASIC_FIXED_STRUCT types. Often but not always
+        # BASIC_OT_SPECIAL or FIXED_LENGTH_BASIC_STRUCT types. Often but not always
         # used in arrays.
+        #
         # Characteristics:
         #   - have PACKED_FORMAT and PACKED_SIZE "static" members
         #   - have FIELD_NAMES or FIELD_TYPES static members
@@ -67,9 +71,9 @@ def assertIsWellDefinedOTType(className):
     to parse structures.
 
     For example, a BASIC type must have a PACKED_FORMAT member, but is not
-    required to have a FIELD_NAMES member.
+    required to have a FIELDS member.
     """
-    
+
     assert hasattr(className, 'TYPE_CATEGORY')
     assert type(className.TYPE_CATEGORY) == otTypeCategory
 
@@ -79,16 +83,38 @@ def assertIsWellDefinedOTType(className):
     assert hasattr(className, 'PACKED_SIZE')
     assert (type(className.PACKED_SIZE) == int)
     assert (className.PACKED_SIZE == struct.calcsize(className.PACKED_FORMAT))
+    assert hasattr(className, 'NUM_PACKED_VALUES')
+    assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
+
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
-        # no additional validations are feasible
-        pass
+        assert int in className.__mro__
+
     if className.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL:
-        assert hasattr(className, 'NUM_PACKED_VALUES')
-        assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
         assert hasattr(className, 'createFromUnpackedValues')
         assert callable(className.createFromUnpackedValues)
         pass
+
+
+
+def concatFormatStrings(*args):
+    """Combines struct format strings."""
+    assert len(args) > 0
+    assert type(args[0]) == str
+    if args[0][0] in "@=<!":
+        raise OTCodecError("Only big-endian format strings are supported.")
+    if len(args) == 1:
+        return args[0]
+    result = args[0]
+    for arg in args[1:]:
+        assert type(arg) == str
+        if arg[0] in "@=<!":
+            raise OTCodecError("Only big-endian format strings are supported.")
+        if arg[0] == '>':
+            result += arg[1:]
+        else:
+            result += arg
+    return result
 
 
 
@@ -98,7 +124,7 @@ def _tryReadRawBytes(fileBytesIO:BytesIO, length):
         raise OTCodecError("Unable to read expected number of bytes from file")
     return rawbytes
 
-def _readBasicTypeFromBytesIO(cls, fileBytesIO:BytesIO):
+def readBasicTypeFromBytesIO(cls, fileBytesIO:BytesIO):
     """Can be used by any otTypeCategory.BASIC type for sequential
     read from a BytesIO buffer."""
     rawbytes = _tryReadRawBytes(fileBytesIO, cls.PACKED_SIZE)
@@ -116,6 +142,7 @@ class int8(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">b"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x80) or val > 0x7f):
@@ -124,7 +151,7 @@ class int8(int):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(int8, fileBytes)
+        return readBasicTypeFromBytesIO(int8, fileBytes)
 
 
 class uint8(int):
@@ -132,6 +159,7 @@ class uint8(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">B"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < 0 or val > 0xff):
@@ -140,7 +168,7 @@ class uint8(int):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(uint8, fileBytes)
+        return readBasicTypeFromBytesIO(uint8, fileBytes)
 
 
 
@@ -149,6 +177,7 @@ class int16(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x8000) or val > 0x7fff):
@@ -157,7 +186,7 @@ class int16(int):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(int16, fileBytes)
+        return readBasicTypeFromBytesIO(int16, fileBytes)
 
 
 
@@ -167,7 +196,7 @@ class FWord(int16):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(FWord, fileBytes)
+        return readBasicTypeFromBytesIO(FWord, fileBytes)
 
 
 
@@ -176,6 +205,7 @@ class uint16(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">H"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < 0 or val > 0xffff):
@@ -184,7 +214,7 @@ class uint16(int):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(uint16, fileBytes)
+        return readBasicTypeFromBytesIO(uint16, fileBytes)
 
 
 
@@ -194,7 +224,7 @@ class UFWord(uint16):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(UFWord, fileBytes)
+        return readBasicTypeFromBytesIO(UFWord, fileBytes)
 
 
 
@@ -204,7 +234,7 @@ class Offset16(uint16):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(Offset16, fileBytes)
+        return readBasicTypeFromBytesIO(Offset16, fileBytes)
 
 
 
@@ -213,6 +243,7 @@ class int32(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">l"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x8000_0000) or val > 0x7fff_ffff):
@@ -221,7 +252,7 @@ class int32(int):
 
     @staticmethod
     def readFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(int32, fileBytes)
+        return readBasicTypeFromBytesIO(int32, fileBytes)
 
 
 
@@ -230,6 +261,7 @@ class uint32(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">L"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
     
     def __new__(cls, val):
         if (val < 0 or val > 0xffff_ffff):
@@ -238,7 +270,7 @@ class uint32(int):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(uint32, fileBytes)
+        return readBasicTypeFromBytesIO(uint32, fileBytes)
 
 
 
@@ -249,7 +281,7 @@ class Offset32(uint32):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(Offset32, fileBytes)
+        return readBasicTypeFromBytesIO(Offset32, fileBytes)
 
 
 
@@ -258,6 +290,7 @@ class int64(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">q"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x8000_0000_0000_0000) or val > 0x7fff_ffff_ffff_ffff):
@@ -266,7 +299,7 @@ class int64(int):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(int64, fileBytes)
+        return readBasicTypeFromBytesIO(int64, fileBytes)
 
 
 
@@ -277,7 +310,7 @@ class LongDateTime(int64):
 
     @staticmethod
     def tryReadFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(LongDateTime, fileBytes)
+        return readBasicTypeFromBytesIO(LongDateTime, fileBytes)
 
 
 
@@ -286,6 +319,7 @@ class uint64(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">Q"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    NUM_PACKED_VALUES = 1
     
     def __new__(cls, val):
         if (val < 0 or val > 0xffff_ffff_ffff_ffff):
@@ -294,7 +328,7 @@ class uint64(int):
 
     @staticmethod
     def readFromBytesIO(fileBytes:BytesIO):
-        return _readBasicTypeFromBytesIO(uint64, fileBytes)
+        return readBasicTypeFromBytesIO(uint64, fileBytes)
 
 
 
@@ -306,39 +340,40 @@ class uint64(int):
 class uint24(int):
 
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">3B"
+    PACKED_FORMAT = ">3s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 3
+    NUM_PACKED_VALUES = 1
     
     def __new__(cls, val):
-        if (val < 0 or val > 0xffff_ffff_ffff):
-            raise ValueError("uint24 must be in the range %d to %d" % (0, 0xffff_ffff_ffff))
-        return super().__new__(cls, val)
+        """Accepts bytearray, bytes or int (in range 0 to 0xffff_ffff_ffff)."""
+        if not isinstance(val, (bytearray, bytes, int)):
+            raise TypeError("val argument must be bytearray, bytes or int.")
+
+        if isinstance(val, int):
+            if (val < 0 or val > 0xffff_ffff_ffff):
+                raise ValueError("uint24 must be in the range %d to %d" % (0, 0xffff_ffff_ffff))
+            intval = val
+        else:
+            if len(val) != cls.PACKED_SIZE:
+                raise TypeError("val argument byte sequence must be 3 bytes long.")
+            intval = (val[0] << 16) + (val[1] << 8) + val[2]
+        return super().__new__(cls, intval)
 
     @staticmethod
-    def createFromUnpackedValues(*args):
-        if len(args) != uint24.NUM_PACKED_VALUES:
-            raise TypeError(f"expected number of arguments for createFromUnpackedValues: {uint24.NUM_PACKED_VALUES}")
-        for a in args:
-            if type(a) != int:
-                raise TypeError("createFromUnpackedValues requires int arguments")
-            if (a < 0 or a > 255):
-                raise ValueError("createFromUnpackedValues arguments must be 0 to 255")
-        val = (args[0] << 16) + (args[1] << 8) + args[2]
-        return uint24(val)
+    def createFromUnpackedValues(bytes_):
+        return uint24(bytes_)
 
     @staticmethod
     def tryReadFromBytesIO(fileBytesIO:BytesIO):
         bytes_ = _tryReadRawBytes(fileBytesIO, uint24.PACKED_SIZE)
-        vals = struct.unpack(uint24.PACKED_FORMAT, bytes_)
-        return uint24.createFromUnpackedValues(*vals)
+        return uint24(bytes_)
 
 
 
 class Fixed(float):
 
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">L"
+    PACKED_FORMAT = ">4s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     NUM_PACKED_VALUES = 1
     
@@ -359,8 +394,8 @@ class Fixed(float):
         return fixed_
 
     @staticmethod
-    def createFromUnpackedValues(val:int):
-        return Fixed.createFixedFromUint32(val)
+    def createFromUnpackedValues(bytes_):
+        return Fixed(bytes_)
 
     @staticmethod
     def createFixedFromUint32(val:int):
@@ -422,7 +457,7 @@ class Fixed(float):
 class F2Dot14(float):
 
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">H"
+    PACKED_FORMAT = ">2s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     NUM_PACKED_VALUES = 1
     
@@ -449,8 +484,8 @@ class F2Dot14(float):
         return f2dot14
 
     @staticmethod
-    def createFromUnpackedValues(val:int):
-        return F2Dot14.createF2Dot14FromUint16(val)
+    def createFromUnpackedValues(bytes_):
+        return F2Dot14(bytes_)
 
     @staticmethod
     def createF2Dot14FromUint16(val:int):
