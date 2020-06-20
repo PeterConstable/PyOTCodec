@@ -45,6 +45,16 @@ def tryReadFixedLengthStructFieldsFromBuffer(buffer, className):
 
     allFields = OrderedDict([])
 
+    # FIXED_LENGTH_BASIC_STRUCT structs have only BASIC or BASIC_OT_SPECIAL 
+    # fields. Those types have constructors that can accept unpacked values
+    # directly.
+    # 
+    # FIXED_LENGTH_COMPLEX_STRUCT structs have fields that take other nested
+    # FIXED_LENGTH_COMPLEX_STRUCT or FIXED_LENGTH_BASIC_STRUCT structs as values.
+    # These require a recursive call to this function, passing the portion of the
+    # buffer for that struct. So for the parent struct we need to process the 
+    # buffer sequentially.
+
     if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT:
         vals = struct.unpack(className.PACKED_FORMAT, buffer[:className.PACKED_SIZE])
         for val, field, type_ in zip(vals, className.FIELDS.keys(), className.FIELDS.values()):
@@ -62,37 +72,7 @@ def tryReadFixedLengthStructFieldsFromBuffer(buffer, className):
             allFields[field] = fieldValue
 
     return allFields
-
-
-
-def tryReadFixedBasicRecordsArrayFromBuffer(buffer, recordClass, numRecords, arrayName):
-    """Takes a buffer and returns a list of objects of the indicated type read
-    from the buffer.
-
-    Assumes that the records array starts at the beginning of the buffer.
-
-    Also assumes that recordClass meets the criteria for FIXED_LENGTH_BASIC_STRUCT.
-    """
-    try:
-        assertIsWellDefinedOTType(recordClass)
-    except:
-        raise TypeError(f"{recordClass} isn't a well-defined fixed-length struct type.")
-    if (recordClass.TYPE_CATEGORY != otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
-        and recordClass.TYPE_CATEGORY != otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
-        raise TypeError(f"{recordClass} isn't a fixed-length struct type.")
-
-    arrayLength = numRecords * recordClass.PACKED_SIZE
-    if len(buffer) < arrayLength:
-        raise OTCodecError(f"The buffer is not long enough to read the {arrayName} array.")
-
-    if recordClass.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT:
-        unpack_iter = struct.iter_unpack(recordClass.PACKED_FORMAT, buffer[:arrayLength])
-        return [
-            recordClass(*vals)
-            for vals in itertools.islice(unpack_iter, numRecords)
-            ]
-    else:
-        pass
+# End of tryReadFixedLengthStructFieldsFromBuffer
 
 
 
@@ -109,25 +89,50 @@ def tryReadFixedLengthStructFromBuffer(buffer, className):
        assertIsWellDefinedOTType(className)
     except:
         raise TypeError(f"{className} isn't a well-defined fixed-length struct type.")
-    if (className.TYPE_CATEGORY != otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
-        and className.TYPE_CATEGORY != otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
+    if not className.TYPE_CATEGORY in (
+            otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
         raise TypeError(f"{className} isn't a fixed-length struct type.")
 
     if len(buffer) < className.PACKED_SIZE:
         raise OTCodecError(f"The buffer is to short to read {className}.")
 
-    # Structs that have only BASIC or BASIC_OT_SPECIAL fields are fairly
-    # easy since those types have constructors that can accept unpacked 
-    # values directly.
-    # 
-    # But fields that take FIXED_LENGTH_BASIC_STRUCT values are more
-    # complex. They can have nested FIXED_LENGTH_BASIC_STRUCT structs,
-    # and their constructors don't take unpacked values directly. They
-    # require a recursive call to this function.
-
     allFields = tryReadFixedLengthStructFieldsFromBuffer(buffer, className)
 
     return className(*allFields.values())
+# End of tryReadFixedLengthStructFromBuffer
+
+
+
+def tryReadFixedLengthRecordsArrayFromBuffer(buffer, recordClass, numRecords, arrayName):
+    """Takes a buffer and returns a list of objects of the indicated type read
+    from the buffer.
+
+    Assumes that the records array starts at the beginning of the buffer.
+
+    Also assumes that recordClass meets the criteria for FIXED_LENGTH_BASIC_STRUCT.
+    """
+    try:
+        assertIsWellDefinedOTType(recordClass)
+    except:
+        raise TypeError(f"{recordClass} isn't a well-defined fixed-length struct type.")
+    if not recordClass.TYPE_CATEGORY in (
+            otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
+        raise TypeError(f"{recordClass} isn't a fixed-length struct type.")
+
+    arrayLength = numRecords * recordClass.PACKED_SIZE
+    if len(buffer) < arrayLength:
+        raise OTCodecError(f"The buffer is not long enough to read the {arrayName} array.")
+
+    bufferIO = BytesIO(buffer)
+    records = []
+    for i in range(numRecords):
+        recordBuffer = bufferIO.read(recordClass.PACKED_SIZE)
+        records.append(tryReadFixedLengthStructFromBuffer(recordBuffer, recordClass))
+
+    return records
+# End of tryReadFixedBasicRecordsArrayFromBuffer
 
 
 
@@ -136,7 +141,7 @@ def tryReadVarLengthBasicStructFromBuffer(buffer, className):
     the buffer.
 
     Assumes that the struct starts at the beginning of the buffer. The
-    structClass must meet the criteria for VAR_LENGTH_BASIC_STRUCT 
+    structClass must meet the criteria for VAR_LENGTH_STRUCT 
     structures (otTypeCategory enums): comprised of basic struct types
     described by FIELDS, and has one or more arrays described by ARRAYS.
     """
@@ -144,29 +149,35 @@ def tryReadVarLengthBasicStructFromBuffer(buffer, className):
        assertIsWellDefinedOTType(className)
     except:
         raise TypeError(f"{className} isn't a well-defined type for purposes of declarative parsing.")
+    if not className.TYPE_CATEGORY in (
+            otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT):
+        raise TypeError(f"{className} isn't a fixed- or variable-length struct type.")
 
     # start with header
     allFields = tryReadFixedLengthStructFieldsFromBuffer(buffer, className)
 
     # finished with headers; now process arrays
-    for array in className.ARRAYS:
-        # determine count: either a number or a header field name
-        if type(array["count"]) == str:
-            count = allFields[array["count"]]
-        else:
-            count = array["count"]
-        # determine location: if "offset" is a str, then a header field name for offset;
-        # if "offset" is None, then immediately after the header;
-        # 
-        if type(array["offset"]) == str:
-            offset = allFields[array["offset"]]
-        elif array["offset"] is None:
-            offset = className.PACKED_SIZE
-        allFields[array["field"]] = tryReadFixedBasicRecordsArrayFromBuffer(
-            buffer[offset:],
-            array["type"],
-            count,
-            array["field"]
-            )
+    if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT:
+        for array in className.ARRAYS:
+            # determine count: either a number or a header field name
+            if type(array["count"]) == str:
+                count = allFields[array["count"]]
+            else:
+                count = array["count"]
+            # determine location: if "offset" is a str, then a header field name for
+            # offset; else "offset" has offset directly;
+            # 
+            if type(array["offset"]) == str:
+                offset = allFields[array["offset"]]
+            else:
+                offset = array["offset"]
+            allFields[array["field"]] = tryReadFixedLengthRecordsArrayFromBuffer(
+                buffer[offset:],
+                array["type"],
+                count,
+                array["field"]
+                )
         
     return className(*allFields.values())

@@ -71,7 +71,7 @@ testResults["baseTypes file read test 19 (Tag.tryReadFromBytesIO)"] = Tag.tryRea
 result = hasattr(otTypeCategory, 'BASIC')
 result &= hasattr(otTypeCategory, 'BASIC_OT_SPECIAL')
 result &= hasattr(otTypeCategory, 'FIXED_LENGTH_BASIC_STRUCT')
-result &= hasattr(otTypeCategory, 'VAR_LENGTH_BASIC_STRUCT')
+result &= hasattr(otTypeCategory, 'VAR_LENGTH_STRUCT')
 testResults["baseTypes otTypeCategory constants test"] = result
 
 

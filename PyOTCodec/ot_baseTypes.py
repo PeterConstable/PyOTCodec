@@ -56,12 +56,13 @@ class otTypeCategory(Enum):
         #  - has constructor that takes arguments as per FIELDs
         #  - constructor does not take unpacked values directly
 
-    VAR_LENGTH_BASIC_STRUCT = 4
-        # VAR_LENGTH_BASIC_STRUCT: a struct that has BASIC or BASIC_FIXED_STRUCT 
-        # members and also has one or more variable-length arrays of BASIC or
-        # BASIC_FIXED_STRUCT elements (records). The length of each array is 
-        # indicated in one of the direct BASIC type members of the struct. The
-        # offset is either indicated in one of the members or is a constant.
+    VAR_LENGTH_STRUCT = 4
+        # VAR_LENGTH_STRUCT: a struct that has a header with members of the 
+        # above types and also has one or more variable-length arrays of 
+        # FIXED_LENGTH_BASIC_STRUCT or FIXED_LENGTH_COMPLEX_STRUCT
+        # elements (records). The length of each array is either fixed or is
+        # indicated in one of the header fields. The offset to the array is
+        # either a constant or is indicated in one of the header fields.
         #
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
@@ -134,7 +135,7 @@ def assertIsWellDefinedOTType(className):
                 )
             assertIsWellDefinedOTType(type_)
 
-    if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_BASIC_STRUCT:
+    if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT:
         assert hasattr(className, 'FIELDS')
         assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
         assert hasattr(className, 'ARRAYS')
@@ -148,7 +149,7 @@ def assertIsWellDefinedOTType(className):
             assert "count" in a
             assert isinstance(a["count"], (int, str))
             assert "offset" in a
-            assert (isinstance(a["offset"], (int, str)) or a["offset"] is None)
+            assert isinstance(a["offset"], (int, str))
         assert hasattr(className, 'ALL_FIELD_NAMES')
         assert type(className.ALL_FIELD_NAMES) == list
         assert len(className.ALL_FIELD_NAMES) == len(className.FIELDS) + len(className.ARRAYS)

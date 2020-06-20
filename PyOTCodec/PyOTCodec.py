@@ -21,7 +21,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == "baseTypes":
             import PyOTCodecTests.test_ot_baseTypes
         elif sys.argv[1] == "structs":
-            # import PyOTCodecTests.test_ot_baseTypes
+            import PyOTCodecTests.test_ot_baseTypes
             import PyOTCodecTests.test_ot_structs
     else:
         print("Welcome to PyOTCodec")
