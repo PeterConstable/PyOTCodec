@@ -42,7 +42,8 @@ class otTypeCategory(Enum):
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
         #  - has FIELDS static member
-        #  - does not have a constructor that takes unpacked values directly
+        #  - has constructor that takes arguments as per FIELDs
+        #  - constructor does not take unpacked values directly
 
     FIXED_LENGTH_COMPLEX_STRUCT = 3
         # FIXED_LENGTH_COMPLEX_STRUCT: a struct that has members of BASIC,
@@ -52,7 +53,8 @@ class otTypeCategory(Enum):
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
         #  - has FIELDS static member
-        #  - does not have a constructor that takes unpacked values directly
+        #  - has constructor that takes arguments as per FIELDs
+        #  - constructor does not take unpacked values directly
 
     VAR_LENGTH_BASIC_STRUCT = 4
         # VAR_LENGTH_BASIC_STRUCT: a struct that has BASIC or BASIC_FIXED_STRUCT 
@@ -68,6 +70,9 @@ class otTypeCategory(Enum):
         #    include any array
         #  - has an ARRAYS static member describing the arrays
         #  - has an ALL_FIELD_NAMES static member, a list of all field names
+        #  - has constructor that takes positional arguments for members in 
+        #    FIELDS followed by members in ARRAYS
+        #  - constructor does not take unpacked values directly
 
 
 
@@ -145,7 +150,8 @@ def assertIsWellDefinedOTType(className):
             assert "offset" in a
             assert (isinstance(a["offset"], (int, str)) or a["offset"] is None)
         assert hasattr(className, 'ALL_FIELD_NAMES')
-        assert (type(className.ALL_FIELD_NAMES) == list and len(className.ALL_FIELD_NAMES) > 0)
+        assert type(className.ALL_FIELD_NAMES) == list
+        assert len(className.ALL_FIELD_NAMES) == len(className.FIELDS) + len(className.ARRAYS)
     
     pass
 

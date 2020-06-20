@@ -3,7 +3,7 @@ import itertools
 from ot_baseTypes import *
 
 
-def getPackedFormatFromFieldsDefinition(fields:OrderedDict):
+def getPackedFormatFromFieldsDef(fields:OrderedDict):
     """Takes an OrderedDict that describes the fields for a class
     and returns a packed format string that can be used in
     struct.unpack or struct.pack; and also returns the number

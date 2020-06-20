@@ -119,7 +119,7 @@ class testClass:
         ("field2", Fixed),
         ("field3", F2Dot14)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, field1, field2, field3):
@@ -150,7 +150,7 @@ class testClassChild:
         ("fieldC2", uint16),
         ("fieldC3", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -164,7 +164,7 @@ class testClassParent:
         ("fieldP2", testClassChild),
         ("fieldP3", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -198,7 +198,7 @@ class testClassGrandParent:
         ("fieldGP1", uint8),
         ("fieldGP2", testClassParent)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -237,7 +237,10 @@ testResults["structs tryReadFixedLengthStructFromBuffer test 13"] = result
 
 
 
-# Experiment
+#-------------------------------------------------------------
+# Tests for tryReadVarLengthBasicStructFromBuffer
+#-------------------------------------------------------------
+
 
 class testClassRecord:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
@@ -245,7 +248,7 @@ class testClassRecord:
         ("field1", uint8),
         ("field2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -257,7 +260,7 @@ class testClassTable:
     FIELDS = OrderedDict([
         ("numRecs", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "records", "type": testClassRecord, "count": "numRecs", "offset": None}
