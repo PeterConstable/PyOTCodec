@@ -1003,15 +1003,6 @@ x = uint24(b'\x42\xac\x87')
 result = (type(x) == uint24 and x == 0x42_ac87)
 testResults["baseTypes uint24 constructor test 9"] = result
 
-
-# createFromUnpackedValues
-
-buffer = b'\x42\xac\x87'
-val, = struct.unpack(uint24.PACKED_FORMAT, buffer)
-x = uint24.createFromUnpackedValues(val)
-result = (type(x) == uint24 and x == 0x42_ac87)
-testResults["baseTypes uint24 createFromUnpackedValues test 1"] = result
-
 # see above for test of tryReadFromBytesIO
 
 
@@ -1070,23 +1061,6 @@ testResults["baseTypes Fixed constructor test 4"] = (type(Fixed(bytearray([0,1,0
 testResults["baseTypes Fixed constructor test 5"] = (type(Fixed(bytes(b'\xF0\x00\x80\x00'))) == Fixed)
 testResults["baseTypes Fixed constructor test 6"] = (Fixed(b'\xF0\x00\x80\x00') == -4095.5)
 testResults["baseTypes Fixed constructor test 7"] = (-4095.5 == Fixed(b'\xF0\x00\x80\x00'))
-
-# Fixed.createFromUnpackedValues: arg must be between 0 and 0xffff_ffff
-
-buffer = b'\x00\x01\x80\x00'
-val, = struct.unpack(Fixed.PACKED_FORMAT, buffer)
-x = Fixed.createFromUnpackedValues(val)
-testResults["baseTypes Fixed.createFromUnpackedValues test 1"] = (x == 1.5)
-
-buffer = b'\xf0\x00\x80\x00'
-val, = struct.unpack(Fixed.PACKED_FORMAT, buffer)
-x = Fixed.createFromUnpackedValues(val)
-testResults["baseTypes Fixed.createFromUnpackedValues test 2"] = (x == -4095.5)
-
-buffer = b'\x00\x01\x50\x00'
-val, = struct.unpack(Fixed.PACKED_FORMAT, buffer)
-x = Fixed.createFromUnpackedValues(val)
-testResults["baseTypes Fixed.createFromUnpackedValues test 3"] = (x._rawBytes == bytes(b'\x00\x01\x50\x00'))
 
 # Fixed.createFixedFromUint32
 try:
@@ -1232,23 +1206,6 @@ testResults["baseTypes F2Dot14 constructor test 4"] = (type(F2Dot14(bytearray([0
 testResults["baseTypes F2Dot14 constructor test 5"] = (type(F2Dot14(bytes(b'\xF0\x00'))) == F2Dot14)
 testResults["baseTypes F2Dot14 constructor test 6"] = (F2Dot14(b'\xF0\x00') == -0.25)
 
-
-# F2Dot14.createFromUnpackedValues
-buffer = b'\x60\x00'
-val, = struct.unpack(F2Dot14.PACKED_FORMAT, buffer)
-x = F2Dot14.createFromUnpackedValues(val)
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 1"] = (x == 1.5)
-
-buffer = b'\xf0\x00'
-val, = struct.unpack(F2Dot14.PACKED_FORMAT, buffer)
-x = F2Dot14.createFromUnpackedValues(val)
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 2"] = (x == -0.25)
-
-buffer = b'\x3c\x01'
-val, = struct.unpack(F2Dot14.PACKED_FORMAT, buffer)
-x = F2Dot14.createFromUnpackedValues(val)
-testResults["baseTypes F2Dot14.createFromUnpackedValues test 3"] = (x._rawBytes == bytes(b'\x3c\x01'))
-
 # F2Dot14.createF2Dot14FromUint16: arg must be between 0 and 0xffff
 try:
     F2Dot14.createF2Dot14FromUint16(-1)
@@ -1382,35 +1339,6 @@ testResults["baseTypes Tag constructor test 6"] = (x == "ab  ")
 x = Tag("abcd")
 testResults["baseTypes Tag constructor test 7"] = (x == "abcd")
 
-# Tag.createFromUnpackedValues: bytearray or bytes, length 4
-try:
-    Tag.createFromUnpackedValues(1)
-except TypeError:
-    result = True
-else:
-    result = False
-testResults["baseTypes Tag.createFromUnpackedValues test 1"] = result
-
-try:
-    Tag.createFromUnpackedValues(b'\x00')
-except TypeError:
-    result = True
-else:
-    result = False
-testResults["baseTypes Tag.createFromUnpackedValues test 2"] = result
-
-try:
-    Tag.createFromUnpackedValues(b'\x00\x01\x02\x03\x04')
-except TypeError:
-    result = True
-else:
-    result = False
-testResults["baseTypes Tag.createFromUnpackedValues test 3"] = result
-
-x = Tag.createFromUnpackedValues(b'\x68\x69\x6a\x6b')
-result = (type(x) == Tag and x == 'hijk')
-testResults["baseTypes Tag.createFromUnpackedValues test 4"] = result
-
 # tests for Tag.tryReadFromBytesIO
 testbio = BytesIO(b'\x61\x63\x65\x67\x48\x49\x4a\x4b\x00\x00\x01\x02\x03')
 x = Tag.tryReadFromBytesIO(testbio)
@@ -1456,6 +1384,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 290
+assert numTestResults == 279
 
 printTestResultSummary("Tests for ot_baseTypes", testResults, skippedTests)

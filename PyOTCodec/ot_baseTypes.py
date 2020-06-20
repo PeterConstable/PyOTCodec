@@ -30,10 +30,8 @@ class otTypeCategory(Enum):
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
         #  - does not have FIELDS member
         #  - has a constructor function that takes unpacked value directly
-        #  - constructor may or may not accept the base type
+        #  - constructor might or might NOT accept the base type
         #  - has a tryReadFromBytesIO static method
-        #  - has a createFromUnpackedValues static method
-        #  - returns the base type directly
 
     FIXED_LENGTH_BASIC_STRUCT = 2
         # FIXED_LENGTH_BASIC_STRUCT: a struct that has two or more members of BASIC 
@@ -111,8 +109,9 @@ def assertIsWellDefinedOTType(className):
         assert callable(className.tryReadFromBytesIO)
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL:
-        assert hasattr(className, 'createFromUnpackedValues')
-        assert callable(className.createFromUnpackedValues)
+        assert (int in className.__mro__
+                or str in className.__mro__
+                or float in className.__mro__)
         assert not hasattr(className, 'FIELDS')
         assert hasattr(className, 'tryReadFromBytesIO')
         assert callable(className.tryReadFromBytesIO)
@@ -420,10 +419,6 @@ class uint24(int):
         return super().__new__(cls, intval)
 
     @staticmethod
-    def createFromUnpackedValues(bytes_):
-        return uint24(bytes_)
-
-    @staticmethod
     def tryReadFromBytesIO(fileBytesIO:BytesIO):
         bytes_ = _tryReadRawBytes(fileBytesIO, uint24.PACKED_SIZE)
         return uint24(bytes_)
@@ -452,10 +447,6 @@ class Fixed(float):
         fixed_.mantissa, fixed_.fraction = vals
 
         return fixed_
-
-    @staticmethod
-    def createFromUnpackedValues(bytes_):
-        return Fixed(bytes_)
 
     @staticmethod
     def createFixedFromUint32(val:int):
@@ -542,10 +533,6 @@ class F2Dot14(float):
         f2dot14.fraction = (vals[0] & 0x3f) * 256 + vals[1]
 
         return f2dot14
-
-    @staticmethod
-    def createFromUnpackedValues(bytes_):
-        return F2Dot14(bytes_)
 
     @staticmethod
     def createF2Dot14FromUint16(val:int):
@@ -645,13 +632,6 @@ class Tag(str):
             tag = content
             bytes_ = content.encode("ascii")
         return tag, bytes_
-
-    @staticmethod
-    def createFromUnpackedValues(val):
-        # more stringent validation than in constructor
-        if not isinstance(val, (bytearray, bytes)) or len(val) != 4:
-            raise TypeError('The val argument must be bytearray or bytes with length of four.')
-        return Tag(val)
 
     @staticmethod
     def tryReadFromBytesIO(fileBytesIO:BytesIO):
