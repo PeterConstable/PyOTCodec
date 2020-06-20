@@ -9,11 +9,11 @@ skippedTests = []
 
 
 #-------------------------------------------------------------
-# Tests for tryReadFixedLengthBasicStructFromBuffer
+# Tests for tryReadFixedLengthStructFromBuffer
 #-------------------------------------------------------------
 
 # Want a class conforming to FIXED_LENGTH_BASIC_STRUCT, and then
-# test that tryReadFixedLengthBasicStructFromBuffer is able to read
+# test that tryReadFixedLengthStructFromBuffer is able to read
 # an instance of that class from a buffer. We should test for each
 # different category of type: basic, basic-special, basic-struct.
 
@@ -22,22 +22,22 @@ buffer = b'\x02\x04\xf5\x32\x01\x02'
 class testClass:
     pass
 try:
-    x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClass)
+    x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
 except TypeError:
     result = True
 else:
     result = False
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 1"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 1"] = result
 
 class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
 try:
-    x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClass)
+    x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
 except TypeError:
     result = True
 else:
     result = False
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 2"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 2"] = result
 
 
 class testClass:
@@ -56,29 +56,29 @@ class testClass:
 
 buffer = b'\x02\x04\xf5'
 try:
-    x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClass)
+    x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
 except OTCodecError:
     result = True
 else:
     result = False
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 3"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 3"] = result
 
 
 # structs with BASIC fields
 
 buffer = b'\x02\x04\xf5\x32\x01\x02'
 
-x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClass)
+x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
 result = type(x) == testClass
 # x has expected fields with values of expected types and values
 result &= len(vars(x)) == len(testClass.FIELDS)
 for field, type_ in testClass.FIELDS.items():
     result &= (field in vars(x))
     result &= (type(getattr(x, field)) == type_)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 4"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 4"] = result
 
 result = (x.field1 == 0x0204 and x.field2 == -2766)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 5"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 5"] = result
 
 class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
@@ -97,17 +97,17 @@ class testClass:
         self.field3 = field3
 
 buffer = b'\x02\x04\xf5\x38\xE0\x00\x25\x84\xDE\x1C\x95\xB4\x7e\x01\x02'
-x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClass)
+x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
 result = type(x) == testClass
 # x has expected fields with values of expected types and values
 result &= len(vars(x)) == len(testClass.FIELDS)
 for field, type_ in testClass.FIELDS.items():
     result &= (field in vars(x))
     result &= (type(getattr(x, field)) == type_)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 6"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 6"] = result
 
 result = (x.field1 == 0x0204_f538 and x.field2 == -2305801756621367884 and x.field3 == 126)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 7"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 7"] = result
 
 
 # structs with BASIC_OT_SPECIAL fields
@@ -128,17 +128,17 @@ class testClass:
         self.field3 = field3
 
 buffer = b'\x61\x62\x64\x63\xE0\x00\xc0\x00\xf0\x0e'
-x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClass)
+x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
 result = type(x) == testClass
 # x has expected fields with values of expected types and values
 result &= len(vars(x)) == len(testClass.FIELDS)
 for field, type_ in testClass.FIELDS.items():
     result &= (field in vars(x))
     result &= (type(getattr(x, field)) == type_)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 8"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 8"] = result
 
 result = (x.field1 == 'abdc' and x.field2._rawBytes == b'\xE0\x00\xc0\x00' and x.field3._rawBytes == b'\xf0\x0e')
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 9"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 9"] = result
 
 
 # structs with fields that have FIXED_LENGTH_BASIC_STRUCT as values
@@ -158,7 +158,7 @@ class testClassChild:
             setattr(self, f, a)
 
 class testClassParent:
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("fieldP1", F2Dot14),
         ("fieldP2", testClassChild),
@@ -174,13 +174,13 @@ class testClassParent:
 buffer = (b'\x60\x00'
           b'\x70\x00\x01\x01\x01\x02'
           b'\x00\x02')
-x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClassParent)
+x = tryReadFixedLengthStructFromBuffer(buffer, testClassParent)
 result = type(x) == testClassParent
 result &= len(vars(x)) == len(testClassParent.FIELDS)
 for field, type_ in testClassParent.FIELDS.items():
     result &= (field in vars(x))
     result &= (type(getattr(x, field)) == type_)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 10"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 10"] = result
 
 result = (x.fieldP1 == 1.5 and x.fieldP3 == 2)
 y = x.fieldP2
@@ -189,11 +189,11 @@ for field, type_ in testClassChild.FIELDS.items():
     result &= (field in vars(y))
     result &= (type(getattr(y, field)) == type_)
 result &= (y.fieldC1 == 1.75 and y.fieldC2 == 0x0101 and y.fieldC3 == 0x0102)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 11"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 11"] = result
 
 
 class testClassGrandParent:
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("fieldGP1", uint8),
         ("fieldGP2", testClassParent)
@@ -211,13 +211,13 @@ buffer = (b'\xa0'
             b'\x00\x02'
           b'\xa1')
 
-x = tryReadFixedLengthBasicStructFromBuffer(buffer, testClassGrandParent)
+x = tryReadFixedLengthStructFromBuffer(buffer, testClassGrandParent)
 result = type(x) == testClassGrandParent
 result &= len(vars(x)) == len(testClassGrandParent.FIELDS)
 for field, type_ in testClassGrandParent.FIELDS.items():
     result &= (field in vars(x))
     result &= (type(getattr(x, field)) == type_)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 12"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 12"] = result
 
 result = (x.fieldGP1 == 0xa0)
 y = x.fieldGP2
@@ -233,7 +233,56 @@ for field, type_ in testClassChild.FIELDS.items():
     result &= (field in vars(z))
     result &= (type(getattr(z, field)) == type_)
 result &= (z.fieldC1 == 1.75 and z.fieldC2 == 0x0101 and z.fieldC3 == 0x0102)
-testResults["structs tryReadFixedLengthBasicStructFromBuffer test 13"] = result
+testResults["structs tryReadFixedLengthStructFromBuffer test 13"] = result
+
+
+
+# Experiment
+
+class testClassRecord:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    FIELDS = OrderedDict([
+        ("field1", uint8),
+        ("field2", uint16)
+        ])
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+
+    def __init__(self, *args):
+        for f, a in zip(self.FIELDS, args):
+            setattr(self, f, a)
+
+class testClassTable:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_BASIC_STRUCT
+    FIELDS = OrderedDict([
+        ("numRecs", uint16)
+        ])
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDefinition(FIELDS)
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    ARRAYS = [
+        {"field": "records", "type": testClassRecord, "count": "numRecs", "offset": None}
+        ]
+    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS)
+
+    def __init__(self, *args):
+        for f, a in zip(self.ALL_FIELD_NAMES, args):
+            setattr(self, f, a)
+
+buffer = (b'\x00\x03'
+            b'\xa0\x10\x11'
+            b'\xa0\x10\x11'
+            b'\xa0\x10\x11'
+          b'\xff\xfe')
+x = tryReadVarLengthBasicStructFromBuffer(buffer, testClassTable)
+result = type(x) == testClassTable
+result = type(x) == testClassTable
+result &= len(vars(x)) == len(testClassTable.ALL_FIELD_NAMES)
+for field, type_ in testClassTable.FIELDS.items():
+    result &= (field in vars(x))
+    result &= (type(getattr(x, field)) == type_)
+testResults["structs tryReadFixedLengthStructFromBuffer test 14"] = result
+
+
 
 
 
@@ -243,6 +292,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 13
+assert numTestResults == 14
 
 printTestResultSummary("Tests for ot_structs", testResults, skippedTests)

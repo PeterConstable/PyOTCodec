@@ -18,7 +18,7 @@ class otTypeCategory(Enum):
         #  - does not have FIELDS member
         #  - has a constructor function that takes unpacked value directly,
         #    and that value is an instance of the base class
-        #  - returns the same value directly
+        #  - has a tryReadFromBytesIO static method
 
     BASIC_OT_SPECIAL = 1
         # BASIC_OT_SPECIAL: Tag, Fixed, F2Dot14, uint24. Type is not directly
@@ -31,32 +31,44 @@ class otTypeCategory(Enum):
         #  - does not have FIELDS member
         #  - has a constructor function that takes unpacked value directly
         #  - constructor may or may not accept the base type
+        #  - has a tryReadFromBytesIO static method
         #  - has a createFromUnpackedValues static method
         #  - returns the base type directly
 
     FIXED_LENGTH_BASIC_STRUCT = 2
-        # FIXED_LENGTH_BASIC_STRUCT: a struct that has two or more members of BASIC, 
-        # BASIC_OT_SPECIAL or FIXED_LENGTH_BASIC_STRUCT types. Often but not always
-        # used in arrays.
+        # FIXED_LENGTH_BASIC_STRUCT: a struct that has two or more members of BASIC 
+        # or BASIC_OT_SPECIAL types. These can be read without requiring recursion.
         #
         # Characteristics:
-        #   - have PACKED_FORMAT and PACKED_SIZE "static" members
-        #   - have FIELD_NAMES or FIELD_TYPES static members
-        #   - have a createFromUnpackedValues static method
+        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has FIELDS static member
+        #  - does not have a constructor that takes unpacked values directly
 
-    VAR_LENGTH_BASIC_STRUCT = 3
+    FIXED_LENGTH_COMPLEX_STRUCT = 3
+        # FIXED_LENGTH_COMPLEX_STRUCT: a struct that has members of BASIC,
+        # BASIC_OT_SPECIAL, FIXED_LENGTH_BASIC_STRUCT or FIXED_LENGTH_COMPLEX_STRUCT
+        # types. Reading requires recursion to parse the embedded structs.
+        #
+        # Characteristics:
+        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has FIELDS static member
+        #  - does not have a constructor that takes unpacked values directly
+
+    VAR_LENGTH_BASIC_STRUCT = 4
         # VAR_LENGTH_BASIC_STRUCT: a struct that has BASIC or BASIC_FIXED_STRUCT 
         # members and also has one or more variable-length arrays of BASIC or
         # BASIC_FIXED_STRUCT elements (records). The length of each array is 
         # indicated in one of the direct BASIC type members of the struct. The
         # offset is either indicated in one of the members or is a constant.
+        #
         # Characteristics:
-        #   - have PACKED_FORMAT and PACKED_SIZE "static" members describing 
-        #     header fields
-        #   - have FIELD_NAMES or FIELD_TYPES static members describing header 
-        #     fields
-        #   - have an ARRAYS_FORMAT static member describing the arrays.
-        #   - have a tryReadFromFile static method
+        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has FIELDS static member
+        #  - FIELDS, PACKED_FORMAT, etc. only describe a header that doesn't
+        #    include any array
+        #  - has an ARRAYS static member describing the arrays
+        #  - has an ALL_FIELD_NAMES static member, a list of all field names
+
 
 
 def assertIsWellDefinedOTType(className):
@@ -86,15 +98,56 @@ def assertIsWellDefinedOTType(className):
     assert hasattr(className, 'NUM_PACKED_VALUES')
     assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
 
-
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
         assert int in className.__mro__
+        assert not hasattr(className, 'FIELDS')
+        assert hasattr(className, 'tryReadFromBytesIO')
+        assert callable(className.tryReadFromBytesIO)
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL:
         assert hasattr(className, 'createFromUnpackedValues')
         assert callable(className.createFromUnpackedValues)
-        pass
+        assert not hasattr(className, 'FIELDS')
+        assert hasattr(className, 'tryReadFromBytesIO')
+        assert callable(className.tryReadFromBytesIO)
 
+    if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT:
+        assert hasattr(className, 'FIELDS')
+        assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
+        for type_ in className.FIELDS.values():
+            assert type_.TYPE_CATEGORY in (
+                otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL)
+
+    if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT:
+        assert hasattr(className, 'FIELDS')
+        assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
+        for type_ in className.FIELDS.values():
+            assert type_.TYPE_CATEGORY in (
+                otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL,
+                otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+                otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+                )
+            assertIsWellDefinedOTType(type_)
+
+    if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_BASIC_STRUCT:
+        assert hasattr(className, 'FIELDS')
+        assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
+        assert hasattr(className, 'ARRAYS')
+        assert (type(className.ARRAYS) == list and len(className.ARRAYS) > 0)
+        for a in className.ARRAYS:
+            assert (type(a) == dict and len(a) == 4)
+            assert "field" in a
+            assert type(a["field"]) == str
+            assert "type" in a
+            assert type(a["type"]) == type
+            assert "count" in a
+            assert isinstance(a["count"], (int, str))
+            assert "offset" in a
+            assert (isinstance(a["offset"], (int, str)) or a["offset"] is None)
+        assert hasattr(className, 'ALL_FIELD_NAMES')
+        assert (type(className.ALL_FIELD_NAMES) == list and len(className.ALL_FIELD_NAMES) > 0)
+    
+    pass
 
 
 def concatFormatStrings(*args):
@@ -251,7 +304,7 @@ class int32(int):
         return super().__new__(cls, val)
 
     @staticmethod
-    def readFromBytesIO(fileBytes:BytesIO):
+    def tryReadFromBytesIO(fileBytes:BytesIO):
         return readBasicTypeFromBytesIO(int32, fileBytes)
 
 
@@ -327,7 +380,7 @@ class uint64(int):
         return super().__new__(cls, val)
 
     @staticmethod
-    def readFromBytesIO(fileBytes:BytesIO):
+    def tryReadFromBytesIO(fileBytes:BytesIO):
         return readBasicTypeFromBytesIO(uint64, fileBytes)
 
 

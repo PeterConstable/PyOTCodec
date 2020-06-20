@@ -47,10 +47,10 @@ testResults["baseTypes file read test 3 (int8.tryReadFromBytesIO)"] = int8.tryRe
 testResults["baseTypes file read test 4 (uint8.tryReadFromBytesIO)"] = uint8.tryReadFromBytesIO(testbio) == 0x0F
 testResults["baseTypes file read test 5 (int16.tryReadFromBytesIO)"] = int16.tryReadFromBytesIO(testbio) == -6180 # \xE7\xDC
 testResults["baseTypes file read test 6 (uint16.tryReadFromBytesIO)"] = uint16.tryReadFromBytesIO(testbio) == 0x9A02
-testResults["baseTypes file read test 7 (int32.tryReadFromBytesIO)"] = int32.readFromBytesIO(testbio) == -1087906662 # \xBF\x27\xDC\x9A
+testResults["baseTypes file read test 7 (int32.tryReadFromBytesIO)"] = int32.tryReadFromBytesIO(testbio) == -1087906662 # \xBF\x27\xDC\x9A
 testResults["baseTypes file read test 8 (uint32.tryReadFromBytesIO)"] = uint32.tryReadFromBytesIO(testbio) == 0xB20F37DC
 testResults["baseTypes file read test 9 (int64.tryReadFromBytesIO)"] = int64.tryReadFromBytesIO(testbio) == -7349294909316519972 # \x9A\x02\x0F\x37\xDC\x9A\x27\xDC
-testResults["baseTypes file read test 10 (uint64.tryReadFromBytesIO)"] = uint64.readFromBytesIO(testbio) == 0x27DC_9AB2_0F37_DC9A
+testResults["baseTypes file read test 10 (uint64.tryReadFromBytesIO)"] = uint64.tryReadFromBytesIO(testbio) == 0x27DC_9AB2_0F37_DC9A
 
 testResults["baseTypes file read test 11 (FWord.tryReadFromBytesIO)"] = FWord.tryReadFromBytesIO(testbio) == -11628 # \xd2\x94
 testResults["baseTypes file read test 12 (UFWord.tryReadFromBytesIO)"] = UFWord.tryReadFromBytesIO(testbio) == 0x92cf
