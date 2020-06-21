@@ -72,6 +72,7 @@ result = hasattr(otTypeCategory, 'BASIC')
 result &= hasattr(otTypeCategory, 'BASIC_OT_SPECIAL')
 result &= hasattr(otTypeCategory, 'FIXED_LENGTH_BASIC_STRUCT')
 result &= hasattr(otTypeCategory, 'VAR_LENGTH_STRUCT')
+result &= hasattr(otTypeCategory, 'VAR_LENGTH_STRUCT_WITH_SUBTABLES')
 testResults["baseTypes otTypeCategory constants test"] = result
 
 
@@ -132,7 +133,7 @@ testResults["baseTypes assertIsWellDefinedOTType test 4"] = result
 
 class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
-    PACKED_FORMAT = "x"
+    PACKED_FORMAT = "L"
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -182,8 +183,8 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 8"] = result
 
-# BASIC not a sub-class of int
-class testClass:
+# missing NUM_PACKED_VALUES, or wrong type
+class testClass(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
@@ -195,6 +196,1179 @@ except:
 else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 9"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 10"] = result
+
+
+# BASIC not a sub-class of int
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 11"] = result
+
+class testClass(float):
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 12"] = result
+
+# BASIC can't have FIELDS, ARRAYS or SUBTABLES
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 13"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    ARRAYS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 14"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    SUBTABLES = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 15"] = result
+
+# BASIC must have tryReadFromBytesIO method
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 16"] = result
+
+
+# BASIC_OT_SPECIAL 
+
+# missing PACKED_FORMAT, wrong type, or not starting with '>'
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 17"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 18"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = "L"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 19"] = result
+
+# missing PACKED_SIZE, wrong type, or not correct value
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 20"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 21"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 4
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 22"] = result
+
+# missing NUM_PACKED_VALUES, or wrong type
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 23"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 24"] = result
+
+
+# not a sub-class of int, float or str
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 25"] = result
+
+class testClass(bytes):
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 26"] = result
+
+# BASIC_OT_SPECIAL can't have FIELDS, ARRAYS or SUBTABLES
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 27"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    ARRAYS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 28"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    SUBTABLES = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 29"] = result
+
+# BASIC_OT_SPECIAL must have tryReadFromBytesIO method
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 30"] = result
+
+
+# FIXED_LENGTH_BASIC_STRUCT
+
+# missing PACKED_FORMAT, wrong type, or not starting with '>'
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 31"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 32"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = "L"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 33"] = result
+
+# missing PACKED_SIZE, wrong type, or not correct value
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 34"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 35"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 4
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 36"] = result
+
+# missing NUM_PACKED_VALUES, or wrong type
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 37"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 38"] = result
+
+# FIXED_LENGTH_BASIC_STRUCT can't have ARRAYS or SUBTABLES
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    ARRAYS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 39"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    SUBTABLES = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 40"] = result
+
+# must have FIELDS with non-empty OrderedDict
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 41"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 42"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict()
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 43"] = result
+
+# FIELDS elements must have str keys, BASIC or BASIC_OT_SPECIAL values
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), (42, uint8)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 44"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', int)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 45"] = result
+
+class testRecord:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    pass
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', testRecord)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 46"] = result
+
+
+# FIXED_LENGTH_COMPLEX_STRUCT
+
+# missing PACKED_FORMAT, wrong type, or not starting with '>'
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 47"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 48"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = "L"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 49"] = result
+
+# missing PACKED_SIZE, wrong type, or not correct value
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 50"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 51"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 4
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 52"] = result
+
+# missing NUM_PACKED_VALUES, or wrong type
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 53"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 54"] = result
+
+# FIXED_LENGTH_COMPLEX_STRUCT can't have ARRAYS or SUBTABLES
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    ARRAYS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 55"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    SUBTABLES = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 56"] = result
+
+# must have FIELDS with non-empty OrderedDict
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 57"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 58"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict()
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 59"] = result
+
+# FIELDS elements must have str keys; values can be BASIC, BASIC_OT_SPECIAL, 
+# FIXED_LENGTH_BASIC_STRUCT or FIXED_LENGTH_COMPLEX_STRUCT
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), (42, uint8)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 60"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', int)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 61"] = result
+
+class testRecord:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    pass
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', testRecord)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 62"] = result
+
+
+# VAR_LENGTH_STRUCT
+
+# missing PACKED_FORMAT, wrong type, or not starting with '>'
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 63"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 64"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = "L"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 65"] = result
+
+# missing PACKED_SIZE, wrong type, or not correct value
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 66"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 67"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 4
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 68"] = result
+
+# missing NUM_PACKED_VALUES, or wrong type
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 69"] = result
+
+class testClass(int):
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 'x'
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 70"] = result
+
+# VAR_LENGTH_STRUCT can't have SUBTABLES
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    SUBTABLES = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 71"] = result
+
+# must have FIELDS with non-empty OrderedDict
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 72"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 73"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict()
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 74"] = result
+
+# FIELDS elements must have str keys; values can be BASIC, BASIC_OT_SPECIAL, 
+# FIXED_LENGTH_BASIC_STRUCT or FIXED_LENGTH_COMPLEX_STRUCT
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), (42, uint8)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 75"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', int)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 76"] = result
+
+class testRecord:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    pass
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', testRecord)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 77"] = result
+
+
+# must have ARRAYS with a non-empty list
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 78"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = 42
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 79"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = []
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 80"] = result
+
+
+# ARRAYS elements must be dicts with 4 entries
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [42, 43]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 81"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [{'a': 1}]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 82"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [{'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 83"] = result
+
+# dict entries must have keys "field", "type", "count", "offset"
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [{
+        'a': 1, 
+        'type': 2, 
+        'count': 3, 
+        'offset': 4
+        }]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 84"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [{
+        'fields': 1, 
+        'b': 2, 
+        'count': 3, 
+        'offset': 4
+        }]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 85"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [{
+        'fields': 1, 
+        'type': 2, 
+        'c': 3, 
+        'offset': 4
+        }]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 86"] = result
+
+class testClass:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
+    PACKED_FORMAT = ">h"
+    PACKED_SIZE = 2
+    NUM_PACKED_VALUES = 1
+    FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
+    ARRAYS = [{
+        'fields': 1, 
+        'type': 2, 
+        'count': 3, 
+        'd': 4
+        }]
+    pass
+try:
+    assertIsWellDefinedOTType(testClass)
+except:
+    result = True
+else:
+    result = False
+testResults["baseTypes assertIsWellDefinedOTType test 87"] = result
+
+
 
 
 
@@ -1384,6 +2558,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 279
+assert numTestResults == 357
 
 printTestResultSummary("Tests for ot_baseTypes", testResults, skippedTests)

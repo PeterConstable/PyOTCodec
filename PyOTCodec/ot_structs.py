@@ -20,25 +20,30 @@ def getPackedFormatFromFieldsDef(fields:OrderedDict):
 
 
 
-def getCombinedFieldNames(fields:OrderedDict, arrays:list):
+def getCombinedFieldNames(fields:OrderedDict, arrays:list = None, subtables: list = None):
     """Takes a FIELDS definition and an ARRAYS definition and returns
     a list of the combined field names.
 
     The result list has names from FIELDS first, then names from ARRAYS.
     """
     fieldNames = list(fields)
-    arrayNames = [a["field"] for a in arrays]
-    return fieldNames + arrayNames
+    arrayNames = []
+    if not arrays is None:
+        arrayNames = [a["field"] for a in arrays]
+    subtableNames = []
+    if not subtables is None:
+        subtableNames = [s["field"] for s in subtables]
+    return fieldNames + arrayNames + subtableNames
 
 
 
 def tryReadFixedLengthStructFieldsFromBuffer(buffer, className):
     """Takes a buffer and returns an OrderedDict of field name/value pairs.
 
-    Assumes that the struct starts at the beginning of the buffer.
+    Assumed that the struct starts at the beginning of the buffer.
     
-    Also assume that caller has verified that className meets criteria for
-    FIXED_LENGTH_BASIC_STRUCT structures, and 
+    Also assumed that caller has verified that className is type category
+    FIXED_LENGTH_BASIC_STRUCT structures or FIXED_LENGTH_COMPLEX_STRUCT.
     """
     if len(buffer) < className.PACKED_SIZE:
         raise OTCodecError(f"The buffer is to short to read {className} header.")
@@ -80,9 +85,9 @@ def tryReadFixedLengthStructFromBuffer(buffer, className):
     """Takes a buffer and returns a struct of the specified type, read from
     the buffer.
 
-    Assumes that the struct starts at the beginning of the buffer.
+    Assumed that the struct starts at the beginning of the buffer.
     
-    Also assumes className meets the criteria for FIXED_LENGTH_BASIC_STRUCT 
+    className must be one of the type categories FIXED_LENGTH_BASIC_STRUCT
     or FIXED_LENGTH_COMPLEX_STRUCT.
     """
     try:
@@ -110,7 +115,8 @@ def tryReadFixedLengthRecordsArrayFromBuffer(buffer, recordClass, numRecords, ar
 
     Assumes that the records array starts at the beginning of the buffer.
 
-    Also assumes that recordClass meets the criteria for FIXED_LENGTH_BASIC_STRUCT.
+    recordClass must be of type category FIXED_LENGTH_BASIC_STRUCT or
+    FIXED_LENGTH_COMPLEX_STRUCT.
     """
     try:
         assertIsWellDefinedOTType(recordClass)
@@ -136,14 +142,55 @@ def tryReadFixedLengthRecordsArrayFromBuffer(buffer, recordClass, numRecords, ar
 
 
 
-def tryReadVarLengthBasicStructFromBuffer(buffer, className):
+def tryReadStructArrayFieldsFromBuffer(buffer, className, headerFields):
+    """Takes a buffer and returns an OrderedDict of field name/value pairs
+    where the values are arrays.
+
+    Assumed that the parent struct starts at the beginning of the buffer.
+
+    Also assumed that caller has verified that className is type category
+    VAR_LENGTH_STRUCT or VAR_LENGTH_STRUCT_WITH_SUBTABLES, with
+    descriptions of the arrays given in className.ARRAYS.
+
+    Returns an OrderedDict with each element having a field name as key,
+    and a value that is a list of objects, with name and object type as
+    indicated in the ARRAYS description.
+    """
+
+    arrayFields = OrderedDict([])
+
+    for array in className.ARRAYS:
+        # determine count: either a number or a header field name
+        if type(array["count"]) == str:
+            count = headerFields[array["count"]]
+        else:
+            count = array["count"]
+        # determine offset: either a number or a header field name
+        if type(array["offset"]) == str:
+            offset = headerFields[array["offset"]]
+        else:
+            offset = array["offset"]
+
+        arrayFields[array["field"]] = tryReadFixedLengthRecordsArrayFromBuffer(
+            buffer[offset:],
+            array["type"],
+            count,
+            array["field"]
+            )
+
+    return arrayFields
+# End of tryReadStructArrayFieldsFromBuffer
+
+
+
+def tryReadVarLengthStructFromBuffer(buffer, className):
     """Takes a buffer and returns a struct of the specified type, read from
     the buffer.
 
-    Assumes that the struct starts at the beginning of the buffer. The
-    structClass must meet the criteria for VAR_LENGTH_STRUCT 
-    structures (otTypeCategory enums): comprised of basic struct types
-    described by FIELDS, and has one or more arrays described by ARRAYS.
+    Assumed that the struct starts at the beginning of the buffer.
+    
+    className must be one of the type categories VAR_LENGTH_STRUCT,
+    FIXED_LENGTH_COMPLEX_STRUCT or FIXED_LENGTH_BASIC_STRUCT.
     """
     try:
        assertIsWellDefinedOTType(className)
@@ -160,24 +207,109 @@ def tryReadVarLengthBasicStructFromBuffer(buffer, className):
 
     # finished with headers; now process arrays
     if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT:
-        for array in className.ARRAYS:
-            # determine count: either a number or a header field name
-            if type(array["count"]) == str:
-                count = allFields[array["count"]]
-            else:
-                count = array["count"]
-            # determine location: if "offset" is a str, then a header field name for
-            # offset; else "offset" has offset directly;
-            # 
-            if type(array["offset"]) == str:
-                offset = allFields[array["offset"]]
-            else:
-                offset = array["offset"]
-            allFields[array["field"]] = tryReadFixedLengthRecordsArrayFromBuffer(
-                buffer[offset:],
-                array["type"],
-                count,
-                array["field"]
-                )
+        arrayFields = tryReadStructArrayFieldsFromBuffer(buffer, className, allFields)
+        allFields.update(arrayFields)
         
     return className(*allFields.values())
+# End of tryReadVarLengthStructFromBuffer
+
+
+
+def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
+    """Takes a buffer and returns an OrderedDict of field name/value pairs
+    where the values are subtables.
+
+    The buffer and className arguments are for the parent struct. Assumed
+    that the parent struct starts at the beginning of the buffer.
+
+    Also assumed that caller has verified that className is type category
+    VAR_LENGTH_STRUCT_WITH_SUBTABLES, with descriptions of the subtables
+    given in className.SUBTABLES.
+
+    The headerFields argument must include any record array fields in the 
+    parent table as well as the header fields proper.
+
+    Returns an OrderedDict with each element having a field name as key,
+    and a value that is an object, with name and object type as
+    indicated in the SUBTABLES description.
+    """
+
+    subtableFields = OrderedDict([])
+
+    for subtable in className.SUBTABLES:
+        # determine count: either a number or a header field name
+        if type(subtable["count"]) == str:
+            count = headerFields[subtable["count"]]
+        else:
+            count = subtable["count"]
+        # determine offset: either a number or a header field name
+        if type(subtable["offset"]) == str:
+            offset = headerFields[subtable["offset"]]
+        else:
+            offset = subtable["offset"]
+
+        subtableFields[subtable["field"]] = tryReadStructWithSubtablesFromBuffer(
+            buffer[offset:],
+            subtable["type"]
+            )
+
+    return subtableFields
+# End of tryReadSubtableFieldsFromBuffer
+
+
+
+def tryReadStructWithSubtablesFromBuffer(buffer, className):
+    """Takes a buffer and returns a struct of the specified type, read from
+    the buffer.
+
+    Assumed that the struct starts at the beginning of the buffer.
+
+    Also assumed that caller has verified that className is one of type
+    categories VAR_LENGTH_STRUCT_WITH_SUBTABLES, VAR_LENGTH_STRUCT, 
+    FIXED_LENGTH_COMPLEX_STRUCT or FIXED_LENGTH_BASIC_STRUCT.
+    """
+    # start with header
+    allFields = tryReadFixedLengthStructFieldsFromBuffer(buffer, className)
+
+    # get any arrays
+    if hasattr(className, 'ARRAYS'):
+        arrayFields = tryReadStructArrayFieldsFromBuffer(buffer, className, allFields)
+        allFields.update(arrayFields)
+
+    # get any subtables
+    if hasattr(className, 'SUBTABLES'):
+        subtableFields = tryReadSubtableFieldsFromBuffer(
+            buffer,
+            className,
+            allFields
+            )
+        allFields.update(subtableFields)
+
+    return className(*allFields.values())
+# End of tryReadVarLengthStructWithSubtablesFieldsFromBuffer
+
+
+
+def tryReadVarLengthStructWithSubtablesFromBuffer(buffer, className):
+    """Takes a buffer and returns a struct of the specified type, read from
+    the buffer.
+
+    Assumes that the struct starts at the beginning of the buffer.
+    
+    className must be one of the type categories
+    VAR_LENGTH_STRUCT_WITH_SUBTABLES, VAR_LENGTH_STRUCT, 
+    FIXED_LENGTH_COMPLEX_STRUCT or FIXED_LENGTH_BASIC_STRUCT.
+    """
+    try:
+       assertIsWellDefinedOTType(className)
+    except:
+        raise TypeError(f"{className} isn't a well-defined type for purposes of declarative parsing.")
+    if not className.TYPE_CATEGORY in (
+            otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES):
+        raise TypeError(f"{className} isn't a fixed- or variable-length struct type.")
+
+    return tryReadStructWithSubtablesFromBuffer(buffer, className)
+# End of tryReadVarLengthStructWithSubtablesFromBuffer

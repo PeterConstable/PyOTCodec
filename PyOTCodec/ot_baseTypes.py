@@ -15,7 +15,7 @@ class otTypeCategory(Enum):
         #
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
-        #  - does not have FIELDS member
+        #  - does not have FIELDS, ARRAYS or SUBTABLES members
         #  - has a constructor function that takes unpacked value directly,
         #    and that value is an instance of the base class
         #  - has a tryReadFromBytesIO static method
@@ -28,7 +28,7 @@ class otTypeCategory(Enum):
         # Characteristics:
         #  - has a base type str (Tag), float (Fixed, F2Dot24) or int (uint24)
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
-        #  - does not have FIELDS member
+        #  - does not have FIELDS, ARRAYS or SUBTABLES members
         #  - has a constructor function that takes unpacked value directly
         #  - constructor might or might NOT accept the base type
         #  - has a tryReadFromBytesIO static method
@@ -39,7 +39,10 @@ class otTypeCategory(Enum):
         #
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
-        #  - has FIELDS static member
+        #  - has FIELDS static member, an ordered dict: 
+        #    - keys are str
+        #    - values are BASIC or BASIC_OT_SPECIAL types
+        #  - does NOT have ARRAYS or SUBTABLES members
         #  - has constructor that takes arguments as per FIELDs
         #  - constructor does not take unpacked values directly
 
@@ -50,7 +53,11 @@ class otTypeCategory(Enum):
         #
         # Characteristics:
         #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
-        #  - has FIELDS static member
+        #  - has FIELDS static member, an ordered dict:
+        #    - keys are str
+        #    - values are BASIC, BASIC_OT_SPECIAL, FIXED_LENGTH_BASIC_STRUCT or
+        #      FIXED_LENGTH_COMPLEX_STRUCT types
+        #  - does NOT have ARRAYS or SUBTABLES members
         #  - has constructor that takes arguments as per FIELDs
         #  - constructor does not take unpacked values directly
 
@@ -68,9 +75,29 @@ class otTypeCategory(Enum):
         #  - FIELDS, PACKED_FORMAT, etc. only describe a header that doesn't
         #    include any array
         #  - has an ARRAYS static member describing the arrays
-        #  - has an ALL_FIELD_NAMES static member, a list of all field names
+        #  - does NOT have SUBTABLES member
+        #  - has an ALL_FIELD_NAMES static member, a list of all field names:
+        #    header fields, then array fields
         #  - has constructor that takes positional arguments for members in 
-        #    FIELDS followed by members in ARRAYS
+        #    ALL_FIELD_NAMES (header, then arrays)
+        #  - constructor does not take unpacked values directly
+
+    VAR_LENGTH_STRUCT_WITH_SUBTABLES = 5
+        # VAR_LENGTH_STRUCT_WITH_SUBTABLES: a struct that has a header with
+        # members of types BASIC to FIXED_LENGTH_COMPLEX_STRUCT, that may
+        # have one or more record arrays (as for VAR_LENGTH_STRUCT), and
+        # that has one or more subtables referenced by offsets. The offset
+        # is either a constant or is indicated in one of the header fields.
+        #
+        # Characteristics:
+        #  - has PACKED_FORMAT, PACKED_SIZE, NUM_PACKED_VALUES, FIELDS 
+        #    static members that describe header (no arrays or subtables)
+        #  - MAY have an ARRAYS static member describing arrays
+        #  - has a SUBTABLES static member describing the subtable member
+        #  - has an ALL_FIELD_NAMES static member, a list of all field names:
+        #    header fields, then array fields, then subtable fields
+        #  - has constructor that takes positional arguments for members in 
+        #    ALL_FIELD_NAMES (header, then arrays, then subtables)
         #  - constructor does not take unpacked values directly
 
 
@@ -104,28 +131,41 @@ def assertIsWellDefinedOTType(className):
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
         assert int in className.__mro__
-        assert not hasattr(className, 'FIELDS')
-        assert hasattr(className, 'tryReadFromBytesIO')
-        assert callable(className.tryReadFromBytesIO)
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL:
         assert (int in className.__mro__
                 or str in className.__mro__
                 or float in className.__mro__)
+
+    if className.TYPE_CATEGORY in (
+            otTypeCategory.BASIC,
+            otTypeCategory.BASIC_OT_SPECIAL
+            ):
         assert not hasattr(className, 'FIELDS')
         assert hasattr(className, 'tryReadFromBytesIO')
         assert callable(className.tryReadFromBytesIO)
 
-    if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT:
+    if className.TYPE_CATEGORY in (
+            otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
+            ):
         assert hasattr(className, 'FIELDS')
         assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
+        for field in className.FIELDS:
+            assert type(field) == str
+
+    if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT:
         for type_ in className.FIELDS.values():
             assert type_.TYPE_CATEGORY in (
                 otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL)
 
-    if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT:
-        assert hasattr(className, 'FIELDS')
-        assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
+    if className.TYPE_CATEGORY in (
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT,
+            otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
+            ):
         for type_ in className.FIELDS.values():
             assert type_.TYPE_CATEGORY in (
                 otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL,
@@ -134,10 +174,22 @@ def assertIsWellDefinedOTType(className):
                 )
             assertIsWellDefinedOTType(type_)
 
-    if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT:
-        assert hasattr(className, 'FIELDS')
-        assert (type(className.FIELDS) == OrderedDict and len(className.FIELDS) > 0)
+    if className.TYPE_CATEGORY in (
+            otTypeCategory.BASIC,
+            otTypeCategory.BASIC_OT_SPECIAL,
+            otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
+            ):
+        assert not hasattr(className, 'ARRAYS')
+        assert not hasattr(className, 'SUBTABLES')
+
+    if className.TYPE_CATEGORY in (
+            otTypeCategory.VAR_LENGTH_STRUCT,
+            ):
         assert hasattr(className, 'ARRAYS')
+        assert not hasattr(className, 'SUBTABLES')
+
+    if hasattr(className, 'ARRAYS'):
         assert (type(className.ARRAYS) == list and len(className.ARRAYS) > 0)
         for a in className.ARRAYS:
             assert (type(a) == dict and len(a) == 4)
@@ -145,14 +197,49 @@ def assertIsWellDefinedOTType(className):
             assert type(a["field"]) == str
             assert "type" in a
             assert type(a["type"]) == type
+            assertIsWellDefinedOTType(a["type"])
             assert "count" in a
             assert isinstance(a["count"], (int, str))
             assert "offset" in a
             assert isinstance(a["offset"], (int, str))
         assert hasattr(className, 'ALL_FIELD_NAMES')
         assert type(className.ALL_FIELD_NAMES) == list
-        assert len(className.ALL_FIELD_NAMES) == len(className.FIELDS) + len(className.ARRAYS)
+        if hasattr(className, 'SUBTABLES'):
+            assert len(className.ALL_FIELD_NAMES) == (
+                len(className.FIELDS) + len(className.ARRAYS) + len(className.SUBTABLES)
+                )
+        else:
+            assert len(className.ALL_FIELD_NAMES) == (
+                len(className.FIELDS) + len(className.ARRAYS)
+                )
     
+    if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES:
+        assert hasattr(className, 'SUBTABLES')
+        assert (type(className.SUBTABLES) == list and len(className.SUBTABLES) > 0)
+        assert (type(className.SUBTABLES) == list and len(className.SUBTABLES) > 0)
+        for s in className.SUBTABLES:
+            assert (type(s) == dict and len(s) == 4)
+            assert "field" in s
+            assert type(s["field"]) == str
+            assert "type" in s
+            assert type(s["type"]) == type
+            assertIsWellDefinedOTType(s["type"])
+            assert "count" in s
+            assert isinstance(s["count"], (int, str))
+            assert "offset" in s
+            assert isinstance(s["offset"], (int, str))
+        assert hasattr(className, 'ALL_FIELD_NAMES')
+        assert type(className.ALL_FIELD_NAMES) == list
+        if hasattr(className, 'ARRAYS'):
+            assert len(className.ALL_FIELD_NAMES) == (
+                len(className.FIELDS) + len(className.ARRAYS) + len(className.SUBTABLES)
+                )
+        else:
+            assert len(className.ALL_FIELD_NAMES) == (
+                len(className.FIELDS) + len(className.SUBTABLES)
+                )
+                    
+
     pass
 
 
