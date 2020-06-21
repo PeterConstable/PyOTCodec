@@ -238,6 +238,8 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
 
     for subtable in className.SUBTABLES:
         # determine count: either a number or a header field name
+        # NOTE: count will only be relevant if offset comes from
+        # a records array
         if type(subtable["count"]) == str:
             count = headerFields[subtable["count"]]
         else:
@@ -247,10 +249,22 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
             offset = headerFields[subtable["offset"]]
         else:
             offset = subtable["offset"]
+        # determine subtable type -- may be variant formats
+        # subtable["type"] is either a type or a dict; if a dict,
+        # then there are multiple subtable formats that start with
+        # a format field
+        if type(subtable["type"]) == type:
+            subtableType = subtable["type"]
+        else:
+            formatFieldType = subtable["type"]["formatFieldType"]
+            # read the format at offset
+            bufferIO = BytesIO(buffer[offset:])
+            subtableFormat = formatFieldType.tryReadFromBytesIO(bufferIO)
+            subtableType = subtable["type"]["subtableFormats"][subtableFormat]
 
         subtableFields[subtable["field"]] = tryReadStructWithSubtablesFromBuffer(
             buffer[offset:],
-            subtable["type"]
+            subtableType
             )
 
     return subtableFields

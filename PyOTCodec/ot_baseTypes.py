@@ -216,14 +216,24 @@ def assertIsWellDefinedOTType(className):
     if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES:
         assert hasattr(className, 'SUBTABLES')
         assert (type(className.SUBTABLES) == list and len(className.SUBTABLES) > 0)
-        assert (type(className.SUBTABLES) == list and len(className.SUBTABLES) > 0)
         for s in className.SUBTABLES:
             assert (type(s) == dict and len(s) == 4)
             assert "field" in s
             assert type(s["field"]) == str
             assert "type" in s
-            assert type(s["type"]) == type
-            assertIsWellDefinedOTType(s["type"])
+            # Support variant-format subtables
+            assert isinstance(s["type"], (type, dict))
+            if type(s["type"]) == type:
+                assertIsWellDefinedOTType(s["type"])
+            else:
+                assert len(s["type"]) == 2
+                assert "formatFieldType" in s["type"]
+                assert s["type"]["formatFieldType"] in (uint8, uint16, uint32, Fixed)
+                assert "subtableFormats" in s["type"]
+                for k in s["type"]["subtableFormats"].keys():
+                    assert type(k) in s["type"]["formatFieldType"].__mro__
+                for t in s["type"]["subtableFormats"].values():
+                    assertIsWellDefinedOTType(t)
             assert "count" in s
             assert isinstance(s["count"], (int, str))
             assert "offset" in s
