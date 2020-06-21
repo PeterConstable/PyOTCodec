@@ -127,13 +127,24 @@ PACKED_SIZE: This is always calcuated using struct.calcsize(). Follows after
 PACKED_FORMAT and NUM_PACKED_VALUES.
 
 ARRAYS: This is a list of dicts, each of which has four entries:
-  - "field": the field name in the parent table for the array
-  - "type": the struct type for the records in the array
-  - "count": the number of records—either a constant or the name of a header 
-     field that holds the count
-  - "offset": the location of the start of the array relative to the parent
-     table—either a constant or the name of a header field that has the offset.
-     For arrays that immediately follow header fields, use PACKED_SIZE.
+
+  - "field": The field name (str) in the parent table for the array.
+  - "type": The struct type (type) for the records in the array.
+  - "count": The number of records—either a constant (int) or the name of a header 
+     field (str) that holds the count.
+  - "offset": The location of the start of the array relative to the parent
+     table—either a constant (int) or the name of a header field (str) that has
+     the offset. For arrays that immediately follow header fields, use PACKED_SIZE.
+
+Example:
+
+    ARRAYS = [
+        {"field": "records", 
+         "type": testClassRecord, 
+         "count": "numRecs", 
+         "offset": "arrayOffset"}
+        ]
+
 
 SUBTABLES: This is a list of dicts, each of which has four entries, as for
 arrays: "field", "type", "count", "offset". But note certain differences in
@@ -154,12 +165,20 @@ format.
             "subtableFormats": {1: testClassFormat1, 2: testClassFormat2}
             }, 
 
-- "count": Count is 1 if and only if offset is constant or from a header field.
-  Count is greater than 1 if and only if offset is obtained from a record field
-  within an array.
+- "count": Must be 1 or else the name of a record field (str). Count is 1 if and 
+  only if offset is constant or taken from a header field. Count is the name of a
+  header field if and only if offset is obtained from a record field within an 
+  array.
 
 - "offset": Either a constant (int), a name of a header field (str), or a
-  ... that describes how offsets are obtained from an array.
+  dict that describes how offsets are obtained from an array. The dict has
+  one or two entries.
+
+  - 1 entry: "parentField" is the parent field for an offsets array. The array
+    entries are positive integer types, normally Offset16 or Offset32.
+  - 2 entries:
+    - "parentField": The name of a parent field for an array of records.
+    - "recordField": The name of the field within the records for the table offset.
 
 """
 
@@ -299,7 +318,15 @@ def assertIsWellDefinedOTType(className):
             assert "count" in s
             assert isinstance(s["count"], (int, str))
             assert "offset" in s
-            assert isinstance(s["offset"], (int, str))
+            assert isinstance(s["offset"], (int, str, dict))
+            if isinstance(s["offset"], (int, str)):
+                assert s["count"] == 1
+            else:
+                assert type(s["count"]) == str and s["count"] in className.FIELDS
+                assert len(s["offset"]) in (1, 2)
+                assert "parentField" in s["offset"] and type(s["offset"]["parentField"]) == str
+                if len(s["offset"]) == 2:
+                    assert "recordField" in s["offset"] and type(s["offset"]["recordField"]) == str
         assert hasattr(className, 'ALL_FIELD_NAMES')
         assert type(className.ALL_FIELD_NAMES) == list
         if hasattr(className, 'ARRAYS'):
@@ -313,6 +340,17 @@ def assertIsWellDefinedOTType(className):
                     
 
     pass
+
+
+
+def isBasicType(class_):
+    if not hasattr(class_, 'TYPE_CATEGORY'):
+        return False
+    if class_.TYPE_CATEGORY in (otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL):
+        return True
+    else:
+        return False
+
 
 
 def concatFormatStrings(*args):

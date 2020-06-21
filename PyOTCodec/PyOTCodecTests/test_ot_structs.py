@@ -912,6 +912,68 @@ result &= y.fieldC2 == 0xf002
 testResults["structs tryReadVarLengthStructWithSubtablesFromBuffer test 6"] = result
 
 
+# add subtable arrays using offset array
+
+class testClassParent:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
+    FIELDS = OrderedDict([
+        ("fieldP1", uint16),
+        ("numSubtables", uint16)
+        ])
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    ARRAYS = [
+        {"field": "subtableOffsets",
+         "type": Offset16,
+         "count": "numSubtables",
+         "offset": PACKED_SIZE}
+        ]
+    SUBTABLES = [
+        {"field": "subtables", 
+         "type": testClassChild, 
+         "count": "numSubtables", 
+         "offset": {"parentField": "subtableOffsets"}
+         }
+        ]
+    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
+
+    def __init__(self, *args):
+        for f, a in zip(self.ALL_FIELD_NAMES, args):
+            setattr(self, f, a)
+
+assertIsWellDefinedOTType(testClassParent)
+
+buffer = (b'\x0f\x42' b'\x00\x03'
+            b'\x00\x0c\x00\x12\x00\x15'
+          b'\x00\x00'
+          b'\x02\xf0\x01'
+          b'\x00\x00\x00'
+          b'\x01\xf0\x02'
+          b'\x03\xf0\x03'
+          b'\xf0\xf0'
+        )
+x = tryReadVarLengthStructWithSubtablesFromBuffer(buffer, testClassParent)
+result = type(x) == testClassParent
+result &= len(vars(x)) == 4
+result &= "fieldP1" in vars(x) and type(x.fieldP1) == uint16 and x.fieldP1 == 0x0f42
+result &= "numSubtables" in vars(x) and type(x.numSubtables) == uint16 and x.numSubtables == 3
+result &= "subtableOffsets" in vars(x) and type(x.subtableOffsets) == list and len(x.subtableOffsets) == 3
+result &= "subtables" in vars(x) and type (x.subtables) == list and len(x.subtables) == 3
+
+result &= x.subtableOffsets == [12, 18, 21]
+y = x.subtables[0]
+result &= y.fieldC1 == 2
+result &= y.fieldC2 == 0xf001
+y = x.subtables[1]
+result &= y.fieldC1 == 1
+result &= y.fieldC2 == 0xf002
+y = x.subtables[2]
+result &= y.fieldC1 == 3
+result &= y.fieldC2 == 0xf003
+
+testResults["structs tryReadVarLengthStructWithSubtablesFromBuffer test 7"] = result
+
+
 
 # END OF TESTS
 
@@ -919,6 +981,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 28
+assert numTestResults == 29
 
 printTestResultSummary("Tests for ot_structs", testResults, skippedTests)

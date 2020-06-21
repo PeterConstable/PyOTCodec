@@ -142,15 +142,14 @@ def tryReadFixedLengthRecordsArrayFromBuffer(buffer, recordClass, numRecords, ar
 
 
 
-def tryReadStructArrayFieldsFromBuffer(buffer, className, headerFields):
+def tryReadArrayFieldsFromBuffer(buffer, className, headerFields):
     """Takes a buffer and returns an OrderedDict of field name/value pairs
-    where the values are arrays.
+    where the values are arrays as defined in className.ARRAYS.
 
     Assumed that the parent struct starts at the beginning of the buffer.
 
     Also assumed that caller has verified that className is type category
-    VAR_LENGTH_STRUCT or VAR_LENGTH_STRUCT_WITH_SUBTABLES, with
-    descriptions of the arrays given in className.ARRAYS.
+    VAR_LENGTH_STRUCT or VAR_LENGTH_STRUCT_WITH_SUBTABLES.
 
     Returns an OrderedDict with each element having a field name as key,
     and a value that is a list of objects, with name and object type as
@@ -171,12 +170,23 @@ def tryReadStructArrayFieldsFromBuffer(buffer, className, headerFields):
         else:
             offset = array["offset"]
 
-        arrayFields[array["field"]] = tryReadFixedLengthRecordsArrayFromBuffer(
-            buffer[offset:],
-            array["type"],
-            count,
-            array["field"]
-            )
+        # check if the type of array elements is a basic type or struct
+        if isBasicType(array["type"]):
+            # get the values directly
+            arrayLength = count * array["type"].PACKED_SIZE
+            if len(buffer) < offset + arrayLength:
+                raise OTCodecError(f'Unable to read the {array["field"]} array in {className}: buffer is not long enough.')
+            unpack_iter = struct.iter_unpack(array["type"].PACKED_FORMAT, buffer[offset : offset + arrayLength])
+            arrayFields[array["field"]] = [array["type"](v)
+                for v, in itertools.islice(unpack_iter, count)]
+            
+        else:
+            arrayFields[array["field"]] = tryReadFixedLengthRecordsArrayFromBuffer(
+                buffer[offset:],
+                array["type"],
+                count,
+                array["field"]
+                )
 
     return arrayFields
 # End of tryReadStructArrayFieldsFromBuffer
@@ -207,7 +217,7 @@ def tryReadVarLengthStructFromBuffer(buffer, className):
 
     # finished with headers; now process arrays
     if className.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT:
-        arrayFields = tryReadStructArrayFieldsFromBuffer(buffer, className, allFields)
+        arrayFields = tryReadArrayFieldsFromBuffer(buffer, className, allFields)
         allFields.update(arrayFields)
         
     return className(*allFields.values())
@@ -244,11 +254,21 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
             count = headerFields[subtable["count"]]
         else:
             count = subtable["count"]
-        # determine offset: either a number or a header field name
+        
+            # determine offset: either a number or a header field name
         if type(subtable["offset"]) == str:
             offset = headerFields[subtable["offset"]]
-        else:
+            assert count == 1
+        elif type(subtable["offset"]) == int:
             offset = subtable["offset"]
+            assert count == 1
+        else:
+            # offset is dict with one or 2 elements
+            # will need to get the offsets within a loop
+            offsetArrayField = subtable["offset"]["parentField"]
+            if len(subtable["offset"]) > 1:
+                offsetRecordField = subtable["offset"]["recordField"]
+
         # determine subtable type -- may be variant formats
         # subtable["type"] is either a type or a dict; if a dict,
         # then there are multiple subtable formats that start with
@@ -256,16 +276,44 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
         if type(subtable["type"]) == type:
             subtableType = subtable["type"]
         else:
+            # alternate subtable formats -- need to determine
+            # the type for each within a loop
             formatFieldType = subtable["type"]["formatFieldType"]
-            # read the format at offset
-            bufferIO = BytesIO(buffer[offset:])
-            subtableFormat = formatFieldType.tryReadFromBytesIO(bufferIO)
-            subtableType = subtable["type"]["subtableFormats"][subtableFormat]
+            subtableFormats = subtable["type"]["subtableFormats"]
 
-        subtableFields[subtable["field"]] = tryReadStructWithSubtablesFromBuffer(
-            buffer[offset:],
-            subtableType
-            )
+        subtableArray = []
+        for i in range(count):
+            # get the offset
+            if type(subtable["offset"]) == dict:
+                if len(subtable["offset"]) == 1:
+                    offset = headerFields[offsetArrayField][i]
+                else:
+                    offset = headerFields[offsetArrayField][i].offsetRecordField
+            else:
+                # already got the single offset earlier
+                pass
+
+            # get the type
+            if type(subtable["type"]) == dict:
+                # read the format at offset
+                bufferIO = BytesIO(buffer[offset:])
+                subtableFormat = formatFieldType.tryReadFromBytesIO(bufferIO)
+                subtableType = subtableFormats[subtableFormat]
+            else:
+                # already got the single type earlier
+                pass
+
+            subtableArray.append(
+                tryReadStructWithSubtablesFromBuffer(
+                    buffer[offset:],
+                    subtableType
+                    )
+                )
+
+        if len(subtableArray) == 1:
+            subtableFields[subtable["field"]] = subtableArray[0]
+        else:
+            subtableFields[subtable["field"]] = subtableArray
 
     return subtableFields
 # End of tryReadSubtableFieldsFromBuffer
@@ -287,7 +335,7 @@ def tryReadStructWithSubtablesFromBuffer(buffer, className):
 
     # get any arrays
     if hasattr(className, 'ARRAYS'):
-        arrayFields = tryReadStructArrayFieldsFromBuffer(buffer, className, allFields)
+        arrayFields = tryReadArrayFieldsFromBuffer(buffer, className, allFields)
         allFields.update(arrayFields)
 
     # get any subtables
