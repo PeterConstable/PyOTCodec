@@ -288,7 +288,7 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
                 if len(subtable["offset"]) == 1:
                     offset = headerFields[offsetArrayField][i]
                 else:
-                    offset = headerFields[offsetArrayField][i].offsetRecordField
+                    offset = getattr(headerFields[offsetArrayField][i], offsetRecordField)
             else:
                 # already got the single offset earlier
                 pass

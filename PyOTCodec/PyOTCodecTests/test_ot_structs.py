@@ -961,6 +961,7 @@ result &= "subtableOffsets" in vars(x) and type(x.subtableOffsets) == list and l
 result &= "subtables" in vars(x) and type (x.subtables) == list and len(x.subtables) == 3
 
 result &= x.subtableOffsets == [12, 18, 21]
+result &= type(x.subtableOffsets[0]) == Offset16
 y = x.subtables[0]
 result &= type(y) == testClassChild
 result &= y.fieldC1 == 2
@@ -1029,6 +1030,7 @@ result &= "subtableOffsets" in vars(x) and type(x.subtableOffsets) == list and l
 result &= "subtables" in vars(x) and type (x.subtables) == list and len(x.subtables) == 3
 
 result &= x.subtableOffsets == [12, 19, 23]
+result &= type(x.subtableOffsets[0]) == Offset16
 y = x.subtables[0]
 result &= type(y) == testClassFormat2
 result &= y.format == 2
@@ -1045,12 +1047,192 @@ result &= y.fieldC2 == 0xf003
 testResults["structs tryReadVarLengthStructWithSubtablesFromBuffer test 8"] = result
 
 
+# offsets in array of records
+
+class testClassRecord:
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    FIELDS = OrderedDict([
+        ("subtableTag", Tag),
+        ("subtableOffset", uint16)
+        ])
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    
+    def __init__(self, *args):
+        for f, a in zip(self.FIELDS, args):
+            setattr(self, f, a)
+
+class testClassParent:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
+    FIELDS = OrderedDict([
+        ("fieldP1", uint16),
+        ("numSubtables", uint16)
+        ])
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    ARRAYS = [
+        {"field": "subtableRecords",
+         "type": testClassRecord,
+         "count": "numSubtables",
+         "offset": PACKED_SIZE}
+        ]
+    SUBTABLES = [
+        {"field": "subtables", 
+         "type": testClassChild, 
+         "count": "numSubtables", 
+         "offset": {"parentField": "subtableRecords",
+                    "recordField": "subtableOffset"}
+        }
+        ]
+    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
+
+    def __init__(self, *args):
+        for f, a in zip(self.ALL_FIELD_NAMES, args):
+            setattr(self, f, a)
+
+assertIsWellDefinedOTType(testClassParent)
+
+buffer = (b'\x0f\x42' b'\x00\x03'
+            b'abvm\x00\x18'
+            b'blwm\x00\x1e'
+            b'mkmk\x00\x21'
+          b'\x00\x00'
+          b'\x02\xf0\x01'
+          b'\x00\x00\x00'
+          b'\x01\xf0\x02'
+          b'\x03\xf0\x03'
+          b'\xf0\xf0'
+        )
+x = tryReadVarLengthStructWithSubtablesFromBuffer(buffer, testClassParent)
+result = type(x) == testClassParent
+result &= len(vars(x)) == 4
+result &= "fieldP1" in vars(x) and type(x.fieldP1) == uint16 and x.fieldP1 == 0x0f42
+result &= "numSubtables" in vars(x) and type(x.numSubtables) == uint16 and x.numSubtables == 3
+result &= "subtableRecords" in vars(x) and type(x.subtableRecords) == list and len(x.subtableRecords) == 3
+result &= "subtables" in vars(x) and type (x.subtables) == list and len(x.subtables) == 3
+
+y = x.subtableRecords[0]
+result &= type(y) == testClassRecord
+result &= y.subtableTag == 'abvm'
+result &= y.subtableOffset == 24
+y = x.subtableRecords[1]
+result &= type(y) == testClassRecord
+result &= y.subtableTag == 'blwm'
+result &= y.subtableOffset == 30
+y = x.subtableRecords[2]
+result &= type(y) == testClassRecord
+result &= y.subtableTag == 'mkmk'
+result &= y.subtableOffset == 33
+
+y = x.subtables[0]
+result &= type(y) == testClassChild
+result &= y.fieldC1 == 2
+result &= y.fieldC2 == 0xf001
+y = x.subtables[1]
+result &= type(y) == testClassChild
+result &= y.fieldC1 == 1
+result &= y.fieldC2 == 0xf002
+y = x.subtables[2]
+result &= type(y) == testClassChild
+result &= y.fieldC1 == 3
+result &= y.fieldC2 == 0xf003
+
+testResults["structs tryReadVarLengthStructWithSubtablesFromBuffer test 9"] = result
+
+
+# offsets in array of records, with format-variant subtables
+
+class testClassParent:
+    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
+    FIELDS = OrderedDict([
+        ("fieldP1", uint16),
+        ("numSubtables", uint16)
+        ])
+    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
+    ARRAYS = [
+        {"field": "subtableRecords",
+         "type": testClassRecord,
+         "count": "numSubtables",
+         "offset": PACKED_SIZE}
+        ]
+    SUBTABLES = [
+        {"field": "subtables", 
+         "type": {
+             "formatFieldType": uint16,
+             "subtableFormats": {1: testClassFormat1, 2: testClassFormat2}
+             }, 
+         "count": "numSubtables", 
+         "offset": {"parentField": "subtableRecords",
+                    "recordField": "subtableOffset"}
+        }
+        ]
+    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
+
+    def __init__(self, *args):
+        for f, a in zip(self.ALL_FIELD_NAMES, args):
+            setattr(self, f, a)
+
+assertIsWellDefinedOTType(testClassParent)
+
+buffer = (b'\x0f\x42' b'\x00\x03'
+            b'abvm\x00\x18'
+            b'blwm\x00\x1f'
+            b'mkmk\x00\x23'
+          b'\x00\x00'
+          b'\x00\x02\xf0\x01'
+          b'\x00\x00\x00'
+          b'\x00\x01\xf0\x02'
+          b'\x00\x02\xf0\x03'
+          b'\xf0\xf0'
+        )
+x = tryReadVarLengthStructWithSubtablesFromBuffer(buffer, testClassParent)
+result = type(x) == testClassParent
+result &= len(vars(x)) == 4
+result &= "fieldP1" in vars(x) and type(x.fieldP1) == uint16 and x.fieldP1 == 0x0f42
+result &= "numSubtables" in vars(x) and type(x.numSubtables) == uint16 and x.numSubtables == 3
+result &= "subtableRecords" in vars(x) and type(x.subtableRecords) == list and len(x.subtableRecords) == 3
+result &= "subtables" in vars(x) and type (x.subtables) == list and len(x.subtables) == 3
+
+y = x.subtableRecords[0]
+result &= type(y) == testClassRecord
+result &= y.subtableTag == 'abvm'
+result &= y.subtableOffset == 24
+y = x.subtableRecords[1]
+result &= type(y) == testClassRecord
+result &= y.subtableTag == 'blwm'
+result &= y.subtableOffset == 31
+y = x.subtableRecords[2]
+result &= type(y) == testClassRecord
+result &= y.subtableTag == 'mkmk'
+result &= y.subtableOffset == 35
+
+y = x.subtables[0]
+result &= type(y) == testClassFormat2
+result &= y.format == 2
+result &= y.fieldC2 == 0xf001
+y = x.subtables[1]
+result &= type(y) == testClassFormat1
+result &= y.format == 1
+result &= y.fieldC2 == 0xf002
+y = x.subtables[2]
+result &= type(y) == testClassFormat2
+result &= y.format == 2
+result &= y.fieldC2 == 0xf003
+
+testResults["structs tryReadVarLengthStructWithSubtablesFromBuffer test 10"] = result
+
+
+
+
+
+
 # END OF TESTS
 
 numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 30
+assert numTestResults == 32
 
 printTestResultSummary("Tests for ot_structs", testResults, skippedTests)
