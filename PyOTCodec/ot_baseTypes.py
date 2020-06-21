@@ -100,6 +100,68 @@ class otTypeCategory(Enum):
         #    ALL_FIELD_NAMES (header, then arrays, then subtables)
         #  - constructor does not take unpacked values directly
 
+"""
+TYPE_CATEGORY: One of the above enum values. This is the first static field 
+in a struct class definition.
+
+Note: All BASIC and BASIC_OT_SPECIAL types are defined in this module.
+
+FIELDS: Used in FIXED_LENGTH_BASIC_STRUCT or more-complex types. This is
+the second static field in a struct class definition. It is an OrderedDict
+with field name / field type as key-value pairs. For example:
+
+    FIELDS = OrderedDict([
+        ("field1", uint8),
+        ("field2", uint16)
+        ])
+
+The fields include all struct members up to but not including any record 
+array.
+
+PACKED_FORMAT, NUM_PACKED_VALUES: These are specified in this module for all 
+basic types — int8 to uint64, Offset16, etc.; uint24, Fixed, F2Dot14, Tag. 
+For all other types, these should derived from the FIELDS definition using
+getPackedFormatFromFieldsDef(FIELDS). This must follow the FIELDS definition.
+
+PACKED_SIZE: This is always calcuated using struct.calcsize(). Follows after
+PACKED_FORMAT and NUM_PACKED_VALUES.
+
+ARRAYS: This is a list of dicts, each of which has four entries:
+  - "field": the field name in the parent table for the array
+  - "type": the struct type for the records in the array
+  - "count": the number of records—either a constant or the name of a header 
+     field that holds the count
+  - "offset": the location of the start of the array relative to the parent
+     table—either a constant or the name of a header field that has the offset.
+     For arrays that immediately follow header fields, use PACKED_SIZE.
+
+SUBTABLES: This is a list of dicts, each of which has four entries, as for
+arrays: "field", "type", "count", "offset". But note certain differences in
+format.
+
+- "type": The value is either a type or is a dict describing alternate subtable
+  formats. Formatted subtables always have format as the first field in the struct.
+  
+  When a dict is used, it has two entries:
+  - "formatFieldType": the type of the format field; must be uint8, uint16, uint32
+    or FIXED.
+  - "subtableFormats": a dict with format values as keys and format types as values.
+
+  For example:
+
+        "type": {
+            "formatFieldType": uint16,
+            "subtableFormats": {1: testClassFormat1, 2: testClassFormat2}
+            }, 
+
+- "count": Count is 1 if and only if offset is constant or from a header field.
+  Count is greater than 1 if and only if offset is obtained from a record field
+  within an array.
+
+- "offset": Either a constant (int), a name of a header field (str), or a
+  ... that describes how offsets are obtained from an array.
+
+"""
 
 
 def assertIsWellDefinedOTType(className):
