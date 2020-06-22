@@ -61,14 +61,14 @@ testResults["Fixed constants test 2"] = (Fixed._packedSize == 4)
 # arg must be bytearray or bytes
 try:
     Fixed(None)
-except OTCodecError:
+except (OTCodecError, TypeError):
     result = True
 else:
     result = False
 testResults["Fixed constructor test 1"] = result
 try:
     Fixed(123)
-except OTCodecError:
+except (OTCodecError, TypeError):
     result = True
 else:
     result = False
@@ -77,13 +77,13 @@ testResults["Fixed constructor test 2"] = result
 # arg length must be 4 bytes
 try:
     Fixed(b'\x00\x01')
-except OTCodecError:
+except (OTCodecError, TypeError):
     result = True
 else:
     result = False
 try:
     Fixed(b'\x00\x01\x02\x03\x04')
-except OTCodecError:
+except (OTCodecError, TypeError):
     result &= True
 else:
     result &= False
@@ -1074,7 +1074,7 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 158
+assert numTestResults == 155
 
 printTestResultSummary("Tests for table_maxp", testResults, skippedTests)
 

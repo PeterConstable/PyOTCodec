@@ -2,7 +2,7 @@ import struct
 from pathlib import Path
 from io import BytesIO
 from ot_types import *
-from table_COLR import *
+from table_COLR_new import *
 from table_fmtx import *
 from table_head import *
 from table_hhea import *
@@ -132,7 +132,7 @@ class OTFont:
     _earlyReadTables = ("COLR", "fmtx", "head", "hhea", "maxp", "OS/2")
 
     _tryReadFromFileSwitch = {
-        "COLR": Table_COLR.tryReadFromFile,
+        "COLR": Table_COLR_new.tryReadFromFile,
         "fmtx": Table_fmtx.tryReadFromFile,
         "head": Table_head.tryReadFromFile,
         "hhea": Table_hhea.tryReadFromFile,

@@ -15,6 +15,10 @@ class VarFixed:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {"value": self.value, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
+# End of class VarFixed
+
 
 class VarF2Dot14:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
@@ -29,6 +33,12 @@ class VarF2Dot14:
     def __init__(self, *args):
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
+
+    def __repr__(self):
+        return {"value": self.value, 
+                "varOuterIndex": self.varOuterIndex, 
+                "varInnerIndex": self.varInnerIndex}.__repr__()
+# End of class VarF2Dot14
 
 
 class VarFWord:
@@ -45,6 +55,10 @@ class VarFWord:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {"coordinate": self.coordinate, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
+# End of class VarFWord
+
 
 class VarUFWord:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
@@ -60,9 +74,13 @@ class VarUFWord:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {"distance": self.distance, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
+# End of class VarUFWord
+
 
 class Affine2x2:
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("xx", VarFixed),
         ("xy", VarFixed),
@@ -76,9 +94,13 @@ class Affine2x2:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {'xx': self.xx, 'xy': self.xy, 'yx': self.yx, 'yy': self.yy}.__repr__()
+# End of class Affine2x2
+
 
 class ColorIndex:
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("paletteIndex", uint16),
         ("alpha", VarF2Dot14)
@@ -90,9 +112,13 @@ class ColorIndex:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {"paletteIndex": self.paletteIndex, "alpha": self.alpha}.__repr__()
+# End of class ColorIndex
+
 
 class ColorStop:
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("stopOffset", VarF2Dot14),
         ("color", ColorIndex)
@@ -103,6 +129,10 @@ class ColorStop:
     def __init__(self, *args):
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
+
+    def __repr__(self):
+        return {'stopOffset': self.stopOffset, 'color': self.color}.__repr__()
+# End of class ColorStop
 
 
 class extend(Enum):
@@ -135,7 +165,7 @@ class ColorLine:
 
 
 class PaintFormat1:
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
+    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("format", uint16),
         ("color", ColorIndex)
@@ -146,6 +176,10 @@ class PaintFormat1:
     def __init__(self, *args):
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
+
+    def __repr__(self):
+        return {'format': self.format, 'color': self.color}.__repr__()
+# End of class PaintFormat1
 
 
 class PaintFormat2:
@@ -219,6 +253,9 @@ class LayerV1Record:
     def __init__(self, *args):
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
+    def __repr__(self):
+        return {'glyphID': self.glyphID, 'paintOffset': self.paintOffset}.__repr__()
+# End of class LayerV1Record
 
 
 class LayersV1:
@@ -269,6 +306,10 @@ class BaseGlyphV1Record:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {'glyphID': self.glyphID, 'layersV1Offset': self.layersV1Offset}.__repr__()
+# End of class BaseGlyphV1Record
+
 
 class BaseGlyphV1List:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
@@ -312,6 +353,10 @@ class BaseGlyphRecord:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {'glyphID': self.glyphID, 'firstLayerIndex': self.firstLayerIndex, 'numLayers': self.numLayers}.__repr__()
+# End of class BaseGlyphRecord
+
 
 class LayerRecord:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
@@ -326,8 +371,14 @@ class LayerRecord:
         for f, a in zip(self.FIELDS, args):
             setattr(self, f, a)
 
+    def __repr__(self):
+        return {'glyphID': self.glyphID, 'paletteIndex': self.paletteIndex}.__repr__()
+# End of class LayerRecord
+
 
 class Table_COLR_new:
+    _expectedTag = Tag("COLR")
+
     TYPE_CATEGORY = otTypeCategory.VERSIONED_TABLE
 
     _fields0 = OrderedDict([
@@ -346,7 +397,7 @@ class Table_COLR_new:
          "offset": "baseGlyphRecordsOffset"},
         {"field": "layerRecords",
          "type": LayerRecord,
-         "count": "numLeyerRecords",
+         "count": "numLayerRecords",
          "offset": "layerRecordsOffset"}
         ]
 
@@ -360,7 +411,7 @@ class Table_COLR_new:
     _subtables1 = [
         {"field": "baseGlyphV1List", 
          "type": BaseGlyphV1List, 
-         "count": "1", 
+         "count": 1, 
          "offset": "baseGlyphV1ListOffset"
         } # ignoring ItemVariationStore for now
         ]
@@ -393,3 +444,30 @@ class Table_COLR_new:
     def __init__(self, *args):
         for f, a in zip(self.ALL_FIELD_NAMES, args):
             setattr(self, f, a)
+
+    @staticmethod
+    def tryReadFromFile(parentFont, tableRecord):
+
+        from ot_font import OTFont, TableRecord
+        if not (isinstance(parentFont, OTFont) and isinstance(tableRecord, TableRecord)):
+            raise Exception()
+
+        import ot_table
+        ot_table.ValidateTableTag(tableRecord, Tag("COLR"))
+
+        # get file bytes, then validate offset/length are in file bounds
+        fileBytes = parentFont.fileBytes
+        offsetInFile = tableRecord.offset
+        ot_table.ValidateOffsetAndLength(
+            len(fileBytes), offsetInFile, tableRecord.length
+            )
+
+        # get the table bytes: since offset length are in bounds, can get the expected length
+        tableBytes = fileBytes[offsetInFile : offsetInFile + tableRecord.length]
+
+        colr = tryReadVersionedTableFromBuffer(tableBytes, Table_COLR_new)
+
+        colr.parentFont = parentFont
+        colr.tableRecord = tableRecord
+
+        return colr
