@@ -84,6 +84,9 @@
     <Compile Include="table_COLR.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="table_COLR_new.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="table_fmtx.py">
       <SubType>Code</SubType>
     </Compile>
