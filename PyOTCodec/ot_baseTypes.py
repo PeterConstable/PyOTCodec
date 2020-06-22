@@ -100,6 +100,17 @@ class otTypeCategory(Enum):
         #    ALL_FIELD_NAMES (header, then arrays, then subtables)
         #  - constructor does not take unpacked values directly
 
+    VERSIONED_TABLE = 6
+        # VERSIONED_TABLE: Table that starts with a version field (or fields) 
+        # and that has alternate formats according to the version.
+        #
+        # Characteristics:
+        #  - has FORMATS member that describes the alternate formats.
+        #  - does NOT have PACKED_FORMAT, etc. members directly. (These
+        #    details are contained, for alternate formats, in the FORMATS
+        #    member.
+
+
 """
 TYPE_CATEGORY: One of the above enum values. This is the first static field 
 in a struct class definition.
@@ -182,6 +193,12 @@ format.
 
 """
 
+class otVersionType(Enum):
+    UINT16_MINOR = 0
+    UINT16_MAJOR_MINOR = 1
+    UINT32_MINOR = 2
+    UINT32_SFNT = 3
+
 
 def assertIsWellDefinedOTType(className):
     """Asserts that className is well defined according to its type category.
@@ -202,13 +219,14 @@ def assertIsWellDefinedOTType(className):
     assert type(className.TYPE_CATEGORY) == otTypeCategory
 
     # all types must have PACKED_FORMAT, PACKED_SIZE
-    assert hasattr(className, 'PACKED_FORMAT')
-    assert (type(className.PACKED_FORMAT) == str and className.PACKED_FORMAT[0] == '>')
-    assert hasattr(className, 'PACKED_SIZE')
-    assert (type(className.PACKED_SIZE) == int)
-    assert (className.PACKED_SIZE == struct.calcsize(className.PACKED_FORMAT))
-    assert hasattr(className, 'NUM_PACKED_VALUES')
-    assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
+    if className.TYPE_CATEGORY != otTypeCategory.VERSIONED_TABLE:
+        assert hasattr(className, 'PACKED_FORMAT')
+        assert (type(className.PACKED_FORMAT) == str and className.PACKED_FORMAT[0] == '>')
+        assert hasattr(className, 'PACKED_SIZE')
+        assert (type(className.PACKED_SIZE) == int)
+        assert (className.PACKED_SIZE == struct.calcsize(className.PACKED_FORMAT))
+        assert hasattr(className, 'NUM_PACKED_VALUES')
+        assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
         assert int in className.__mro__

@@ -1225,6 +1225,143 @@ testResults["structs tryReadVarLengthStructWithSubtablesFromBuffer test 10"] = r
 
 
 
+#-------------------------------------------------------------
+# Tests for tryReadVersionedTablesFromBuffer
+#-------------------------------------------------------------
+
+
+# otVersionType.UINT16_MINOR
+class testVersionedTable:
+
+    TYPE_CATEGORY = otTypeCategory.VERSIONED_TABLE
+
+    _fields0 = OrderedDict([
+            ("version", uint16),
+            ("numBaseRecords", uint16),
+            ("baseRecordsOffset", uint16)
+        ])
+    _packedFormat0, _numPackedValues0 = getPackedFormatFromFieldsDef(_fields0)
+    _packedSize0 = struct.calcsize(_packedFormat0)
+    _arrays0 = [
+        {"field": "baseRecords",
+         "type": testClassRecord,
+         "count": "numBaseRecords",
+         "offset": "baseRecordsOffset"}
+        ]
+
+    _fields1_addl = OrderedDict([
+            ("numExtraRecords", uint16),
+            ("extraRecordsOffset", uint16)
+        ])
+    _packedFormat1_addl, _numPackedValues1_addl = getPackedFormatFromFieldsDef(_fields1_addl)
+    _packedSize1_addl = struct.calcsize(_packedFormat1_addl)
+    _arrays1_addl = [
+        {"field": "extraRecords",
+         "type": testClassRecord,
+         "count": "numExtraRecords",
+         "offset": "extraRecordsOffset"}
+        ]
+
+    FORMATS = {
+        "versionType": otVersionType.UINT16_MINOR,
+        "versions": {
+            0: {
+                "FIELDS": _fields0,
+                "PACKED_FORMAT": _packedFormat0,
+                "PACKED_SIZE": _packedSize0,
+                "NUM_PACKED_VALUES": _numPackedValues0,
+                "ARRAYS": _arrays0,
+                "ALL_FIELD_NAMES": getCombinedFieldNames(_fields0, _arrays0)
+                },
+            1: {
+                "FIELDS": OrderedDict(list(_fields0.items()) + list(_fields1_addl.items())),
+                "PACKED_FORMAT": concatFormatStrings(_packedFormat0, _packedFormat1_addl),
+                "PACKED_SIZE": _packedSize0 + _packedSize1_addl,
+                "NUM_PACKED_VALUES": _numPackedValues0 + _numPackedValues1_addl,
+                "ARRAYS": _arrays0 + _arrays1_addl,
+                "ALL_FIELD_NAMES": getCombinedFieldNames(
+                    OrderedDict(list(_fields0.items()) + list(_fields1_addl.items())),
+                    _arrays0 + _arrays1_addl
+                    )
+                }
+            }
+        }
+
+    def __init__(self, *args):
+        for f, a in zip(self.ALL_FIELD_NAMES, args):
+            setattr(self, f, a)
+
+# version 0
+buffer = (
+    b'\x00\x00\x00\x03\x00\x06'
+      b'blwm\x01\x00'
+      b'abvm\x01\x01'
+      b'mkmk\x01\x02'
+    )
+x = tryReadVersionedTableFromBuffer(buffer, testVersionedTable)
+result = type(x) == testVersionedTable
+result &= len(vars(x)) == 4
+result &= "version" in vars(x) and type(x.version) == uint16 and x.version == 0
+result &= "numBaseRecords" in vars(x) and type(x.numBaseRecords) == uint16 and x.numBaseRecords == 3
+result &= "baseRecordsOffset" in vars(x) and type(x.baseRecordsOffset) == uint16 and x.baseRecordsOffset == 6
+result &= "baseRecords" in vars(x) and type(x.baseRecords) == list and len(x.baseRecords) == 3
+
+y = x.baseRecords[0]
+result &= type(y) == testClassRecord
+result &= type(y.subtableTag) == Tag and y.subtableTag == 'blwm'
+result &= type(y.subtableOffset) == uint16 and y.subtableOffset == 256
+y = x.baseRecords[1]
+result &= y.subtableTag == 'abvm'
+result &= y.subtableOffset == 257
+y = x.baseRecords[2]
+result &= y.subtableTag == 'mkmk'
+result &= y.subtableOffset == 258
+
+testResults["structs tryReadVersionedTableFromBuffer test 1"] = result
+
+
+# version 1
+buffer = (
+    b'\x00\x01\x00\x03\x00\x0a' b'\x00\x02\x00\x1e'
+      b'blwm\x01\x00'
+      b'abvm\x01\x01'
+      b'mkmk\x01\x02'
+    b'\x00\x00'
+      b'half\x02\x00'
+      b'reph\x02\x01'
+    )
+x = tryReadVersionedTableFromBuffer(buffer, testVersionedTable)
+result = type(x) == testVersionedTable
+result &= len(vars(x)) == 7
+result &= "version" in vars(x) and type(x.version) == uint16 and x.version == 1
+result &= "numBaseRecords" in vars(x) and type(x.numBaseRecords) == uint16 and x.numBaseRecords == 3
+result &= "baseRecordsOffset" in vars(x) and type(x.baseRecordsOffset) == uint16 and x.baseRecordsOffset == 10
+result &= "baseRecords" in vars(x) and type(x.baseRecords) == list and len(x.baseRecords) == 3
+result &= "numExtraRecords" in vars(x) and type(x.numExtraRecords) == uint16 and x.numExtraRecords == 2
+result &= "extraRecordsOffset" in vars(x) and type(x.extraRecordsOffset) == uint16 and x.extraRecordsOffset == 30
+result &= "extraRecords" in vars(x) and type(x.extraRecords) == list and len(x.extraRecords) == 2
+
+y = x.baseRecords[0]
+result &= type(y) == testClassRecord
+result &= type(y.subtableTag) == Tag and y.subtableTag == 'blwm'
+result &= type(y.subtableOffset) == uint16 and y.subtableOffset == 256
+y = x.baseRecords[1]
+result &= y.subtableTag == 'abvm'
+result &= y.subtableOffset == 257
+y = x.baseRecords[2]
+result &= y.subtableTag == 'mkmk'
+result &= y.subtableOffset == 258
+
+y = x.extraRecords[0]
+result &= type(y) == testClassRecord
+result &= type(y.subtableTag) == Tag and y.subtableTag == 'half'
+result &= type(y.subtableOffset) == uint16 and y.subtableOffset == 512
+y = x.extraRecords[1]
+result &= y.subtableTag == 'reph'
+result &= y.subtableOffset == 513
+
+testResults["structs tryReadVersionedTableFromBuffer test 2"] = result
+
 
 
 # END OF TESTS
@@ -1233,6 +1370,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 32
+assert numTestResults == 34
 
 printTestResultSummary("Tests for ot_structs", testResults, skippedTests)

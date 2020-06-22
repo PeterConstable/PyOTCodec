@@ -375,3 +375,57 @@ def tryReadVarLengthStructWithSubtablesFromBuffer(buffer, className):
 
     return tryReadStructWithSubtablesFromBuffer(buffer, className)
 # End of tryReadVarLengthStructWithSubtablesFromBuffer
+
+
+
+def tryReadVersionedTableFromBuffer(buffer, className):
+    """Takes a buffer and returns a table of the specified type, read from
+    the buffer.
+
+    Assumes that the table starts at the beginning of the buffer.
+
+    className must be of type category VERSIONED_TABLE.
+    """
+
+    if not className.TYPE_CATEGORY in (otTypeCategory.VERSIONED_TABLE,):
+        raise TypeError(f"{className} isn't a versioned table.")
+    try:
+        assertIsWellDefinedOTType(className)
+    except:
+        raise TypeError(f"{className} isn't a well-defined versioned table.")
+
+    # get the version field value(s) according to the type
+    versionType = className.FORMATS["versionType"]
+    if versionType == otVersionType.UINT16_MINOR:
+        versionFormat = ">H"
+    elif versionType == otVersionType.UINT16_MAJOR_MINOR:
+        versionFormat = ">2H"
+    elif versionType == otVersionType.UINT32_MINOR:
+        versionFormat = ">L"
+    else: # UINT32_SFNT
+        versionFormat = "4s"
+    versionVals = struct.unpack(versionFormat, buffer[:struct.calcsize(versionFormat)])
+
+    # From here, want to resolve the appropriate format data from what's available.
+    if versionType == otVersionType.UINT32_SFNT:
+        version == versionVals[0]
+    elif versionType in (otVersionType.UINT16_MINOR, otVersionType.UINT32_MINOR):
+        # take the max available that's less than or equal to the value read
+        eligibleFormatVersions = [x for x in className.FORMATS["versions"] if x <= versionVals[0]]
+        if len(eligibleFormatVersions) == 0:
+            raise OTCodecError(f"The table version in the data, {versionVals[0]}, is not supported. "
+                              f"The minimum version supported is {min(className.FORMATS['versions'])}.")
+        version = max(eligibleFormatVersions)
+        format = className.FORMATS["versions"][version]
+    else: # UINT16_MAJOR_MINOR
+        # ??
+        pass
+
+    # got the format; apply to the class
+    for k, v in format.items():
+        setattr(className, k, v)
+
+    # now we can read like a non-versioned table
+    return tryReadStructWithSubtablesFromBuffer(buffer, className)
+
+# End of tryReadVersionedTableFromBuffer
