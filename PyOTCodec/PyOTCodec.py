@@ -25,3 +25,4 @@ if __name__ == '__main__':
             import PyOTCodecTests.test_ot_structs
     else:
         print("Welcome to PyOTCodec")
+    import table_COLR_new

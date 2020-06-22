@@ -154,7 +154,7 @@ class PaintFormat2:
         ("format", uint16),
         ("colorLineOffset", Offset32),
         ("x0", VarFWord),
-        ("y0", VarFWord)
+        ("y0", VarFWord),
         ("x1", VarFWord),
         ("y1", VarFWord),
         ("x2", VarFWord),
@@ -181,7 +181,7 @@ class PaintFormat3:
         ("format", uint16),
         ("colorLineOffset", Offset32),
         ("x0", VarFWord),
-        ("y0", VarFWord)
+        ("y0", VarFWord),
         ("x1", VarFWord),
         ("y1", VarFWord),
         ("r0", VarUFWord),
