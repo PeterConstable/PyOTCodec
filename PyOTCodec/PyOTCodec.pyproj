@@ -69,6 +69,9 @@
     <Compile Include="PyOTCodecTests\test_table_COLR.py">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="PyOTCodecTests\test_table_COLR_new.py">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="PyOTCodecTests\test_table_fmtx.py">
       <SubType>Code</SubType>
     </Compile>

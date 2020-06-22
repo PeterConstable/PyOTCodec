@@ -8,15 +8,11 @@ def getPackedFormatFromFieldsDef(fields:OrderedDict):
     and returns a packed format string that can be used in
     struct.unpack or struct.pack; and also returns the number
     of packed values.
-
-    Returned tuple: packedFormat, numPackedValues
     """
     packedFormats = []
-    numPackedValues = 0
     for t in fields.values():
         packedFormats.append(t.PACKED_FORMAT)
-        numPackedValues += t.NUM_PACKED_VALUES
-    return concatFormatStrings(*packedFormats), numPackedValues
+    return concatFormatStrings(*packedFormats)
 
 
 

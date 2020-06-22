@@ -14,7 +14,7 @@ class otTypeCategory(Enum):
         # BASIC: a defined sub-class of int (e.g., int8).
         #
         # Characteristics:
-        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #  - does not have FIELDS, ARRAYS or SUBTABLES members
         #  - has a constructor function that takes unpacked value directly,
         #    and that value is an instance of the base class
@@ -27,7 +27,7 @@ class otTypeCategory(Enum):
         #
         # Characteristics:
         #  - has a base type str (Tag), float (Fixed, F2Dot24) or int (uint24)
-        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #  - does not have FIELDS, ARRAYS or SUBTABLES members
         #  - has a constructor function that takes unpacked value directly
         #  - constructor might or might NOT accept the base type
@@ -38,7 +38,7 @@ class otTypeCategory(Enum):
         # or BASIC_OT_SPECIAL types. These can be read without requiring recursion.
         #
         # Characteristics:
-        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #  - has FIELDS static member, an ordered dict: 
         #    - keys are str
         #    - values are BASIC or BASIC_OT_SPECIAL types
@@ -52,7 +52,7 @@ class otTypeCategory(Enum):
         # types. Reading requires recursion to parse the embedded structs.
         #
         # Characteristics:
-        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #  - has FIELDS static member, an ordered dict:
         #    - keys are str
         #    - values are BASIC, BASIC_OT_SPECIAL, FIXED_LENGTH_BASIC_STRUCT or
@@ -70,7 +70,7 @@ class otTypeCategory(Enum):
         # either a constant or is indicated in one of the header fields.
         #
         # Characteristics:
-        #  - has PACKED_FORMAT, PACKED_SIZE and NUM_PACKED_VALUES "static" members
+        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #  - has FIELDS static member
         #  - FIELDS, PACKED_FORMAT, etc. only describe a header that doesn't
         #    include any array
@@ -90,7 +90,7 @@ class otTypeCategory(Enum):
         # is either a constant or is indicated in one of the header fields.
         #
         # Characteristics:
-        #  - has PACKED_FORMAT, PACKED_SIZE, NUM_PACKED_VALUES, FIELDS 
+        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #    static members that describe header (no arrays or subtables)
         #  - MAY have an ARRAYS static member describing arrays
         #  - has a SUBTABLES static member describing the subtable member
@@ -129,13 +129,13 @@ with field name / field type as key-value pairs. For example:
 The fields include all struct members up to but not including any record 
 array.
 
-PACKED_FORMAT, NUM_PACKED_VALUES: These are specified in this module for all 
-basic types — int8 to uint64, Offset16, etc.; uint24, Fixed, F2Dot14, Tag. 
-For all other types, these should derived from the FIELDS definition using
+PACKED_FORMAT: This is specified in this module for all basic types — int8 
+to uint64, Offset16, etc.; uint24, Fixed, F2Dot14, Tag. For all other types,
+these should derived from the FIELDS definition using
 getPackedFormatFromFieldsDef(FIELDS). This must follow the FIELDS definition.
 
 PACKED_SIZE: This is always calcuated using struct.calcsize(). Follows after
-PACKED_FORMAT and NUM_PACKED_VALUES.
+PACKED_FORMAT.
 
 ARRAYS: This is a list of dicts, each of which has four entries:
 
@@ -225,8 +225,6 @@ def assertIsWellDefinedOTType(className):
         assert hasattr(className, 'PACKED_SIZE')
         assert (type(className.PACKED_SIZE) == int)
         assert (className.PACKED_SIZE == struct.calcsize(className.PACKED_FORMAT))
-        assert hasattr(className, 'NUM_PACKED_VALUES')
-        assert (type(className.NUM_PACKED_VALUES) == int and className.NUM_PACKED_VALUES > 0)
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
         assert int in className.__mro__
@@ -416,7 +414,6 @@ class int8(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">b"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x80) or val > 0x7f):
@@ -433,7 +430,6 @@ class uint8(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">B"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < 0 or val > 0xff):
@@ -451,7 +447,6 @@ class int16(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x8000) or val > 0x7fff):
@@ -479,7 +474,6 @@ class uint16(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">H"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < 0 or val > 0xffff):
@@ -517,7 +511,6 @@ class int32(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">l"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x8000_0000) or val > 0x7fff_ffff):
@@ -535,7 +528,6 @@ class uint32(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">L"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
     
     def __new__(cls, val):
         if (val < 0 or val > 0xffff_ffff):
@@ -564,7 +556,6 @@ class int64(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">q"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
 
     def __new__(cls, val):
         if (val < -(0x8000_0000_0000_0000) or val > 0x7fff_ffff_ffff_ffff):
@@ -593,7 +584,6 @@ class uint64(int):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">Q"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
     
     def __new__(cls, val):
         if (val < 0 or val > 0xffff_ffff_ffff_ffff):
@@ -616,7 +606,6 @@ class uint24(int):
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">3s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
     
     def __new__(cls, val):
         """Accepts bytearray, bytes or int (in range 0 to 0xffff_ffff_ffff)."""
@@ -645,7 +634,6 @@ class Fixed(float):
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">4s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
     
     def __new__(cls, bytes_):
         """Accepts bytes or byte array and returns a Fixed."""
@@ -725,7 +713,6 @@ class F2Dot14(float):
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">2s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
     
     def __new__(cls, bytes_):
         """Accepts bytes or byte array and returns an F2Dot14."""
@@ -811,7 +798,6 @@ class Tag(str):
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">4s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 1
     
     def __new__(cls, tagContent):
         """ Accept bytes, bytearray or string."""

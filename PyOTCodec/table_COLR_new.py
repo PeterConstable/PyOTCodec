@@ -8,7 +8,7 @@ class VarFixed:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -23,7 +23,7 @@ class VarF2Dot14:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -38,7 +38,7 @@ class VarFWord:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -53,7 +53,7 @@ class VarUFWord:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -69,7 +69,7 @@ class Affine2x2:
         ("yx", VarFixed),
         ("yy", VarFixed)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -83,7 +83,7 @@ class ColorIndex:
         ("paletteIndex", uint16),
         ("alpha", VarF2Dot14)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -97,7 +97,7 @@ class ColorStop:
         ("stopOffset", VarF2Dot14),
         ("color", ColorIndex)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -117,7 +117,7 @@ class ColorLine:
         ("extend", uint16),
         ("numStops", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "colorStops", 
@@ -140,7 +140,7 @@ class PaintFormat1:
         ("format", uint16),
         ("color", ColorIndex)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -160,7 +160,7 @@ class PaintFormat2:
         ("x2", VarFWord),
         ("y2", VarFWord)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     SUBTABLES = [
         {"field": "colorLine", 
@@ -188,7 +188,7 @@ class PaintFormat3:
         ("r1", VarUFWord),
         ("transformOffset", Offset32)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     SUBTABLES = [
         {"field": "colorLine", 
@@ -213,7 +213,7 @@ class LayerV1Record:
         ("glyphID", uint16),
         ("paintOffset", Offset32)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -226,7 +226,7 @@ class LayersV1:
     FIELDS = OrderedDict([
         ("numLayerV1Records", uint32)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "layerV1Records", 
@@ -262,7 +262,7 @@ class BaseGlyphV1Record:
         ("glyphID", uint16),
         ("layersV1Offset", Offset32)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -275,7 +275,7 @@ class BaseGlyphV1List:
     FIELDS = OrderedDict([
         ("numBaseGlyphV1Records", uint32)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "baseGlyphV1Records", 
@@ -305,7 +305,7 @@ class BaseGlyphRecord:
         ("firstLayerIndex", uint16),
         ("numLayers", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -319,7 +319,7 @@ class LayerRecord:
         ("glyphID", uint16),
         ("paletteIndex", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -337,7 +337,7 @@ class Table_COLR_new:
             ("layerRecordsOffset", Offset32),
             ("numLayerRecords", uint16)
         ])
-    _packedFormat0, _numPackedValues0 = getPackedFormatFromFieldsDef(_fields0)
+    _packedFormat0 = getPackedFormatFromFieldsDef(_fields0)
     _packedSize0 = struct.calcsize(_packedFormat0)
     _arrays0 = [
         {"field": "baseGlyphRecords",
@@ -354,7 +354,7 @@ class Table_COLR_new:
             ("baseGlyphV1ListOffset", Offset32),
             ("itemVariationStoreOffset", Offset32)
         ])
-    _packedFormat1_addl, _numPackedValues1_addl = getPackedFormatFromFieldsDef(_fields1_addl)
+    _packedFormat1_addl = getPackedFormatFromFieldsDef(_fields1_addl)
     _packedSize1_addl = struct.calcsize(_packedFormat1_addl)
 
     _subtables1 = [
@@ -372,7 +372,6 @@ class Table_COLR_new:
                 "FIELDS": _fields0,
                 "PACKED_FORMAT": _packedFormat0,
                 "PACKED_SIZE": _packedSize0,
-                "NUM_PACKED_VALUES": _numPackedValues0,
                 "ARRAYS": _arrays0,
                 "ALL_FIELD_NAMES": getCombinedFieldNames(_fields0, _arrays0)
                 },
@@ -380,7 +379,6 @@ class Table_COLR_new:
                 "FIELDS": OrderedDict(list(_fields0.items()) + list(_fields1_addl.items())),
                 "PACKED_FORMAT": concatFormatStrings(_packedFormat0, _packedFormat1_addl),
                 "PACKED_SIZE": _packedSize0 + _packedSize1_addl,
-                "NUM_PACKED_VALUES": _numPackedValues0 + _numPackedValues1_addl,
                 "ARRAYS": _arrays0,
                 "SUBTABLES": _subtables1,
                 "ALL_FIELD_NAMES": getCombinedFieldNames(

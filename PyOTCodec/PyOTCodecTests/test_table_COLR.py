@@ -857,4 +857,4 @@ numSkipped = len(skippedTests)
 
 assert numTestResults == 183
 
-printTestResultSummary("Tests for table_maxp", testResults, skippedTests)
+printTestResultSummary("Tests for table_COLR", testResults, skippedTests)

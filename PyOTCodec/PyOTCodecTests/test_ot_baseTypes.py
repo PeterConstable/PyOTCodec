@@ -183,41 +183,12 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 8"] = result
 
-# missing NUM_PACKED_VALUES, or wrong type
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 9"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 'x'
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 10"] = result
-
 
 # BASIC not a sub-class of int
 class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -231,7 +202,6 @@ class testClass(float):
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -246,7 +216,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = []
     pass
 try:
@@ -261,7 +230,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     ARRAYS = []
     pass
 try:
@@ -276,7 +244,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     SUBTABLES = []
     pass
 try:
@@ -292,7 +259,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -380,41 +346,11 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 22"] = result
 
-# missing NUM_PACKED_VALUES, or wrong type
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 23"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 'x'
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 24"] = result
-
-
 # not a sub-class of int, float or str
 class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -428,7 +364,6 @@ class testClass(bytes):
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -443,7 +378,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = []
     pass
 try:
@@ -458,7 +392,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     ARRAYS = []
     pass
 try:
@@ -473,7 +406,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     SUBTABLES = []
     pass
 try:
@@ -489,7 +421,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -577,40 +508,11 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 36"] = result
 
-# missing NUM_PACKED_VALUES, or wrong type
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 37"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 'x'
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 38"] = result
-
 # FIXED_LENGTH_BASIC_STRUCT can't have ARRAYS or SUBTABLES
 class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     ARRAYS = []
     pass
 try:
@@ -625,7 +527,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     SUBTABLES = []
     pass
 try:
@@ -641,7 +542,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -655,7 +555,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = 42
     pass
 try:
@@ -670,7 +569,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict()
     pass
 try:
@@ -686,7 +584,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), (42, uint8)])
     pass
 try:
@@ -701,7 +598,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', int)])
     pass
 try:
@@ -720,7 +616,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', testRecord)])
     pass
 try:
@@ -809,40 +704,11 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 52"] = result
 
-# missing NUM_PACKED_VALUES, or wrong type
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 53"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 'x'
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 54"] = result
-
 # FIXED_LENGTH_COMPLEX_STRUCT can't have ARRAYS or SUBTABLES
 class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     ARRAYS = []
     pass
 try:
@@ -857,7 +723,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     SUBTABLES = []
     pass
 try:
@@ -873,7 +738,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -887,7 +751,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = 42
     pass
 try:
@@ -902,7 +765,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict()
     pass
 try:
@@ -919,7 +781,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), (42, uint8)])
     pass
 try:
@@ -934,7 +795,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', int)])
     pass
 try:
@@ -953,7 +813,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', testRecord)])
     pass
 try:
@@ -1042,40 +901,11 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 68"] = result
 
-# missing NUM_PACKED_VALUES, or wrong type
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 69"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 'x'
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 70"] = result
-
 # VAR_LENGTH_STRUCT can't have SUBTABLES
 class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     SUBTABLES = []
     pass
 try:
@@ -1091,7 +921,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     pass
 try:
     assertIsWellDefinedOTType(testClass)
@@ -1105,7 +934,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = 42
     pass
 try:
@@ -1120,7 +948,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict()
     pass
 try:
@@ -1137,7 +964,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), (42, uint8)])
     pass
 try:
@@ -1152,7 +978,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', int)])
     pass
 try:
@@ -1171,7 +996,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', testRecord)])
     pass
 try:
@@ -1188,7 +1012,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     pass
 try:
@@ -1203,7 +1026,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = 42
     pass
@@ -1219,7 +1041,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = []
     pass
@@ -1238,7 +1059,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [42, 43]
     pass
@@ -1254,7 +1074,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [{'a': 1}]
     pass
@@ -1270,7 +1089,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [{'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}]
     pass
@@ -1288,7 +1106,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [{
         'a': 1, 
@@ -1309,7 +1126,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [{
         'fields': 1, 
@@ -1330,7 +1146,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [{
         'fields': 1, 
@@ -1351,7 +1166,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     PACKED_FORMAT = ">h"
     PACKED_SIZE = 2
-    NUM_PACKED_VALUES = 1
     FIELDS = OrderedDict([('a', uint8), ('b', uint16)])
     ARRAYS = [{
         'fields': 1, 
@@ -2115,7 +1929,6 @@ testResults["baseTypes uint24 definition test 1"] = result
 testResults["baseTypes uint24 definition test 2"] = (uint24.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
 testResults["baseTypes uint24 definition test 3"] = (uint24.PACKED_FORMAT == ">3s")
 testResults["baseTypes uint24 definition test 4"] = (uint24.PACKED_SIZE == 3)
-testResults["baseTypes uint24 definition test 5"] = (uint24.NUM_PACKED_VALUES == 1)
 
 # constructor requires int argument in range [0, 0xffff_ffff_ffff]
 try:
@@ -2195,7 +2008,6 @@ testResults["baseTypes Fixed definition test 1"] = result
 testResults["baseTypes Fixed definition test 2"] = (Fixed.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
 testResults["baseTypes Fixed definition test 3"] = (Fixed.PACKED_FORMAT == ">4s")
 testResults["baseTypes Fixed definition test 4"] = (Fixed.PACKED_SIZE == 4)
-testResults["baseTypes Fixed definition test 5"] = (Fixed.NUM_PACKED_VALUES == 1)
 
 # constructor
 
@@ -2340,7 +2152,6 @@ testResults["baseTypes F2Dot14 definition test 1"] = result
 testResults["baseTypes F2Dot14 definition test 2"] = (F2Dot14.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
 testResults["baseTypes F2Dot14 definition test 3"] = (F2Dot14.PACKED_FORMAT == ">2s")
 testResults["baseTypes F2Dot14 definition test 4"] = (F2Dot14.PACKED_SIZE == 2)
-testResults["baseTypes F2Dot14 definition test 5"] = (F2Dot14.NUM_PACKED_VALUES == 1)
 
 # constructor tests
 
@@ -2475,7 +2286,6 @@ testResults["baseTypes Tag definition test 1"] = result
 testResults["baseTypes Tag definition test 2"] = (Tag.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
 testResults["baseTypes Tag definition test 3"] = (Tag.PACKED_FORMAT == ">4s")
 testResults["baseTypes Tag definition test 4"] = (Tag.PACKED_SIZE == 4)
-testResults["baseTypes Tag definition test 5"] = (Tag.NUM_PACKED_VALUES == 1)
 
 # constructor tests
 

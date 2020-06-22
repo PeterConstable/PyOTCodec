@@ -25,7 +25,6 @@ testBytes1 = ( b'\x02\x0F\x37\xDC\x9A'
 
 testResults["Tag constants test 1"] = (Tag._packedFormat == ">4s")
 testResults["Tag constants test 2"] = (Tag._packedSize == 4)
-testResults["Tag constants test 3"] = (Tag._numPackedValues == 1)
 
 x = Tag(b'\x00\x01') # pad with 0x00
 testResults["Tag constructor test 1"] = (x == b'\x00\x01\x00\x00')
@@ -58,7 +57,6 @@ testResults["Tag validation test 6"] = Tag.validateTag(" €c") == 0x07
 
 testResults["Fixed constants test 1"] = (Fixed._packedFormat == ">L")
 testResults["Fixed constants test 2"] = (Fixed._packedSize == 4)
-testResults["Fixed constants test 3"] = (Fixed._numPackedValues == 1)
 
 # arg must be bytearray or bytes
 try:
@@ -211,7 +209,6 @@ testResults["Fixed.tryReadFromFile test 4"] = result
 
 testResults["F2Dot14 constants test 1"] = (F2Dot14._packedFormat == ">H")
 testResults["F2Dot14 constants test 2"] = (F2Dot14._packedSize == 2)
-testResults["F2Dot14 constants test 3"] = (F2Dot14._numPackedValues == 1)
 
 # arg must be bytearray or bytes
 try:

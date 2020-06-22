@@ -46,7 +46,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">Hh"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 2
     FIELDS = OrderedDict([
         ("field1", uint16),
         ("field2", int16)
@@ -86,7 +85,6 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     PACKED_FORMAT = ">LqB"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
-    NUM_PACKED_VALUES = 3
     FIELDS = OrderedDict([
         ("field1", uint32),
         ("field2", int64),
@@ -121,7 +119,7 @@ class testClass:
         ("field2", Fixed),
         ("field3", F2Dot14)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, field1, field2, field3):
@@ -152,7 +150,7 @@ class testClassChild:
         ("fieldC2", uint16),
         ("fieldC3", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -166,7 +164,7 @@ class testClassParent:
         ("fieldP2", testClassChild),
         ("fieldP3", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -200,7 +198,7 @@ class testClassGrandParent:
         ("fieldGP1", uint8),
         ("fieldGP2", testClassParent)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -278,7 +276,7 @@ class testClassRecord:
         ("field1", uint8),
         ("field2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -290,7 +288,7 @@ class testClassTable:
     FIELDS = OrderedDict([
         ("numRecs", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "records", 
@@ -343,7 +341,7 @@ class testClassTable:
     FIELDS = OrderedDict([
         ("arrayOffset", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "records", 
@@ -387,7 +385,7 @@ class testClassRecChild:
         ("fieldC1", uint8),
         ("fieldC2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -400,7 +398,7 @@ class testClassRecord:
         ("fieldR1", uint8),
         ("fieldR2", testClassRecChild)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -412,7 +410,7 @@ class testClassTable:
     FIELDS = OrderedDict([
         ("numRecs", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "records", 
@@ -462,7 +460,7 @@ class testClassTable:
         ("arrayOffset", uint16),
         ("numRecs", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "records", 
@@ -515,7 +513,7 @@ class testClassTable:
         ("array2Offset", uint16),
         ("numRecs2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     # intentionally listing arrays out of logical order: the one that's later
     # in the file before the one sequentially after the header (not likely to
@@ -594,7 +592,7 @@ class testClassChild:
         ("fieldC2", uint16),
         ("fieldC3", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -608,7 +606,7 @@ class testClassParent:
         ("fieldP2", testClassChild),
         ("fieldP3", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
 
     def __init__(self, *args):
@@ -680,7 +678,7 @@ class testClassChild:
         ("fieldC1", uint8),
         ("fieldC2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -695,7 +693,7 @@ class testClassParent:
         ("subtable2Offset", uint16),
         ("fieldP2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     SUBTABLES = [
         {"field": "subtable1", 
@@ -767,7 +765,7 @@ class testClassParent:
         ("fieldP3", uint16),
         ("numRecs", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "records", 
@@ -835,7 +833,7 @@ class testClassFormat1:
         ("format", uint16),
         ("fieldC2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -848,7 +846,7 @@ class testClassFormat2:
         ("format", uint16),
         ("fieldC2", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -862,7 +860,7 @@ class testClassParent:
         ("subtable1Offset", uint16),
         ("subtable2Offset", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     SUBTABLES = [
         {"field": "subtable1", 
@@ -920,7 +918,7 @@ class testClassParent:
         ("fieldP1", uint16),
         ("numSubtables", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "subtableOffsets",
@@ -986,7 +984,7 @@ class testClassParent:
         ("fieldP1", uint16),
         ("numSubtables", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "subtableOffsets",
@@ -1055,7 +1053,7 @@ class testClassRecord:
         ("subtableTag", Tag),
         ("subtableOffset", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
@@ -1068,7 +1066,7 @@ class testClassParent:
         ("fieldP1", uint16),
         ("numSubtables", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "subtableRecords",
@@ -1148,7 +1146,7 @@ class testClassParent:
         ("fieldP1", uint16),
         ("numSubtables", uint16)
         ])
-    PACKED_FORMAT, NUM_PACKED_VALUES = getPackedFormatFromFieldsDef(FIELDS)
+    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     ARRAYS = [
         {"field": "subtableRecords",
@@ -1240,7 +1238,7 @@ class testVersionedTable:
             ("numBaseRecords", uint16),
             ("baseRecordsOffset", uint16)
         ])
-    _packedFormat0, _numPackedValues0 = getPackedFormatFromFieldsDef(_fields0)
+    _packedFormat0 = getPackedFormatFromFieldsDef(_fields0)
     _packedSize0 = struct.calcsize(_packedFormat0)
     _arrays0 = [
         {"field": "baseRecords",
@@ -1253,7 +1251,7 @@ class testVersionedTable:
             ("numExtraRecords", uint16),
             ("extraRecordsOffset", uint16)
         ])
-    _packedFormat1_addl, _numPackedValues1_addl = getPackedFormatFromFieldsDef(_fields1_addl)
+    _packedFormat1_addl = getPackedFormatFromFieldsDef(_fields1_addl)
     _packedSize1_addl = struct.calcsize(_packedFormat1_addl)
     _arrays1_addl = [
         {"field": "extraRecords",
@@ -1269,7 +1267,6 @@ class testVersionedTable:
                 "FIELDS": _fields0,
                 "PACKED_FORMAT": _packedFormat0,
                 "PACKED_SIZE": _packedSize0,
-                "NUM_PACKED_VALUES": _numPackedValues0,
                 "ARRAYS": _arrays0,
                 "ALL_FIELD_NAMES": getCombinedFieldNames(_fields0, _arrays0)
                 },
@@ -1277,7 +1274,6 @@ class testVersionedTable:
                 "FIELDS": OrderedDict(list(_fields0.items()) + list(_fields1_addl.items())),
                 "PACKED_FORMAT": concatFormatStrings(_packedFormat0, _packedFormat1_addl),
                 "PACKED_SIZE": _packedSize0 + _packedSize1_addl,
-                "NUM_PACKED_VALUES": _numPackedValues0 + _numPackedValues1_addl,
                 "ARRAYS": _arrays0 + _arrays1_addl,
                 "ALL_FIELD_NAMES": getCombinedFieldNames(
                     OrderedDict(list(_fields0.items()) + list(_fields1_addl.items())),
