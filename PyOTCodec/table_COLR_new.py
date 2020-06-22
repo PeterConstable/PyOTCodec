@@ -16,7 +16,7 @@ class VarFixed:
             setattr(self, f, a)
 
     def __repr__(self):
-        return {"value": self.value, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
+        return {"scalar": self.scalar, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
 # End of class VarFixed
 
 
@@ -35,7 +35,7 @@ class VarF2Dot14:
             setattr(self, f, a)
 
     def __repr__(self):
-        return {"value": self.value, 
+        return {"scalar": self.scalar, 
                 "varOuterIndex": self.varOuterIndex, 
                 "varInnerIndex": self.varInnerIndex}.__repr__()
 # End of class VarF2Dot14
