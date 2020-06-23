@@ -3,36 +3,34 @@ import inspect
 import sys
 
 
-# NOTE: For most classes, boilerplate statements in the class defs to set
-# PACKED_FORMAT and PACKED_SIZE are handled at the end of the module.
+# NOTE: Some class properties are derived from sub-class-specific attributes:
+#
+#  - PACKED_FORMAT, PACKED_SIZE are derifed from FIELDS
+#  - ALL_FIELD_NAMES is derived from FIELDS, ARRAYS, SUBTABLES
+#
+# These attributes will get set in the base class.
 
 
-class VarFixed:
+class VarFixed(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("scalar", Fixed),
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"scalar": self.scalar, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
 # End of class VarFixed
 
 
-class VarF2Dot14:
+class VarF2Dot14(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("scalar", F2Dot14),
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"scalar": self.scalar, 
@@ -41,39 +39,33 @@ class VarF2Dot14:
 # End of class VarF2Dot14
 
 
-class VarFWord:
+class VarFWord(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("coordinate", FWord),
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"coordinate": self.coordinate, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
 # End of class VarFWord
 
 
-class VarUFWord:
+class VarUFWord(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("scalar", UFWord),
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"distance": self.distance, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
 # End of class VarUFWord
 
 
-class Affine2x2:
+class Affine2x2(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("xx", VarFixed),
@@ -81,39 +73,30 @@ class Affine2x2:
         ("yx", VarFixed),
         ("yy", VarFixed)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'xx': self.xx, 'xy': self.xy, 'yx': self.yx, 'yy': self.yy}.__repr__()
 # End of class Affine2x2
 
 
-class ColorIndex:
+class ColorIndex(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("paletteIndex", uint16),
         ("alpha", VarF2Dot14)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"paletteIndex": self.paletteIndex, "alpha": self.alpha}.__repr__()
 # End of class ColorIndex
 
 
-class ColorStop:
+class ColorStop(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("stopOffset", VarF2Dot14),
         ("color", ColorIndex)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'stopOffset': self.stopOffset, 'color': self.color}.__repr__()
@@ -126,7 +109,7 @@ class extend(Enum):
     EXTEND_REFLECT = 2
 
 
-class ColorLine:
+class ColorLine(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT
     FIELDS = OrderedDict([
         ("extend", uint16),
@@ -140,7 +123,6 @@ class ColorLine:
          "count": "numStops", 
          "offset": PACKED_SIZE}
         ]
-    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS)
 
     def __init__(self, *args):
         init_setattributes(self, *args)
@@ -148,22 +130,19 @@ class ColorLine:
             raise ValueError(f"Invalid extend value: {self.extend}")
 
 
-class PaintFormat1:
+class PaintFormat1(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
     FIELDS = OrderedDict([
         ("format", uint16),
         ("color", ColorIndex)
         ])
-    
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'format': self.format, 'color': self.color}.__repr__()
 # End of class PaintFormat1
 
 
-class PaintFormat2:
+class PaintFormat2(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
     FIELDS = OrderedDict([
         ("format", uint16),
@@ -181,13 +160,9 @@ class PaintFormat2:
          "count": 1, 
          "offset": "colorLineOffset"}
         ]
-    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, subtables = SUBTABLES)
-
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
 
-class PaintFormat3:
+class PaintFormat3(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
     FIELDS = OrderedDict([
         ("format", uint16),
@@ -210,28 +185,21 @@ class PaintFormat3:
          "count": 1, 
          "offset": "transformOffset"}
         ]
-    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, subtables = SUBTABLES)
-
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
 
-class LayerV1Record:
+class LayerV1Record(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("glyphID", uint16),
         ("paintOffset", Offset32)
         ])
     
-    def __init__(self, *args):
-        init_setattributes(self, *args)
-
     def __repr__(self):
         return {'glyphID': self.glyphID, 'paintOffset': self.paintOffset}.__repr__()
 # End of class LayerV1Record
 
 
-class LayersV1:
+class LayersV1(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
     FIELDS = OrderedDict([
         ("numLayerV1Records", uint32)
@@ -259,28 +227,21 @@ class LayersV1:
                     "recordField": "paintOffset"}
         }
         ]
-    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
-
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
 
-class BaseGlyphV1Record:
+class BaseGlyphV1Record(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("glyphID", uint16),
         ("layersV1Offset", Offset32)
         ])
     
-    def __init__(self, *args):
-        init_setattributes(self, *args)
-
     def __repr__(self):
         return {'glyphID': self.glyphID, 'layersV1Offset': self.layersV1Offset}.__repr__()
 # End of class BaseGlyphV1Record
 
 
-class BaseGlyphV1List:
+class BaseGlyphV1List(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
     FIELDS = OrderedDict([
         ("numBaseGlyphV1Records", uint32)
@@ -301,13 +262,9 @@ class BaseGlyphV1List:
                     "recordField": "layersV1Offset"}
         }
         ]
-    ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
-
-    def __init__(self, *args):
-        init_setattributes(self, *args)
 
 
-class BaseGlyphRecord:
+class BaseGlyphRecord(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("glyphID", uint16),
@@ -315,24 +272,18 @@ class BaseGlyphRecord:
         ("numLayers", uint16)
         ])
     
-    def __init__(self, *args):
-        init_setattributes(self, *args)
-
     def __repr__(self):
         return {'glyphID': self.glyphID, 'firstLayerIndex': self.firstLayerIndex, 'numLayers': self.numLayers}.__repr__()
 # End of class BaseGlyphRecord
 
 
-class LayerRecord:
+class LayerRecord(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("glyphID", uint16),
         ("paletteIndex", uint16)
         ])
     
-    def __init__(self, *args):
-        init_setattributes(self, *args)
-
     def __repr__(self):
         return {'glyphID': self.glyphID, 'paletteIndex': self.paletteIndex}.__repr__()
 # End of class LayerRecord
@@ -433,17 +384,22 @@ class Table_COLR_new:
         colr.tableRecord = tableRecord
 
         return colr
+    # End of tryReadFromFile
 
-assertIsWellDefinedOTType(Table_COLR_new)
+# End of class Table_COLR_new:
 
 
-# Boilerplate addition of PACKED_FORMAT, PACKED_SIZE attributes to classes
-# that didn't have that in the above definitions.
-classmembers = [
-    VarFixed, VarF2Dot14, VarFWord, VarUFWord, Affine2x2, ColorIndex, ColorStop,
-    PaintFormat1, PaintFormat2, PaintFormat3, LayerV1Record, 
-    BaseGlyphV1Record, BaseGlyphRecord, LayerRecord]
-for c in classmembers:
-    setattr(c, 'PACKED_FORMAT', getPackedFormatFromFieldsDef(c.FIELDS))
-    setattr(c, 'PACKED_SIZE', struct.calcsize(c.PACKED_FORMAT))
-    assertIsWellDefinedOTType(c)
+
+# Run validations on the above struct definitions
+classmembers = inspect.getmembers(
+    sys.modules[__name__], 
+    lambda member: (inspect.isclass(member) 
+        and member.__module__ == __name__
+        and not issubclass(member,  Enum))
+    )
+for name, class_ in classmembers:
+    assertIsWellDefinedOTType(class_)
+
+
+
+

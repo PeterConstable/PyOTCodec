@@ -3,6 +3,31 @@ import itertools
 from ot_baseTypes import *
 
 
+class structBaseClass:
+    """Base class for structs of type categories
+    FIXED_LENGTH_BASIC_STRUCT and higher.
+
+    Every subclass must have a FIELDS attribute and also get
+    PACKED_FORMAT and PACKED_SIZE attributes with values derived
+    from FIELDS.
+    """
+    def __init_subclass__(cls):
+        # This will be called _after_ subclass definitions have
+        # been processed.
+        super().__init_subclass__()
+        cls.PACKED_FORMAT = getPackedFormatFromFieldsDef(cls.FIELDS)
+        cls.PACKED_SIZE = struct.calcsize(cls.PACKED_FORMAT)
+        arrays = None; subtables = None
+        if hasattr(cls, 'ARRAYS'):
+            arrays = cls.ARRAYS
+        if hasattr(cls, 'SUBTABLES'):
+            subtables = cls.SUBTABLES
+        cls.ALL_FIELD_NAMES = getCombinedFieldNames(cls.FIELDS, arrays, subtables)
+
+    def __init__(self, *args):
+        init_setattributes(self, *args)
+
+
 def getPackedFormatFromFieldsDef(fields:OrderedDict):
     """Takes an OrderedDict that describes the fields for a class
     and returns a packed format string that can be used in
