@@ -55,7 +55,7 @@ class VarFWord(structBaseClass):
 class VarUFWord(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
-        ("scalar", UFWord),
+        ("distance", UFWord),
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
@@ -86,6 +86,11 @@ class ColorIndex(structBaseClass):
         ("alpha", VarF2Dot14)
         ])
 
+    def __init__(self, *args):
+        init_setattributes(self, *args)
+        if self.alpha.scalar < 0 or self.alpha.scalar > 1 :
+            raise ValueError(f"Invalid alpha value, {self.alpha}: alpha.scalar must be between 0 and 1.")
+
     def __repr__(self):
         return {"paletteIndex": self.paletteIndex, "alpha": self.alpha}.__repr__()
 # End of class ColorIndex
@@ -97,6 +102,11 @@ class ColorStop(structBaseClass):
         ("stopOffset", VarF2Dot14),
         ("color", ColorIndex)
         ])
+
+    def __init__(self, *args):
+        init_setattributes(self, *args)
+        if self.stopOffset.scalar < 0 or self.stopOffset.scalar > 1 :
+            raise ValueError(f"Invalid stopOffset value, {self.stopOffset}: stopOffset.scalar must be between 0 and 1.")
 
     def __repr__(self):
         return {'stopOffset': self.stopOffset, 'color': self.color}.__repr__()

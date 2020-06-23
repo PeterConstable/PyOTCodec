@@ -23,6 +23,7 @@ if __name__ == '__main__':
         elif sys.argv[1] == "structs":
             #import PyOTCodecTests.test_ot_baseTypes
             import PyOTCodecTests.test_ot_structs
+        elif sys.argv[1] == "colr":
             import PyOTCodecTests.test_table_COLR_new
     else:
         print("Welcome to PyOTCodec")
