@@ -1,4 +1,6 @@
 from ot_structs import *
+import inspect
+import sys
 
 
 class VarFixed:
@@ -8,14 +10,9 @@ class VarFixed:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"scalar": self.scalar, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
@@ -29,14 +26,9 @@ class VarF2Dot14:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"scalar": self.scalar, 
@@ -52,14 +44,9 @@ class VarFWord:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"coordinate": self.coordinate, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
@@ -73,14 +60,9 @@ class VarUFWord:
         ("varOuterIndex", uint16),
         ("varInnerIndex", uint16)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"distance": self.distance, "varOuterIndex": self.varOuterIndex, "varInnerIndex": self.varInnerIndex}.__repr__()
@@ -95,14 +77,9 @@ class Affine2x2:
         ("yx", VarFixed),
         ("yy", VarFixed)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'xx': self.xx, 'xy': self.xy, 'yx': self.yx, 'yy': self.yy}.__repr__()
@@ -115,14 +92,9 @@ class ColorIndex:
         ("paletteIndex", uint16),
         ("alpha", VarF2Dot14)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {"paletteIndex": self.paletteIndex, "alpha": self.alpha}.__repr__()
@@ -135,14 +107,9 @@ class ColorStop:
         ("stopOffset", VarF2Dot14),
         ("color", ColorIndex)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'stopOffset': self.stopOffset, 'color': self.color}.__repr__()
@@ -172,10 +139,7 @@ class ColorLine:
     ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS)
 
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.ALL_FIELD_NAMES, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
         if self.extend not in [x.value for x in extend]:
             raise ValueError(f"Invalid extend value: {self.extend}")
 
@@ -186,14 +150,9 @@ class PaintFormat1:
         ("format", uint16),
         ("color", ColorIndex)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'format': self.format, 'color': self.color}.__repr__()
@@ -212,8 +171,6 @@ class PaintFormat2:
         ("x2", VarFWord),
         ("y2", VarFWord)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     SUBTABLES = [
         {"field": "colorLine", 
          "type": ColorLine, 
@@ -223,10 +180,7 @@ class PaintFormat2:
     ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, subtables = SUBTABLES)
 
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.ALL_FIELD_NAMES, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
 
 class PaintFormat3:
@@ -242,8 +196,6 @@ class PaintFormat3:
         ("r1", VarUFWord),
         ("transformOffset", Offset32)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     SUBTABLES = [
         {"field": "colorLine", 
          "type": ColorLine, 
@@ -257,8 +209,7 @@ class PaintFormat3:
     ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, subtables = SUBTABLES)
 
     def __init__(self, *args):
-        for f, a in zip(self.ALL_FIELD_NAMES, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
 
 class LayerV1Record:
@@ -267,14 +218,10 @@ class LayerV1Record:
         ("glyphID", uint16),
         ("paintOffset", Offset32)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
+
     def __repr__(self):
         return {'glyphID': self.glyphID, 'paintOffset': self.paintOffset}.__repr__()
 # End of class LayerV1Record
@@ -311,10 +258,7 @@ class LayersV1:
     ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
 
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.ALL_FIELD_NAMES, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
 
 class BaseGlyphV1Record:
@@ -323,14 +267,9 @@ class BaseGlyphV1Record:
         ("glyphID", uint16),
         ("layersV1Offset", Offset32)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'glyphID': self.glyphID, 'layersV1Offset': self.layersV1Offset}.__repr__()
@@ -361,10 +300,7 @@ class BaseGlyphV1List:
     ALL_FIELD_NAMES = getCombinedFieldNames(FIELDS, ARRAYS, SUBTABLES)
 
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.ALL_FIELD_NAMES, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
 
 class BaseGlyphRecord:
@@ -374,14 +310,9 @@ class BaseGlyphRecord:
         ("firstLayerIndex", uint16),
         ("numLayers", uint16)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'glyphID': self.glyphID, 'firstLayerIndex': self.firstLayerIndex, 'numLayers': self.numLayers}.__repr__()
@@ -394,14 +325,9 @@ class LayerRecord:
         ("glyphID", uint16),
         ("paletteIndex", uint16)
         ])
-    PACKED_FORMAT = getPackedFormatFromFieldsDef(FIELDS)
-    PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.FIELDS, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
 
     def __repr__(self):
         return {'glyphID': self.glyphID, 'paletteIndex': self.paletteIndex}.__repr__()
@@ -474,10 +400,8 @@ class Table_COLR_new:
         }
 
     def __init__(self, *args):
-        if not validateArgs(self, *args):
-            raise TypeError(f"Wrong arguments were passed to the {type(self)} constructor.")
-        for f, a in zip(self.ALL_FIELD_NAMES, args):
-            setattr(self, f, a)
+        init_setattributes(self, *args)
+
 
     @staticmethod
     def tryReadFromFile(parentFont, tableRecord):
@@ -507,3 +431,15 @@ class Table_COLR_new:
         return colr
 
 assertIsWellDefinedOTType(Table_COLR_new)
+
+
+# Boilerplate addition of PACKED_FORMAT, PACKED_SIZE attributes to classes
+# that didn't have that in the above definitions.
+classmembers = [
+    VarFixed, VarF2Dot14, VarFWord, VarUFWord, Affine2x2, ColorIndex, ColorStop,
+    PaintFormat1, PaintFormat2, PaintFormat3, LayerV1Record, 
+    BaseGlyphV1Record, BaseGlyphRecord, LayerRecord]
+for c in classmembers:
+    setattr(c, 'PACKED_FORMAT', getPackedFormatFromFieldsDef(c.FIELDS))
+    setattr(c, 'PACKED_SIZE', struct.calcsize(c.PACKED_FORMAT))
+    assertIsWellDefinedOTType(c)

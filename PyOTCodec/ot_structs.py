@@ -15,7 +15,6 @@ def getPackedFormatFromFieldsDef(fields:OrderedDict):
     return concatFormatStrings(*packedFormats)
 
 
-
 def getCombinedFieldNames(fields:OrderedDict, arrays:list = None, subtables: list = None):
     """Takes a FIELDS definition and an ARRAYS definition and returns
     a list of the combined field names.
@@ -73,6 +72,21 @@ def validateArgs(obj, *args):
         if type(a) != t:
             return False
     return True
+
+
+def init_setattributes(obj, *args):
+    """Takes an object of a defined type plus argument passed to its
+    constructor, validates the args and then sets the attributes.
+    """
+    if not validateArgs(obj, *args):
+        raise TypeError(f"Wrong arguments were passed to the {type(obj)} constructor.")
+    if hasattr(obj, 'ALL_FIELD_NAMES'):
+        fields = obj.ALL_FIELD_NAMES
+    else:
+        fields = obj.FIELDS
+    for f, a in zip(fields, args):
+        setattr(obj, f, a)
+
 
 
 def tryReadFixedLengthStructFieldsFromBuffer(buffer, className):
