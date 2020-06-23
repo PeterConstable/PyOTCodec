@@ -32,6 +32,48 @@ def getCombinedFieldNames(fields:OrderedDict, arrays:list = None, subtables: lis
     return fieldNames + arrayNames + subtableNames
 
 
+def getCombinedFieldTypes(obj):
+    """Takes a object and returns a list of types for all of the fields
+    in that struct.
+
+    The object must have a type category FIXED_LENGTH_BASIC_STRUCT or more complex.
+
+    The list of types will be in order with header fields followed by array fields,
+    then fields for subtables or subtable arrays.
+    """
+    assert hasattr(obj, 'TYPE_CATEGORY')
+    assert not obj.TYPE_CATEGORY in (otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL)
+    
+    types = []
+    for t in obj.FIELDS.values():
+        types.append(t)
+    if hasattr(obj, 'ARRAYS'):
+        for a in obj.ARRAYS:
+            types.append(list)
+    if hasattr(obj, 'SUBTABLES'):
+        for x in obj.SUBTABLES:
+            if x["count"] == 1:
+                types.append(x["type"])
+            else:
+                types.append(list)
+    return types
+
+
+def validateArgs(obj, *args):
+    """Takes an object of a defined type plus arguments passed to its 
+    constructor and validates that the correct number and types of arguments
+    were passed.
+
+    Returns True or False
+    """
+    types = getCombinedFieldTypes(obj)
+    if len(types) != len(args):
+        return False
+    for a, t in zip(args, types):
+        if type(a) != t:
+            return False
+    return True
+
 
 def tryReadFixedLengthStructFieldsFromBuffer(buffer, className):
     """Takes a buffer and returns an OrderedDict of field name/value pairs.

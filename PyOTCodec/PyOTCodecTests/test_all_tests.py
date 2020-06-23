@@ -30,13 +30,13 @@ sumFailures = 0
 sumSkipped = 0
 print()
 print("Summary:\n")
-print("{:<32} {:<16} {:<16} {:<20}".format("Test Module", "# test results", "# failures", "# skipped tests"))
-print("===================================================================================")
+print("{:<42} {:<16} {:<14} {:<20}".format("Test Module", "# test results", "# failures", "# skipped tests"))
+print("=============================================================================================")
 for tm in testModules:
-    print(f"{tm.__name__:<32} {tm.numTestResults:<16} {tm.numFailures:<16} {tm.numSkipped}")
+    print(f"{tm.__name__:<42} {tm.numTestResults:<16} {tm.numFailures:<14} {tm.numSkipped}")
     sumAllTests += tm.numTestResults
     sumFailures += tm.numFailures
     sumSkipped += tm.numSkipped
-print("===================================================================================")
-print("{:<32} {:<16} {:<16} {:<20}".format("Totals", sumAllTests, sumFailures, sumSkipped))
+print("=============================================================================================")
+print("{:<42} {:<16} {:<14} {:<20}".format("Totals", sumAllTests, sumFailures, sumSkipped))
 print()
