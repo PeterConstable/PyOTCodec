@@ -3,6 +3,10 @@ import inspect
 import sys
 
 
+# NOTE: For most classes, boilerplate statements in the class defs to set
+# PACKED_FORMAT and PACKED_SIZE are handled at the end of the module.
+
+
 class VarFixed:
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
