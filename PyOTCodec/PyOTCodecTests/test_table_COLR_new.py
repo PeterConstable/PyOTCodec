@@ -701,7 +701,7 @@ x = z.x0
 result &= (x.coordinate == 256 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
 
 x = z.colorLine
-result = (x.extend == 0 and x.numStops == 2)
+result &= (x.extend == 0 and x.numStops == 2)
 
 y = x.colorStops[0]
 result &= (y.stopOffset.scalar == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
@@ -756,6 +756,185 @@ testResults["PaintFormat2 tryReadVarLengthStructWithSubtablesFromBuffer test "] 
 #-------------------------------------------------------------
 # tests for PaintFormat3
 #-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(PaintFormat3)
+except:
+    result = False
+else:
+    result = True
+testResults["PaintFormat3 definition test"] = result
+
+testResults["PaintFormat3 constants test 1"] = (PaintFormat3.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES)
+testResults["PaintFormat3 constants test 2"] = (PaintFormat3.PACKED_FORMAT == ">HLhHHhHHhHHhHHHHHHHHL")
+testResults["PaintFormat3 constants test 3"] = (PaintFormat3.PACKED_SIZE == 46)
+testResults["PaintFormat3 constants test 4"] = (list(PaintFormat3.FIELDS.keys()) == ["format", "colorLineOffset", "x0", "y0", "x1", "y1", "r0", "r1", "transformOffset"])
+testResults["PaintFormat3 constants test 5"] = (list(PaintFormat3.FIELDS.values()) == [uint16, Offset32, VarFWord, VarFWord, VarFWord, VarFWord, VarUFWord, VarUFWord, Offset32])
+testResults["PaintFormat3 constants test 6"] = (PaintFormat3.ALL_FIELD_NAMES == ["format", "colorLineOffset", "x0", "y0", "x1", "y1", "r0", "r1", "transformOffset", "colorLine", "transform"])
+testResults["PaintFormat3 constants test 7"] = getCombinedFieldTypes(PaintFormat3) == [uint16, Offset32, VarFWord, VarFWord, VarFWord, VarFWord, VarUFWord, VarUFWord, Offset32, ColorLine, Affine2x2]
+
+
+# constructor args
+
+buffer = b'\x01\x00\x00\xa0\x00\xa1\xf0\xf0'
+f = tryReadFixedLengthStructFromBuffer(buffer, VarFWord)
+
+buffer = b'\x01\x00\x00\xa0\x00\xa1\xf0\xf0'
+u = tryReadFixedLengthStructFromBuffer(buffer, VarUFWord)
+
+buffer = (b'\x00\x00' b'\x00\x02' 
+          b'\x10\x00\x00\x02\x03\x00\x00\x15\x01\x00\x00\x03\x00\x07'
+          b'\x38\x00\x01\x21\x00\xc2\x01\x42\x00\xff\x0d\x34\x21\x22')
+x = tryReadVarLengthStructFromBuffer(buffer, ColorLine)
+
+buffer = (b'\x01\x00\x50\x00\x00\xa0\x00\xb0'
+          b'\x01\x01\x50\x00\x00\xa1\x00\xb1'
+          b'\x01\x02\x50\x00\x00\xa2\x00\xb2'
+          b'\x01\x03\x50\x00\x00\xa3\x00\xb3'
+          b'\xf0\xf0')
+y = tryReadFixedLengthStructFromBuffer(buffer, Affine2x2)
+
+try:
+    z = PaintFormat3(uint16(3), Offset32(0), f, f, f, f, u, u, Offset32(0), x)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 1"] = result
+
+try:
+    z = PaintFormat3(3, Offset32(0), f, f, f, f, u, u, Offset32(0), x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 2"] = result
+
+try:
+    z = PaintFormat3(uint16(3), 0, f, f, f, f, u, u, Offset32(0), x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 3"] = result
+
+try:
+    z = PaintFormat3(uint16(3), Offset32(0), 0, f, f, f, u, u, Offset32(0), x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 4"] = result
+
+try:
+    z = PaintFormat3(uint16(3), Offset32(0), f, f, f, f, u, u, 0, x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 5"] = result
+
+try:
+    z = PaintFormat3(uint16(3), Offset32(0), f, f, f, f, u, u, Offset32(0), 0, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 6"] = result
+
+try:
+    z = PaintFormat3(uint16(3), Offset32(0), f, f, f, f, u, u, Offset32(0), x, 0)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat3 constructor test 7"] = result
+
+
+z = PaintFormat3(uint16(3), Offset32(0), f, f, f, f, u, u, Offset32(0), x, y)
+result = type(z) == PaintFormat3
+for f in z.ALL_FIELD_NAMES:
+    result &= hasattr(z, f)
+result &= z.format == 3 and z.colorLineOffset == 0 and z.transformOffset == 0
+
+x = z.x0
+result &= (x.coordinate == 256 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+
+x = z.colorLine
+result &= (x.extend == 0 and x.numStops == 2)
+
+y = x.colorStops[0]
+result &= (y.stopOffset.scalar == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
+result &= (y.color.paletteIndex == 21 and y.color.alpha.scalar._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
+
+y = x.colorStops[1]
+result &= (y.stopOffset.scalar == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
+result &= (y.color.paletteIndex == 0x142 and y.color.alpha.scalar._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
+
+x = z.transform
+y = x.xx
+result &= (y.scalar == 256.3125 and y.varOuterIndex == 160 and y.varInnerIndex == 176)
+y = x.xy
+result &= (y.scalar == 257.3125 and y.varOuterIndex == 161 and y.varInnerIndex == 177)
+y = x.yx
+result &= (y.scalar == 258.3125 and y.varOuterIndex == 162 and y.varInnerIndex == 178)
+y = x.yy
+result &= (y.scalar == 259.3125 and y.varOuterIndex == 163 and y.varInnerIndex == 179)
+
+testResults["PaintFormat3 constructor test 8"] = result
+
+
+buffer = (b'\x00\x03' b'\x00\x00\x00\x2e'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x00\x00\x00\x4e'
+          + b'\x00\x00' b'\x00\x02' 
+            b'\x10\x00\x00\x02\x03\x00\x00\x15\x01\x00\x00\x03\x00\x07'
+            b'\x38\x00\x01\x21\x00\xc2\x01\x42\x00\xff\x0d\x34\x21\x22'
+          + b'\x01\x00\x50\x00\x00\xa0\x00\xb0'
+            b'\x01\x01\x50\x00\x00\xa1\x00\xb1'
+            b'\x01\x02\x50\x00\x00\xa2\x00\xb2'
+            b'\x01\x03\x50\x00\x00\xa3\x00\xb3' )
+x = tryReadVarLengthStructWithSubtablesFromBuffer(buffer, PaintFormat3)
+result = type(x) == PaintFormat3
+for f in x.ALL_FIELD_NAMES:
+    result &= hasattr(x, f)
+result &= type(x.format) == uint16 and type(x.colorLineOffset) == Offset32
+result &= (type(x.x0) == VarFWord and type(x.y0) == VarFWord 
+           and type(x.x1) == VarFWord and type(x.y1) == VarFWord
+           and type(x.r0) == VarUFWord and type(x.r1) == VarUFWord
+           and type(x.colorLine) == ColorLine and type(x.transform) == Affine2x2)
+result &= x.format == 3 and x.colorLineOffset == 46 and x.transformOffset == 78
+
+y = x.x0
+result &= (y.coordinate == 256 and y.varOuterIndex == 160 and y.varInnerIndex == 161)
+
+y = x.colorLine
+result = (y.extend == 0 and y.numStops == 2)
+
+z = y.colorStops[0]
+result &= (z.stopOffset.scalar == 0.25 and z.stopOffset.varOuterIndex == 2 and z.stopOffset.varInnerIndex == 0x300)
+result &= (z.color.paletteIndex == 21 and z.color.alpha.scalar._rawBytes == b'\x01\x00' and z.color.alpha.varOuterIndex == 3 and z.color.alpha.varInnerIndex == 7)
+
+z = y.colorStops[1]
+result &= (z.stopOffset.scalar == 0.875 and z.stopOffset.varOuterIndex == 0x121 and z.stopOffset.varInnerIndex == 0xc2)
+result &= (z.color.paletteIndex == 0x142 and z.color.alpha.scalar._rawBytes == b'\x00\xff' and z.color.alpha.varOuterIndex == 0xd34 and z.color.alpha.varInnerIndex == 0x2122)
+
+y = x.transform
+z = y.xx
+result &= (z.scalar == 256.3125 and z.varOuterIndex == 160 and z.varInnerIndex == 176)
+z = y.xy
+result &= (z.scalar == 257.3125 and z.varOuterIndex == 161 and z.varInnerIndex == 177)
+z = y.yx
+result &= (z.scalar == 258.3125 and z.varOuterIndex == 162 and z.varInnerIndex == 178)
+z = y.yy
+result &= (z.scalar == 259.3125 and z.varOuterIndex == 163 and z.varInnerIndex == 179)
+
+testResults["PaintFormat3 tryReadVarLengthStructWithSubtablesFromBuffer test "] = result
 
 
 
@@ -1193,7 +1372,6 @@ testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 """
 Still need tests for
-    - PaintFormat3
     - BaseGlyphV1List
     - COLR V1
 """
