@@ -45,14 +45,22 @@ except:
     result = True
 else:
     result = False
-testResults["Table_COLR VarFixed constructor test 2"] = result
+testResults["VarFixed constructor test 2"] = result
 
 x = VarFixed(Fixed.createFixedFromUint32(0x48000),uint16(1), uint16(3))
-testResults["Table_COLR VarFixed constructor test 3"] = (type(x.scalar) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
-testResults["Table_COLR VarFixed constructor test 4"] = (x.scalar == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+result = (type(x.scalar) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.scalar == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+testResults["Table_COLR VarFixed constructor test 3"] = result
 
 result = x.__repr__() == "{'scalar': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
-testResults["Table_COLR VarFixed __repr__ test"] = result
+testResults["VarFixed __repr__ test"] = result
+
+buffer = b'\x00\x03\x80\x00\x00\xa0\x00\xa1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, VarFixed)
+result = type(x) == VarFixed
+result &= (type(x.scalar) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.scalar == 3.5 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+testResults["VarFixed tryReadFixedLengthStructFromBuffer test"] = result
 
 
 
@@ -97,6 +105,13 @@ testResults["Table_COLR VarF2Dot14 constructor test 4"] = (x.scalar == 1.5 and x
 result = x.__repr__() == "{'scalar': 1.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
 testResults["Table_COLR VarF2Dot14 __repr__ test"] = result
 
+buffer = b'\x60\x00\x00\xa0\x00\xa1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, VarF2Dot14)
+result = type(x) == VarF2Dot14
+result &= (type(x.scalar) == F2Dot14 and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.scalar == 1.5 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+testResults["VarF2Dot14 tryReadFixedLengthStructFromBuffer test"] = result
+
 
 
 #-------------------------------------------------------------
@@ -139,6 +154,14 @@ testResults["Table_COLR VarFWord constructor test 4"] = (x.coordinate == -24 and
 
 testResults["Table_COLR VarFWord __repr__ test"] = (x.__repr__() == "{'coordinate': -24, 'varOuterIndex': 17, 'varInnerIndex': 23}")
 
+buffer = b'\x01\x00\x00\xa0\x00\xa1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, VarFWord)
+result = type(x) == VarFWord
+result &= (type(x.coordinate) == FWord and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.coordinate == 256 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+testResults["VarFWord tryReadFixedLengthStructFromBuffer test"] = result
+
+
 
 #-------------------------------------------------------------
 # tests for VarUFWord
@@ -179,6 +202,13 @@ testResults["Table_COLR VarUFWord constructor test 3"] = (type(x) == VarUFWord a
 testResults["Table_COLR VarUFWord constructor test 4"] = (x.distance == 24 and x.varOuterIndex == 17 and x.varInnerIndex == 23)
 
 testResults["Table_COLR VarUFWord __repr__ test"] = (x.__repr__() == "{'distance': 24, 'varOuterIndex': 17, 'varInnerIndex': 23}")
+
+buffer = b'\x01\x00\x00\xa0\x00\xa1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, VarUFWord)
+result = type(x) == VarUFWord
+result &= (type(x.distance) == UFWord and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.distance == 256 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+testResults["VarUFWord tryReadFixedLengthStructFromBuffer test"] = result
 
 
 
@@ -225,6 +255,24 @@ testResults["Table_COLR Affine2x2 constructor test 4"] = result
 
 result = (y.__repr__() == "{'xx': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'xy': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yx': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yy': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}}")
 testResults["Table_COLR Affine2x2 __repr__ test"] = result
+
+buffer = (b'\x01\x00\x50\x00\x00\xa0\x00\xb0'
+          b'\x01\x01\x50\x00\x00\xa1\x00\xb1'
+          b'\x01\x02\x50\x00\x00\xa2\x00\xb2'
+          b'\x01\x03\x50\x00\x00\xa3\x00\xb3'
+          b'\xf0\xf0')
+x = tryReadFixedLengthStructFromBuffer(buffer, Affine2x2)
+result = type(x) == Affine2x2
+result &= (type(x.xx) == VarFixed and type(x.xy) == VarFixed and type(x.yx) == VarFixed and type (x.yy) == VarFixed)
+y = x.xx
+result &= (y.scalar == 256.3125 and y.varOuterIndex == 160 and y.varInnerIndex == 176)
+y = x.xy
+result &= (y.scalar == 257.3125 and y.varOuterIndex == 161 and y.varInnerIndex == 177)
+y = x.yx
+result &= (y.scalar == 258.3125 and y.varOuterIndex == 162 and y.varInnerIndex == 178)
+y = x.yy
+result &= (y.scalar == 259.3125 and y.varOuterIndex == 163 and y.varInnerIndex == 179)
+testResults["Affine2x2 tryReadFixedLengthStructFromBuffer test"] = result
 
 
 
@@ -298,6 +346,13 @@ x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), uint16(1), uint16(3))
 y = ColorIndex(uint16(24), x)
 result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'scalar': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
 testResults["Table_COLR ColorIndex __repr__ test"] = result
+
+buffer = b'\x01\x03\x30\x00\x00\xa0\x00\xa1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, ColorIndex)
+result = type(x) == ColorIndex
+result &= (type(x.paletteIndex) == uint16 and type(x.alpha) == VarF2Dot14)
+result &= (x.paletteIndex == 259 and x.alpha.scalar == 0.75 and x.alpha.varOuterIndex == 160 and x.alpha.varInnerIndex == 161)
+testResults["ColorIndex tryReadFixedLengthStructFromBuffer test"] = result
 
 
 
@@ -374,6 +429,15 @@ testResults["Table_COLR ColorStop constructor test 8"] = (z.color.paletteIndex =
 result = z.__repr__() == "{'stopOffset': {'scalar': 0.75, 'varOuterIndex': 0, 'varInnerIndex': 4}, 'color': {'paletteIndex': 24, 'alpha': {'scalar': 0.25, 'varOuterIndex': 1, 'varInnerIndex': 3}}}"
 testResults["Table_COLR ColorStop __repr__ test"] = result
 
+buffer = b'\x30\x00\x00\xa0\x00\xa1\x00\x11\x30\x00\x00\xb0\x00\xb1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, ColorStop)
+result = type(x) == ColorStop
+result &= (type(x.stopOffset) == VarF2Dot14 and type(x.color) == ColorIndex)
+result &= (x.stopOffset.scalar == 0.75 and x.stopOffset.varOuterIndex == 160 and x.stopOffset.varInnerIndex == 161)
+result &= (x.color.paletteIndex == 17 and x.color.alpha.scalar == 0.75
+           and x.color.alpha.varOuterIndex == 176 and x.color.alpha.varInnerIndex == 177)
+testResults["ColorStop tryReadFixedLengthStructFromBuffer test"] = result
+
 
 
 #-------------------------------------------------------------
@@ -391,13 +455,90 @@ testResults["Table_COLR ColorLine definition test"] = result
 testResults["Table_COLR ColorLine constants test 1"] = (ColorLine.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT)
 testResults["Table_COLR ColorLine constants test 2"] = (ColorLine.PACKED_FORMAT == ">HH")
 testResults["Table_COLR ColorLine constants test 3"] = (ColorLine.PACKED_SIZE == 4)
-testResults["Table_COLR ColorLine constants test 4"] = (list(ColorLine.FIELDS.keys()) == ["extend", "numStops"])
+testResults["Table_COLR ColorLine constants test 4"] = (ColorLine.ALL_FIELD_NAMES == ["extend", "numStops", "colorStops"])
 testResults["Table_COLR ColorLine constants test 5"] = (list(ColorLine.FIELDS.values()) == [uint16, uint16])
 
+# constructor args
+buffer = b'\x30\x00\x00\xa0\x00\xa1\x00\x11\x30\x00\x00\xb0\x00\xb1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, ColorStop)
+
+try:
+    y = ColorLine(uint16(1), uint16(2))
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorLine constructor test 1"] = result
+
+try:
+    y = ColorLine(1, uint16(2), [x, x])
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorLine constructor test 2"] = result
+
+try:
+    y = ColorLine(uint16(1), 2, [x, x])
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorLine constructor test 3"] = result
+
+try:
+    y = ColorLine(uint16(1), uint16(2), (x, x))
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR ColorLine constructor test 4"] = result
+
+y = ColorLine(uint16(1), uint16(2), [x, x])
+result = (type(y) == ColorLine and type(y.extend) == uint16 and type(y.numStops) == uint16 and type(y.colorStops) == list)
+result &= y.extend == 1 and y.numStops == 2
+result &= len(y.colorStops) == 2 and type(y.colorStops[0]) == ColorStop
+z = y.colorStops[0]
+result &= z.stopOffset.scalar == 0.75 and z.stopOffset.varOuterIndex == 160 and z.stopOffset.varInnerIndex == 161
+result &= (z.color.paletteIndex == 17 and z.color.alpha.scalar == 0.75 
+           and z.color.alpha.varOuterIndex == 176 and z.color.alpha.varInnerIndex == 177)
+testResults["Table_COLR ColorLine constructor test 5"] = result
+
+
+buffer = (b'\x00\x01\x00\x02' 
+          b'\x30\x00\x00\xa0\x00\xa1\x00\x11\x30\x00\x00\xb0\x00\xb1'
+          b'\x30\x00\x00\xa0\x00\xa1\x00\x11\x30\x00\x00\xb0\x00\xb1'
+          b'\xf0\xf0')
+y = tryReadVarLengthStructFromBuffer(buffer, ColorLine)
+result = (type(y) == ColorLine and type(y.extend) == uint16 and type(y.numStops) == uint16 and type(y.colorStops) == list)
+result &= y.extend == 1 and y.numStops == 2
+result &= len(y.colorStops) == 2 and type(y.colorStops[0]) == ColorStop
+z = y.colorStops[0]
+result &= z.stopOffset.scalar == 0.75 and z.stopOffset.varOuterIndex == 160 and z.stopOffset.varInnerIndex == 161
+result &= (z.color.paletteIndex == 17 and z.color.alpha.scalar == 0.75 
+           and z.color.alpha.varOuterIndex == 176 and z.color.alpha.varInnerIndex == 177)
+testResults["ColorLine tryReadFixedLengthStructFromBuffer test"] = result
+
+
+#-------------------------------------------------------------
+# tests for PaintFormat1
+#-------------------------------------------------------------
+
+
+#-------------------------------------------------------------
+# tests for PaintFormat2
+#-------------------------------------------------------------
+
+
+#-------------------------------------------------------------
+# tests for PaintFormat3
+#-------------------------------------------------------------
 
 
 
-# test BaseGlyphRecord
+#-------------------------------------------------------------
+# tests for BaseGlyphRecord
+#-------------------------------------------------------------
 
 try:
     assertIsWellDefinedOTType(BaseGlyphRecord)
@@ -413,9 +554,115 @@ testResults["Table_COLR BaseGlyphRecord constants test 3"] = (BaseGlyphRecord.PA
 testResults["Table_COLR BaseGlyphRecord constants test 5"] = (list(BaseGlyphRecord.FIELDS.keys()) == ["glyphID", "firstLayerIndex", "numLayers"])
 testResults["Table_COLR BaseGlyphRecord constants test 6"] = (list(BaseGlyphRecord.FIELDS.values()) == [uint16, uint16, uint16])
 
+# constructor args
+try:
+    x = BaseGlyphRecord(uint16(2), uint16(4))
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR BaseGlyphRecord constructor test 1"] = result
+try:
+    x = BaseGlyphRecord(2.0, uint16(4), uint16(17))
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR BaseGlyphRecord constructor test 2"] = result
+
+x = BaseGlyphRecord(uint16(2), uint16(4), uint16(17))
+result = (type(x) == BaseGlyphRecord)
+for f in BaseGlyphRecord.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.firstLayerIndex == 4 and x.numLayers == 17)
+testResults["Table_COLR BaseGlyphRecord constructor test 3"] = result
+
+buffer = b'\x00\x02\x00\x04\x00\x11'
+x = tryReadFixedLengthStructFromBuffer(buffer, BaseGlyphRecord)
+result = (type(x) == BaseGlyphRecord)
+for f in BaseGlyphRecord.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.firstLayerIndex == 4 and x.numLayers == 17)
+testResults["BaseGlyphRecord tryReadFixedLengthStructFromBuffer test"] = result
 
 
 
+#-------------------------------------------------------------
+# tests for LayerRecord
+#-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(LayerRecord)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR LayerRecord definition test"] = result
+
+testResults["Table_COLR LayerRecord constants test 1"] = (LayerRecord.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT)
+testResults["Table_COLR LayerRecord constants test 2"] = (LayerRecord.PACKED_FORMAT == ">HH")
+testResults["Table_COLR LayerRecord constants test 3"] = (LayerRecord.PACKED_SIZE == 4)
+testResults["Table_COLR LayerRecord constants test 4"] = (list(LayerRecord.FIELDS.keys()) == ["glyphID", "paletteIndex"])
+testResults["Table_COLR LayerRecord constants test 5"] = (list(LayerRecord.FIELDS.values()) == [uint16, uint16])
+
+# constructor args
+try:
+    x = LayerRecord(uint16(2))
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR LayerRecord constructor test 1"] = result
+try:
+    x = LayerRecord(2.0, uint16(17))
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR LayerRecord constructor test 2"] = result
+
+x = LayerRecord(uint16(2), uint16(17))
+result = (type(x) == LayerRecord)
+for f in LayerRecord.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.paletteIndex == 17)
+testResults["Table_COLR LayerRecord constructor test 3"] = result
+
+
+
+#-------------------------------------------------------------
+# tests for BaseGlyphV1Record
+#-------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------
+# tests for LayerV1Record
+#-------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------
+# tests for LayersV1
+#-------------------------------------------------------------
+
+
+
+#-------------------------------------------------------------
+# tests for BaseGlyphV1List
+#-------------------------------------------------------------
+
+
+
+"""
+Still need tests for
+    - PaintFormat1
+    - PaintFormat2
+    - PaintFormat3
+    - LayersV1
+    - BaseGlyphV1List
+    - COLR V1
+"""
 
 
 
