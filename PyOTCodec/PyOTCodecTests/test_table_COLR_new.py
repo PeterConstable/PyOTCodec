@@ -628,17 +628,113 @@ for f in LayerRecord.FIELDS:
 result &= (x.glyphID == 2 and x.paletteIndex == 17)
 testResults["Table_COLR LayerRecord constructor test 3"] = result
 
+buffer = b'\x00\x02\x00\x11'
+x = tryReadFixedLengthStructFromBuffer(buffer, LayerRecord)
+result = (type(x) == LayerRecord)
+for f in LayerRecord.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.paletteIndex == 17)
+testResults["LayerRecord tryReadFixedLengthStructFromBuffer test"] = result
+
 
 
 #-------------------------------------------------------------
 # tests for BaseGlyphV1Record
 #-------------------------------------------------------------
 
+try:
+    assertIsWellDefinedOTType(BaseGlyphV1Record)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR BaseGlyphV1Record definition test"] = result
+
+testResults["Table_COLR BaseGlyphV1Record constants test 1"] = (BaseGlyphV1Record.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT)
+testResults["Table_COLR BaseGlyphV1Record constants test 2"] = (BaseGlyphV1Record.PACKED_FORMAT == ">HL")
+testResults["Table_COLR BaseGlyphV1Record constants test 3"] = (BaseGlyphV1Record.PACKED_SIZE == 6)
+testResults["Table_COLR BaseGlyphV1Record constants test 4"] = (list(BaseGlyphV1Record.FIELDS.keys()) == ["glyphID", "layersV1Offset"])
+testResults["Table_COLR BaseGlyphV1Record constants test 5"] = (list(BaseGlyphV1Record.FIELDS.values()) == [uint16, Offset32])
+
+try:
+    x = BaseGlyphV1Record(uint16(2))
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR BaseGlyphV1Record constructor test 1"] = result
+try:
+    x = BaseGlyphV1Record(2.0, Offset32(17))
+except TypeError:
+    result = True
+else:
+    result = False
+testResults["Table_COLR BaseGlyphV1Record constructor test 2"] = result
+
+x = BaseGlyphV1Record(uint16(2), Offset32(17))
+result = (type(x) == BaseGlyphV1Record)
+for f in BaseGlyphV1Record.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.layersV1Offset == 17)
+testResults["Table_COLR BaseGlyphV1Record constructor test 3"] = result
+
+buffer = b'\x00\x02\x00\x00\x00\x11'
+x = tryReadFixedLengthStructFromBuffer(buffer, BaseGlyphV1Record)
+result = (type(x) == BaseGlyphV1Record)
+for f in BaseGlyphV1Record.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.layersV1Offset == 17)
+testResults["BaseGlyphV1Record tryReadFixedLengthStructFromBuffer test"] = result
+
 
 
 #-------------------------------------------------------------
 # tests for LayerV1Record
 #-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(LayerV1Record)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR LayerV1Record definition test"] = result
+
+testResults["Table_COLR LayerV1Record constants test 1"] = (LayerV1Record.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT)
+testResults["Table_COLR LayerV1Record constants test 2"] = (LayerV1Record.PACKED_FORMAT == ">HL")
+testResults["Table_COLR LayerV1Record constants test 3"] = (LayerV1Record.PACKED_SIZE == 6)
+testResults["Table_COLR LayerV1Record constants test 4"] = (list(LayerV1Record.FIELDS.keys()) == ["glyphID", "paintOffset"])
+testResults["Table_COLR LayerV1Record constants test 5"] = (list(LayerV1Record.FIELDS.values()) == [uint16, Offset32])
+
+try:
+    x = LayerV1Record(uint16(2))
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR LayerV1Record constructor test 1"] = result
+try:
+    x = LayerV1Record(2.0, Offset32(17))
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR LayerV1Record constructor test 2"] = result
+
+x = LayerV1Record(uint16(2), Offset32(17))
+result = (type(x) == LayerV1Record)
+for f in LayerV1Record.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.paintOffset == 17)
+testResults["Table_COLR LayerV1Record constructor test 3"] = result
+
+buffer = b'\x00\x02\x00\x00\x00\x11'
+x = tryReadFixedLengthStructFromBuffer(buffer, LayerV1Record)
+result = (type(x) == LayerV1Record)
+for f in LayerV1Record.FIELDS:
+    result &= hasattr(x, f)
+result &= (x.glyphID == 2 and x.paintOffset == 17)
+testResults["LayerV1Record tryReadFixedLengthStructFromBuffer test"] = result
 
 
 
