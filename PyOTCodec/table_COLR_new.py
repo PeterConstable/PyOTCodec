@@ -147,6 +147,11 @@ class PaintFormat1(structBaseClass):
         ("color", ColorIndex)
         ])
 
+    def __init__(self, *args):
+        init_setattributes(self, *args)
+        if self.format != 1:
+            raise ValueError(f"Invalid format value: {self.format}")
+
     def __repr__(self):
         return {'format': self.format, 'color': self.color}.__repr__()
 # End of class PaintFormat1

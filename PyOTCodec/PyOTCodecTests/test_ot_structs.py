@@ -25,7 +25,7 @@ class testClass:
     pass
 try:
     x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
-except TypeError:
+except:
     result = True
 else:
     result = False
@@ -35,7 +35,7 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
 try:
     x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
-except TypeError:
+except:
     result = True
 else:
     result = False
@@ -261,7 +261,7 @@ class testClass:
     TYPE_CATEGORY = otTypeCategory.BASIC
 try:
     x = tryReadFixedLengthStructFromBuffer(buffer, testClass)
-except TypeError:
+except:
     result = True
 else:
     result = False

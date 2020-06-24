@@ -167,14 +167,10 @@ def tryReadFixedLengthStructFromBuffer(buffer, className):
     className must be one of the type categories FIXED_LENGTH_BASIC_STRUCT
     or FIXED_LENGTH_COMPLEX_STRUCT.
     """
-    try:
-       assertIsWellDefinedOTType(className)
-    except:
-        raise TypeError(f"{className} isn't a well-defined fixed-length struct type.")
-    if not className.TYPE_CATEGORY in (
+    assert className.TYPE_CATEGORY in (
             otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
-            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
-        raise TypeError(f"{className} isn't a fixed-length struct type.")
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT)
+    assertIsWellDefinedOTType(className)
 
     if len(buffer) < className.PACKED_SIZE:
         raise OTCodecError(f"The buffer is to short to read {className}.")
@@ -195,14 +191,10 @@ def tryReadFixedLengthRecordsArrayFromBuffer(buffer, recordClass, numRecords, ar
     recordClass must be of type category FIXED_LENGTH_BASIC_STRUCT or
     FIXED_LENGTH_COMPLEX_STRUCT.
     """
-    try:
-        assertIsWellDefinedOTType(recordClass)
-    except:
-        raise TypeError(f"{recordClass} isn't a well-defined fixed-length struct type.")
-    if not recordClass.TYPE_CATEGORY in (
+    assert recordClass.TYPE_CATEGORY in (
             otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
-            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
-        raise TypeError(f"{recordClass} isn't a fixed-length struct type.")
+            otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT)
+    assertIsWellDefinedOTType(recordClass)
 
     arrayLength = numRecords * recordClass.PACKED_SIZE
     if len(buffer) < arrayLength:
@@ -270,6 +262,7 @@ def tryReadArrayFieldsFromBuffer(buffer, className, headerFields):
 
 
 
+# USED ONLY FOR TESTING
 def tryReadVarLengthStructFromBuffer(buffer, className):
     """Takes a buffer and returns a struct of the specified type, read from
     the buffer.
@@ -387,7 +380,7 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
                     )
                 )
 
-        if len(subtableArray) == 1:
+        if type(subtable["count"]) == int and subtable["count"] == 1:
             subtableFields[subtable["field"]] = subtableArray[0]
         else:
             subtableFields[subtable["field"]] = subtableArray
