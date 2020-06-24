@@ -369,9 +369,15 @@ class Table_COLR_new:
             }
         }
 
-    def __init__(self, *args):
+    def __init__(self, *args, version = None):
+        if version is None:
+            assert hasattr(self, "FIELDS")
+        else:
+            if not version in self.FORMATS["versions"]:
+                raise ValueError(f"{version} is not a supported COLR version.")
+            for k, v in self.FORMATS["versions"][version].items():
+                setattr(self, k, v)
         init_setattributes(self, *args)
-
 
     @staticmethod
     def tryReadFromFile(parentFont, tableRecord):

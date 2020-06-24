@@ -624,6 +624,134 @@ testResults["PaintFormat1 tryReadFixedLengthStructFromBuffer test"] = result
 # tests for PaintFormat2
 #-------------------------------------------------------------
 
+try:
+    assertIsWellDefinedOTType(PaintFormat2)
+except:
+    result = False
+else:
+    result = True
+testResults["PaintFormat2 definition test"] = result
+
+testResults["PaintFormat2 constants test 1"] = (PaintFormat2.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES)
+testResults["PaintFormat2 constants test 2"] = (PaintFormat2.PACKED_FORMAT == ">HLhHHhHHhHHhHHhHHhHH")
+testResults["PaintFormat2 constants test 3"] = (PaintFormat2.PACKED_SIZE == 42)
+testResults["PaintFormat2 constants test 4"] = (list(PaintFormat2.FIELDS.keys()) == ["format", "colorLineOffset", "x0", "y0", "x1", "y1", "x2", "y2"])
+testResults["PaintFormat2 constants test 5"] = (list(PaintFormat2.FIELDS.values()) == [uint16, Offset32, VarFWord, VarFWord, VarFWord, VarFWord, VarFWord, VarFWord])
+testResults["PaintFormat2 constants test 6"] = (PaintFormat2.ALL_FIELD_NAMES == ["format", "colorLineOffset", "x0", "y0", "x1", "y1", "x2", "y2", "colorLine"])
+testResults["PaintFormat2 constants test 7"] = getCombinedFieldTypes(PaintFormat2) == [uint16, Offset32, VarFWord, VarFWord, VarFWord, VarFWord, VarFWord, VarFWord, ColorLine]
+
+# constructor args
+buffer = b'\x01\x00\x00\xa0\x00\xa1\xf0\xf0'
+x = tryReadFixedLengthStructFromBuffer(buffer, VarFWord)
+
+buffer = (b'\x00\x00' b'\x00\x02' 
+          b'\x10\x00\x00\x02\x03\x00\x00\x15\x01\x00\x00\x03\x00\x07'
+          b'\x38\x00\x01\x21\x00\xc2\x01\x42\x00\xff\x0d\x34\x21\x22')
+# extend: \x00\x00
+# numStops: \x00\x02
+# ColorStop 0: \x10\x00 \x00\x02 \x03\x00 + \x00\x15 \x01\x00 \x00\x03 \x00\x07
+# ColorStop 1: \x38\x00 \x01\x21 \x00\xc2 + \x01\x42 \x00\xff \x0d\x34 \x21\x22
+y = tryReadVarLengthStructFromBuffer(buffer, ColorLine)
+
+try:
+    z = PaintFormat2(uint16(2), Offset32(0), x, x, x, x, x, x)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat2 constructor test 1"] = result
+
+try:
+    z = PaintFormat2(2, Offset32(0), x, x, x, x, x, x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat2 constructor test 2"] = result
+
+try:
+    z = PaintFormat2(uint16(2), 0, x, x, x, x, x, x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat2 constructor test 3"] = result
+
+try:
+    z = PaintFormat2(uint16(2), Offset32(0), 2, x, x, x, x, x, y)
+except:
+    result = True
+else:
+    result = False
+testResults["PaintFormat2 constructor test 4"] = result
+
+# good args
+z = PaintFormat2(uint16(2), Offset32(0), x, x, x, x, x, x, y)
+result = True
+for f in z.ALL_FIELD_NAMES:
+    result &= hasattr(z, f)
+result &= type(z.format) == uint16 and type(z.colorLineOffset) == Offset32
+result &= (type(z.x0) == VarFWord and type(z.y0) == VarFWord 
+           and type(z.x1) == VarFWord and type(z.y1) == VarFWord
+           and type(z.x2) == VarFWord and type(z.y2) == VarFWord
+           and type(z.colorLine) == ColorLine)
+result &= z.format == 2 and z.colorLineOffset == 0
+
+x = z.x0
+result &= (x.coordinate == 256 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+
+x = z.colorLine
+result = (x.extend == 0 and x.numStops == 2)
+
+y = x.colorStops[0]
+result &= (y.stopOffset.scalar == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
+result &= (y.color.paletteIndex == 21 and y.color.alpha.scalar._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
+
+y = x.colorStops[1]
+result &= (y.stopOffset.scalar == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
+result &= (y.color.paletteIndex == 0x142 and y.color.alpha.scalar._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
+
+testResults["PaintFormat2 constructor test 5"] = result
+
+
+buffer = (b'\x00\x02' b'\x00\x00\x00\x2a'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x01\x00\x00\xa0\x00\xa1'
+          b'\x00\x00' b'\x00\x02' 
+            b'\x10\x00\x00\x02\x03\x00\x00\x15\x01\x00\x00\x03\x00\x07'
+            b'\x38\x00\x01\x21\x00\xc2\x01\x42\x00\xff\x0d\x34\x21\x22')
+x = tryReadVarLengthStructWithSubtablesFromBuffer(buffer, PaintFormat2)
+result = type(x) == PaintFormat2
+for f in x.ALL_FIELD_NAMES:
+    result &= hasattr(x, f)
+result &= type(x.format) == uint16 and type(x.colorLineOffset) == Offset32
+result &= (type(x.x0) == VarFWord and type(x.y0) == VarFWord 
+           and type(x.x1) == VarFWord and type(x.y1) == VarFWord
+           and type(x.x2) == VarFWord and type(x.y2) == VarFWord
+           and type(x.colorLine) == ColorLine)
+result &= x.format == 2 and x.colorLineOffset == 42
+
+y = x.x0
+result &= (y.coordinate == 256 and y.varOuterIndex == 160 and y.varInnerIndex == 161)
+
+y = x.colorLine
+result = (y.extend == 0 and y.numStops == 2)
+
+z = y.colorStops[0]
+result &= (z.stopOffset.scalar == 0.25 and z.stopOffset.varOuterIndex == 2 and z.stopOffset.varInnerIndex == 0x300)
+result &= (z.color.paletteIndex == 21 and z.color.alpha.scalar._rawBytes == b'\x01\x00' and z.color.alpha.varOuterIndex == 3 and z.color.alpha.varInnerIndex == 7)
+
+z = y.colorStops[1]
+result &= (z.stopOffset.scalar == 0.875 and z.stopOffset.varOuterIndex == 0x121 and z.stopOffset.varInnerIndex == 0xc2)
+result &= (z.color.paletteIndex == 0x142 and z.color.alpha.scalar._rawBytes == b'\x00\xff' and z.color.alpha.varOuterIndex == 0xd34 and z.color.alpha.varInnerIndex == 0x2122)
+
+testResults["PaintFormat2 tryReadVarLengthStructWithSubtablesFromBuffer test "] = result
+
+
 
 #-------------------------------------------------------------
 # tests for PaintFormat3
@@ -938,9 +1066,133 @@ testResults["LayersV1 tryReadStructWithSubtablesFromBuffer test "] = result
 
 
 
+
+#-------------------------------------------------------------
+# tests for Table_COLR
+#-------------------------------------------------------------
+
+try:
+    assertIsWellDefinedOTType(Table_COLR_new)
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR definition test"] = result
+
+testResults["Table_COLR constants test 1"] = (Table_COLR_new.TYPE_CATEGORY == otTypeCategory.VERSIONED_TABLE)
+result = hasattr(Table_COLR_new, 'FORMATS')
+result &= "versionType" in Table_COLR_new.FORMATS
+result &= Table_COLR_new.FORMATS["versionType"] == otVersionType.UINT16_MINOR
+result &= "versions" in Table_COLR_new.FORMATS
+result &= 0 in Table_COLR_new.FORMATS["versions"]
+result &= 1 in Table_COLR_new.FORMATS["versions"]
+testResults["Table_COLR constants test 2"] = result
+
+# constructor args
+
+try:
+    x = Table_COLR_new()
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR_new constructor test 1"] = result
+
+try:
+    x = Table_COLR_new(version = 0)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR_new constructor test 2"] = result
+
+try:
+    x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), version = 0)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR_new constructor test 3"] = result
+
+x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), [], [], version = 0)
+result = hasattr(x, "FIELDS")
+result &= hasattr(x, "PACKED_FORMAT")
+result &= hasattr(x, "PACKED_SIZE")
+result &= hasattr(x, "ARRAYS")
+result &= hasattr(x, "ALL_FIELD_NAMES")
+testResults["Table_COLR_new constructor test 4"] = result
+
+"""
+x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), [], [], [], version = 1)
+result = hasattr(x, "FIELDS")
+result &= hasattr(x, "PACKED_FORMAT")
+result &= hasattr(x, "PACKED_SIZE")
+result &= hasattr(x, "ARRAYS")
+result &= hasattr(x, "SUBTABLES")
+result &= hasattr(x, "ALL_FIELD_NAMES")
+testResults["Table_COLR_new constructor test 5"] = result
+"""
+
+
+# test Table_COLR.tryReadFromFile using BungeeColor-Regular_colr_Windows.ttf
+bungeeColor_file = getTestFontOTFile("BungeeColor")
+
+try:
+    colr = bungeeColor_file.fonts[0].tables["COLR"]
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR.tryReadFromFile test 1"] = result
+testResults["Table_COLR.tryReadFromFile test 2"] = (type(colr) == Table_COLR_new)
+bungeeColor_COLR_headerValues = (0, 288, 14, 1742, 576)
+result = True
+expected = zip(colr.FIELDS, bungeeColor_COLR_headerValues)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.tryReadFromFile test 3"] = result
+
+recordsArray = colr.baseGlyphRecords
+testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordsArray) == 288)
+
+record = recordsArray[3]
+fields = list(vars(record))
+result = (len(fields) == 3)
+result &= ("glyphID" in fields and "firstLayerIndex" in fields and "numLayers" in fields)
+testResults["Table_COLR.tryReadFromFile test 5"] = result
+
+result = (record.glyphID == 3 and record.firstLayerIndex == 6 and record.numLayers == 2)
+testResults["Table_COLR.tryReadFromFile test 6"] = result
+
+record = recordsArray[174]
+result = (record.glyphID == 174 and record.firstLayerIndex == 348 and record.numLayers == 2)
+testResults["Table_COLR.tryReadFromFile test 7"] = result
+
+recordsArray = colr.layerRecords
+testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordsArray) == 576)
+
+record = recordsArray[6]
+fields = list(vars(record))
+result = (len(fields) == 2)
+result &= ("glyphID" in fields and "paletteIndex" in fields)
+testResults["Table_COLR.tryReadFromFile test 9"] = result
+
+result = (record.glyphID == 452 and record.paletteIndex == 0)
+testResults["Table_COLR.tryReadFromFile test 10"] = result
+
+record = recordsArray[401]
+result = (record.glyphID == 451 and record.paletteIndex == 1)
+testResults["Table_COLR.tryReadFromFile test 11"] = result
+
+
+
+
+
 """
 Still need tests for
-    - PaintFormat2
     - PaintFormat3
     - BaseGlyphV1List
     - COLR V1
