@@ -1243,6 +1243,118 @@ testResults["LayersV1 tryReadStructWithSubtablesFromBuffer test "] = result
 # tests for BaseGlyphV1List
 #-------------------------------------------------------------
 
+try:
+    assertIsWellDefinedOTType(LayersV1)
+except:
+    result = False
+else:
+    result = True
+testResults["BaseGlyphV1List definition test"] = result
+
+testResults["BaseGlyphV1List constants test 1"] = (BaseGlyphV1List.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES)
+testResults["BaseGlyphV1List constants test 2"] = (BaseGlyphV1List.PACKED_FORMAT == ">L")
+testResults["BaseGlyphV1List constants test 3"] = (BaseGlyphV1List.PACKED_SIZE == 4)
+testResults["BaseGlyphV1List constants test 4"] = (list(BaseGlyphV1List.FIELDS.keys()) == ["numBaseGlyphV1Records"])
+testResults["BaseGlyphV1List constants test 5"] = (list(BaseGlyphV1List.FIELDS.values()) == [uint32])
+testResults["BaseGlyphV1List constants test 6"] = (BaseGlyphV1List.ALL_FIELD_NAMES == ["numBaseGlyphV1Records", "baseGlyphV1Records", "layerV1Tables"])
+testResults["BaseGlyphV1List constants test 7"] = getCombinedFieldTypes(BaseGlyphV1List) == [uint32, list, list]
+
+# constructor args
+
+buffer = b'\x00\x01\x00\x00\x00\x11'
+x = tryReadFixedLengthStructFromBuffer(buffer, LayerV1Record)
+
+buffer = (b'\x00\x01' b'\x01\x03' b'\x30\x00\x00\xa0\x00\xa1')
+y = tryReadFixedLengthStructFromBuffer(buffer, PaintFormat1)
+
+z = LayersV1(uint32(1), [x], [y])
+
+buffer = b'\x00\x02\x00\x00\x00\x11'
+x = tryReadFixedLengthStructFromBuffer(buffer, BaseGlyphV1Record)
+
+
+try:
+    z = BaseGlyphV1List(uint32(0), [])
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1List constructor test 1"] = result
+
+try:
+    z = BaseGlyphV1List(0, [], [])
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1List constructor test 2"] = result
+
+try:
+    z = BaseGlyphV1List(uint32(0), 0, [])
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1List constructor test 3"] = result
+
+try:
+    z = BaseGlyphV1List(uint32(0), [], 0)
+except:
+    result = True
+else:
+    result = False
+testResults["BaseGlyphV1List constructor test 4"] = result
+
+z = BaseGlyphV1List(uint32(1), [x], [z])
+result = type(z) == BaseGlyphV1List
+for n in z.ALL_FIELD_NAMES:
+    result &= hasattr(z, n)
+result &= (type(z.numBaseGlyphV1Records) == uint32 and type(z.baseGlyphV1Records) == list and type(z.layerV1Tables) == list)
+result &= z.numBaseGlyphV1Records == 1
+result &= len(z.baseGlyphV1Records) == 1 and type(z.baseGlyphV1Records[0]) == BaseGlyphV1Record
+result &= len(z.layerV1Tables) == 1 and type(z.layerV1Tables[0]) == LayersV1
+
+x = z.baseGlyphV1Records[0]
+result &= x.glyphID == 2 and x.layersV1Offset == 17
+
+x = z.layerV1Tables[0]
+result &= x.numLayerV1Records == 1
+y = x.layerV1Records[0]
+result &= y.glyphID == 1 and y.paintOffset == 17
+y = x.paintTables[0]
+result &= y.format == 1 and y.color.paletteIndex == 259
+result &= y.color.alpha.scalar == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
+
+testResults["BaseGlyphV1List constructor test 5"] = result
+
+
+buffer = (b'\x00\x00\x00\x01'
+          + b'\x00\x02\x00\x00\x00\x0a'
+          + b'\x00\x00\x00\x01'
+            + b'\x00\x01\x00\x00\x00\x0a'
+            + b'\x00\x01' b'\x01\x03' b'\x30\x00\x00\xa0\x00\xa1')
+x = tryReadStructWithSubtablesFromBuffer(buffer, BaseGlyphV1List)
+result = type(x) == BaseGlyphV1List
+for n in x.ALL_FIELD_NAMES:
+    result &= hasattr(x, n)
+result &= (type(x.numBaseGlyphV1Records) == uint32 and type(x.baseGlyphV1Records) == list and type(x.layerV1Tables) == list)
+result &= x.numBaseGlyphV1Records == 1
+result &= len(x.baseGlyphV1Records) == 1 and type(x.baseGlyphV1Records[0]) == BaseGlyphV1Record
+result &= len(x.layerV1Tables) == 1 and type(x.layerV1Tables[0]) == LayersV1
+
+y = x.baseGlyphV1Records[0]
+result &= y.glyphID == 2 and y.layersV1Offset == 10
+
+y = x.layerV1Tables[0]
+result &= y.numLayerV1Records == 1
+
+z = y.layerV1Records[0]
+result &= z.glyphID == 1 and z.paintOffset == 10
+z = y.paintTables[0]
+result &= z.format == 1 and z.color.paletteIndex == 259
+result &= z.color.alpha.scalar == 0.75 and z.color.alpha.varOuterIndex == 160 and z.color.alpha.varInnerIndex == 161
+
+testResults["BaseGlyphV1List tryReadStructWithSubtablesFromBuffer test "] = result
 
 
 
@@ -1372,7 +1484,6 @@ testResults["Table_COLR.tryReadFromFile test 11"] = result
 
 """
 Still need tests for
-    - BaseGlyphV1List
     - COLR V1
 """
 
