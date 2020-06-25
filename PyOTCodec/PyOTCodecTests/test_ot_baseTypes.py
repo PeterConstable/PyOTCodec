@@ -2368,6 +2368,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 357
+assert numTestResults == 343
 
 printTestResultSummary("Tests for ot_baseTypes", testResults, skippedTests)

@@ -1,6 +1,12 @@
 from PyOTCodecTests.test_setup import getTestFontOTFile, printTestResultSummary
 
 testModules = []
+import PyOTCodecTests.test_ot_baseTypes
+testModules.append(PyOTCodecTests.test_ot_baseTypes)
+import PyOTCodecTests.test_ot_structs
+testModules.append(PyOTCodecTests.test_ot_structs)
+import PyOTCodecTests.test_ot_types
+testModules.append(PyOTCodecTests.test_ot_types)
 import PyOTCodecTests.test_ot_file
 testModules.append(PyOTCodecTests.test_ot_file)
 import PyOTCodecTests.test_ot_font

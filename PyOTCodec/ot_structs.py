@@ -233,10 +233,11 @@ def tryReadArrayFieldsFromBuffer(buffer, className, headerFields):
             count = headerFields[array["count"]]
         else:
             count = array["count"]
+
         # determine offset: either a number or a header field name
         if type(array["offset"]) == str:
             offset = headerFields[array["offset"]]
-        else:
+        else: # int
             offset = array["offset"]
 
         # check if the type of array elements is a basic type or struct
@@ -325,14 +326,14 @@ def tryReadSubtableFieldsFromBuffer(buffer, className, headerFields):
         else:
             count = subtable["count"]
         
-            # determine offset: either a number or a header field name
+        # determine offset: either a number or a header field name
         if type(subtable["offset"]) == str:
             offset = headerFields[subtable["offset"]]
             assert count == 1
         elif type(subtable["offset"]) == int:
             offset = subtable["offset"]
             assert count == 1
-        else:
+        else: # dict
             # offset is dict with one or 2 elements
             # will need to get the offsets within a loop
             offsetArrayField = subtable["offset"]["parentField"]
