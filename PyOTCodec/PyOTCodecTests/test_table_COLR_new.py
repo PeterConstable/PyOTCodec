@@ -1381,6 +1381,13 @@ testResults["Table_COLR constants test 2"] = result
 
 # constructor args
 
+buffer = (b'\x00\x00\x00\x01'
+          + b'\x00\x02\x00\x00\x00\x0a'
+          + b'\x00\x00\x00\x01'
+            + b'\x00\x01\x00\x00\x00\x0a'
+            + b'\x00\x01' b'\x01\x03' b'\x30\x00\x00\xa0\x00\xa1')
+y = tryReadStructWithSubtablesFromBuffer(buffer, BaseGlyphV1List)
+
 try:
     x = Table_COLR_new()
 except:
@@ -1405,27 +1412,48 @@ else:
     result = False
 testResults["Table_COLR_new constructor test 3"] = result
 
+try:
+    x = Table_COLR_new(
+    uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), Offset32(0), Offset32(0), [], [], 
+        version = 1)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR_new constructor test 4"] = result
+
+try:
+    x = Table_COLR_new(
+    uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), Offset32(0), Offset32(0), [], [], 0, 
+        version = 1)
+except:
+    result = True
+else:
+    result = False
+testResults["Table_COLR_new constructor test 5"] = result
+
 x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), [], [], version = 0)
 result = hasattr(x, "FIELDS")
 result &= hasattr(x, "PACKED_FORMAT")
 result &= hasattr(x, "PACKED_SIZE")
 result &= hasattr(x, "ARRAYS")
 result &= hasattr(x, "ALL_FIELD_NAMES")
-testResults["Table_COLR_new constructor test 4"] = result
+testResults["Table_COLR_new constructor test 6"] = result
 
-"""
-x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), [], [], [], version = 1)
+x = Table_COLR_new(
+    uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), Offset32(0), Offset32(0), [], [], y, 
+    version = 1)
 result = hasattr(x, "FIELDS")
 result &= hasattr(x, "PACKED_FORMAT")
 result &= hasattr(x, "PACKED_SIZE")
 result &= hasattr(x, "ARRAYS")
 result &= hasattr(x, "SUBTABLES")
 result &= hasattr(x, "ALL_FIELD_NAMES")
-testResults["Table_COLR_new constructor test 5"] = result
-"""
+testResults["Table_COLR_new constructor test 7"] = result
 
 
 # test Table_COLR.tryReadFromFile using BungeeColor-Regular_colr_Windows.ttf
+# version 0
 bungeeColor_file = getTestFontOTFile("BungeeColor")
 
 try:
@@ -1435,64 +1463,89 @@ except:
 else:
     result = True
 testResults["Table_COLR.tryReadFromFile test 1"] = result
-testResults["Table_COLR.tryReadFromFile test 2"] = (type(colr) == Table_COLR_new)
+
+result = (type(colr) == Table_COLR_new)
 bungeeColor_COLR_headerValues = (0, 288, 14, 1742, 576)
-result = True
 expected = zip(colr.FIELDS, bungeeColor_COLR_headerValues)
 for k, v in expected:
     val = getattr(colr, k)
     if val != v:
         result = False
         break
-testResults["Table_COLR.tryReadFromFile test 3"] = result
+testResults["Table_COLR.tryReadFromFile test 2"] = result
 
 recordsArray = colr.baseGlyphRecords
-testResults["Table_COLR.tryReadFromFile test 4"] = (len(recordsArray) == 288)
+result = (len(recordsArray) == 288)
 
 record = recordsArray[3]
 fields = list(vars(record))
-result = (len(fields) == 3)
+result &= (len(fields) == 3)
 result &= ("glyphID" in fields and "firstLayerIndex" in fields and "numLayers" in fields)
-testResults["Table_COLR.tryReadFromFile test 5"] = result
 
-result = (record.glyphID == 3 and record.firstLayerIndex == 6 and record.numLayers == 2)
-testResults["Table_COLR.tryReadFromFile test 6"] = result
+result &= (record.glyphID == 3 and record.firstLayerIndex == 6 and record.numLayers == 2)
 
 record = recordsArray[174]
-result = (record.glyphID == 174 and record.firstLayerIndex == 348 and record.numLayers == 2)
-testResults["Table_COLR.tryReadFromFile test 7"] = result
+result &= (record.glyphID == 174 and record.firstLayerIndex == 348 and record.numLayers == 2)
 
 recordsArray = colr.layerRecords
-testResults["Table_COLR.tryReadFromFile test 8"] = (len(recordsArray) == 576)
+result &= (len(recordsArray) == 576)
 
 record = recordsArray[6]
 fields = list(vars(record))
-result = (len(fields) == 2)
+result &= (len(fields) == 2)
 result &= ("glyphID" in fields and "paletteIndex" in fields)
-testResults["Table_COLR.tryReadFromFile test 9"] = result
 
-result = (record.glyphID == 452 and record.paletteIndex == 0)
-testResults["Table_COLR.tryReadFromFile test 10"] = result
+result &= (record.glyphID == 452 and record.paletteIndex == 0)
 
 record = recordsArray[401]
-result = (record.glyphID == 451 and record.paletteIndex == 1)
-testResults["Table_COLR.tryReadFromFile test 11"] = result
+result &= (record.glyphID == 451 and record.paletteIndex == 1)
+testResults["Table_COLR.tryReadFromFile test 3"] = result
 
 
-
-
-
-"""
-Still need tests for
-    - COLR V1
-"""
-
-
-
-
+# test Table_COLR.tryReadFromFile using Noto-Handwriting-COLR_1.ttf
+# version 1 (draft)
 notoHW_COLR1_rev2_file = getTestFontOTFile("NotoHW-COLR_1_rev2")
+try:
+    colr = notoHW_COLR1_rev2_file.fonts[0].tables["COLR"]
+except:
+    result = False
+else:
+    result = True
+testResults["Table_COLR.tryReadFromFile test 4"] = result
 
+result = (type(colr) == Table_COLR_new)
+notoHW_COLR_headerValues = (1, 0, 0, 0, 0, 22, 0)
+expected = zip(colr.FIELDS, notoHW_COLR_headerValues)
+for k, v in expected:
+    val = getattr(colr, k)
+    if val != v:
+        result = False
+        break
+testResults["Table_COLR.tryReadFromFile test 5"] = result
 
+x = colr.baseGlyphV1List
+result = x.numBaseGlyphV1Records == 6
+result &= len(x.baseGlyphV1Records) == 6 and len(x.layerV1Tables) == 6
+
+y = x.baseGlyphV1Records[1]
+result &= y.glyphID == 8
+result &= y.layersV1Offset == 414
+y = x.baseGlyphV1Records[3]
+result &= y.glyphID == 10
+result &= y.layersV1Offset == 1084
+
+y = x.layerV1Tables[0]
+result &= y.numLayerV1Records == 10
+result &= y.layerV1Records[0].glyphID == 31 and y.layerV1Records[0].paintOffset == 64
+result &= y.layerV1Records[6].glyphID == 37 and y.layerV1Records[6].paintOffset == 1760
+
+z = y.paintTables[0]
+result &= z.format == 2
+result &= z.colorLineOffset == 240
+z = y.paintTables[5]
+result &= z.format == 1 and z.color.paletteIndex == 17
+
+testResults["Table_COLR.tryReadFromFile test 6"] = result
 
 
 
@@ -1503,6 +1556,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-#assert numTestResults == 183
+assert numTestResults == 232
 
 printTestResultSummary("Tests for table_COLR", testResults, skippedTests)
