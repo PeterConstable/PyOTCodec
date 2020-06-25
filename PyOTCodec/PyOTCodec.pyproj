@@ -66,7 +66,7 @@
     <Compile Include="PyOTCodecTests\test_setup.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="PyOTCodecTests\test_table_COLR_new.py">
+    <Compile Include="PyOTCodecTests\test_table_COLR.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="PyOTCodecTests\test_table_fmtx.py">
@@ -81,7 +81,7 @@
     <Compile Include="PyOTCodecTests\test_table_maxp.py">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="table_COLR_new.py">
+    <Compile Include="table_COLR.py">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="table_fmtx.py">

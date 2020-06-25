@@ -304,7 +304,7 @@ class LayerRecord(structBaseClass):
 # End of class LayerRecord
 
 
-class Table_COLR_new:
+class Table_COLR:
     _expectedTag = Tag("COLR")
 
     TYPE_CATEGORY = otTypeCategory.VERSIONED_TABLE
@@ -399,7 +399,7 @@ class Table_COLR_new:
         # get the table bytes: since offset length are in bounds, can get the expected length
         tableBytes = fileBytes[offsetInFile : offsetInFile + tableRecord.length]
 
-        colr = tryReadVersionedTableFromBuffer(tableBytes, Table_COLR_new)
+        colr = tryReadVersionedTableFromBuffer(tableBytes, Table_COLR)
 
         colr.parentFont = parentFont
         colr.tableRecord = tableRecord
@@ -407,7 +407,7 @@ class Table_COLR_new:
         return colr
     # End of tryReadFromFile
 
-# End of class Table_COLR_new:
+# End of class Table_COLR:
 
 
 

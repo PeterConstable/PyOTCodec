@@ -1,6 +1,6 @@
 from PyOTCodecTests.test_setup import getTestFontOTFile, printTestResultSummary
 
-from table_COLR_new import *
+from table_COLR import *
 
 
 testResults = dict({})
@@ -1363,20 +1363,20 @@ testResults["BaseGlyphV1List tryReadStructWithSubtablesFromBuffer test "] = resu
 #-------------------------------------------------------------
 
 try:
-    assertIsWellDefinedOTType(Table_COLR_new)
+    assertIsWellDefinedOTType(Table_COLR)
 except:
     result = False
 else:
     result = True
 testResults["Table_COLR definition test"] = result
 
-testResults["Table_COLR constants test 1"] = (Table_COLR_new.TYPE_CATEGORY == otTypeCategory.VERSIONED_TABLE)
-result = hasattr(Table_COLR_new, 'FORMATS')
-result &= "versionType" in Table_COLR_new.FORMATS
-result &= Table_COLR_new.FORMATS["versionType"] == otVersionType.UINT16_MINOR
-result &= "versions" in Table_COLR_new.FORMATS
-result &= 0 in Table_COLR_new.FORMATS["versions"]
-result &= 1 in Table_COLR_new.FORMATS["versions"]
+testResults["Table_COLR constants test 1"] = (Table_COLR.TYPE_CATEGORY == otTypeCategory.VERSIONED_TABLE)
+result = hasattr(Table_COLR, 'FORMATS')
+result &= "versionType" in Table_COLR.FORMATS
+result &= Table_COLR.FORMATS["versionType"] == otVersionType.UINT16_MINOR
+result &= "versions" in Table_COLR.FORMATS
+result &= 0 in Table_COLR.FORMATS["versions"]
+result &= 1 in Table_COLR.FORMATS["versions"]
 testResults["Table_COLR constants test 2"] = result
 
 # constructor args
@@ -1389,58 +1389,58 @@ buffer = (b'\x00\x00\x00\x01'
 y = tryReadStructWithSubtablesFromBuffer(buffer, BaseGlyphV1List)
 
 try:
-    x = Table_COLR_new()
+    x = Table_COLR()
 except:
     result = True
 else:
     result = False
-testResults["Table_COLR_new constructor test 1"] = result
+testResults["Table_COLR constructor test 1"] = result
 
 try:
-    x = Table_COLR_new(version = 0)
+    x = Table_COLR(version = 0)
 except:
     result = True
 else:
     result = False
-testResults["Table_COLR_new constructor test 2"] = result
+testResults["Table_COLR constructor test 2"] = result
 
 try:
-    x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), version = 0)
+    x = Table_COLR(uint16(0), uint16(0), Offset32(0), Offset32(0), version = 0)
 except:
     result = True
 else:
     result = False
-testResults["Table_COLR_new constructor test 3"] = result
+testResults["Table_COLR constructor test 3"] = result
 
 try:
-    x = Table_COLR_new(
+    x = Table_COLR(
     uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), Offset32(0), Offset32(0), [], [], 
         version = 1)
 except:
     result = True
 else:
     result = False
-testResults["Table_COLR_new constructor test 4"] = result
+testResults["Table_COLR constructor test 4"] = result
 
 try:
-    x = Table_COLR_new(
+    x = Table_COLR(
     uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), Offset32(0), Offset32(0), [], [], 0, 
         version = 1)
 except:
     result = True
 else:
     result = False
-testResults["Table_COLR_new constructor test 5"] = result
+testResults["Table_COLR constructor test 5"] = result
 
-x = Table_COLR_new(uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), [], [], version = 0)
+x = Table_COLR(uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), [], [], version = 0)
 result = hasattr(x, "FIELDS")
 result &= hasattr(x, "PACKED_FORMAT")
 result &= hasattr(x, "PACKED_SIZE")
 result &= hasattr(x, "ARRAYS")
 result &= hasattr(x, "ALL_FIELD_NAMES")
-testResults["Table_COLR_new constructor test 6"] = result
+testResults["Table_COLR constructor test 6"] = result
 
-x = Table_COLR_new(
+x = Table_COLR(
     uint16(0), uint16(0), Offset32(0), Offset32(0), uint16(0), Offset32(0), Offset32(0), [], [], y, 
     version = 1)
 result = hasattr(x, "FIELDS")
@@ -1449,7 +1449,7 @@ result &= hasattr(x, "PACKED_SIZE")
 result &= hasattr(x, "ARRAYS")
 result &= hasattr(x, "SUBTABLES")
 result &= hasattr(x, "ALL_FIELD_NAMES")
-testResults["Table_COLR_new constructor test 7"] = result
+testResults["Table_COLR constructor test 7"] = result
 
 
 # test Table_COLR.tryReadFromFile using BungeeColor-Regular_colr_Windows.ttf
@@ -1464,7 +1464,7 @@ else:
     result = True
 testResults["Table_COLR.tryReadFromFile test 1"] = result
 
-result = (type(colr) == Table_COLR_new)
+result = (type(colr) == Table_COLR)
 bungeeColor_COLR_headerValues = (0, 288, 14, 1742, 576)
 expected = zip(colr.FIELDS, bungeeColor_COLR_headerValues)
 for k, v in expected:
@@ -1513,7 +1513,7 @@ else:
     result = True
 testResults["Table_COLR.tryReadFromFile test 4"] = result
 
-result = (type(colr) == Table_COLR_new)
+result = (type(colr) == Table_COLR)
 notoHW_COLR_headerValues = (1, 0, 0, 0, 0, 22, 0)
 expected = zip(colr.FIELDS, notoHW_COLR_headerValues)
 for k, v in expected:

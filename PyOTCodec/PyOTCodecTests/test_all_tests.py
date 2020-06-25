@@ -13,8 +13,8 @@ import PyOTCodecTests.test_ot_font
 testModules.append(PyOTCodecTests.test_ot_font)
 import PyOTCodecTests.test_ot_types
 testModules.append(PyOTCodecTests.test_ot_types)
-import PyOTCodecTests.test_table_COLR_new
-testModules.append(PyOTCodecTests.test_table_COLR_new)
+import PyOTCodecTests.test_table_COLR
+testModules.append(PyOTCodecTests.test_table_COLR)
 import PyOTCodecTests.test_table_fmtx
 testModules.append(PyOTCodecTests.test_table_fmtx)
 import PyOTCodecTests.test_table_hhea

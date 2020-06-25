@@ -25,6 +25,6 @@ if __name__ == '__main__':
             import PyOTCodecTests.test_ot_structs
         elif sys.argv[1] == "colr":
             import PyOTCodecTests.test_ot_structs
-            import PyOTCodecTests.test_table_COLR_new
+            import PyOTCodecTests.test_Table_COLR
     else:
         print("Welcome to PyOTCodec")
