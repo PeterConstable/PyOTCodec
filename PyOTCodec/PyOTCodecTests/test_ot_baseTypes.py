@@ -69,7 +69,6 @@ testResults["baseTypes file read test 19 (Tag.tryReadFromBytesIO)"] = Tag.tryRea
 
 
 result = hasattr(otTypeCategory, 'BASIC')
-result &= hasattr(otTypeCategory, 'BASIC_OT_SPECIAL')
 result &= hasattr(otTypeCategory, 'FIXED_LENGTH_BASIC_STRUCT')
 result &= hasattr(otTypeCategory, 'VAR_LENGTH_STRUCT')
 result &= hasattr(otTypeCategory, 'VAR_LENGTH_STRUCT_WITH_SUBTABLES')
@@ -268,167 +267,6 @@ else:
     result = False
 testResults["baseTypes assertIsWellDefinedOTType test 16"] = result
 
-
-# BASIC_OT_SPECIAL 
-
-# missing PACKED_FORMAT, wrong type, or not starting with '>'
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 17"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = 42
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 18"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = "L"
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 19"] = result
-
-# missing PACKED_SIZE, wrong type, or not correct value
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 20"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 'x'
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 21"] = result
-
-class testClass(int):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 4
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 22"] = result
-
-# not a sub-class of int, float or str
-class testClass:
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 25"] = result
-
-class testClass(bytes):
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 26"] = result
-
-# BASIC_OT_SPECIAL can't have FIELDS, ARRAYS or SUBTABLES
-class testClass:
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    FIELDS = []
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 27"] = result
-
-class testClass:
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    ARRAYS = []
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 28"] = result
-
-class testClass:
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    SUBTABLES = []
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 29"] = result
-
-# BASIC_OT_SPECIAL must have tryReadFromBytesIO method
-class testClass:
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
-    PACKED_FORMAT = ">h"
-    PACKED_SIZE = 2
-    pass
-try:
-    assertIsWellDefinedOTType(testClass)
-except:
-    result = True
-else:
-    result = False
-testResults["baseTypes assertIsWellDefinedOTType test 30"] = result
 
 
 # FIXED_LENGTH_BASIC_STRUCT
@@ -1926,7 +1764,7 @@ else:
     result = True
 testResults["baseTypes uint24 definition test 1"] = result
 
-testResults["baseTypes uint24 definition test 2"] = (uint24.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes uint24 definition test 2"] = (uint24.TYPE_CATEGORY == otTypeCategory.BASIC)
 testResults["baseTypes uint24 definition test 3"] = (uint24.PACKED_FORMAT == ">3s")
 testResults["baseTypes uint24 definition test 4"] = (uint24.PACKED_SIZE == 3)
 
@@ -2005,7 +1843,7 @@ else:
     result = True
 testResults["baseTypes Fixed definition test 1"] = result
 
-testResults["baseTypes Fixed definition test 2"] = (Fixed.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes Fixed definition test 2"] = (Fixed.TYPE_CATEGORY == otTypeCategory.BASIC)
 testResults["baseTypes Fixed definition test 3"] = (Fixed.PACKED_FORMAT == ">4s")
 testResults["baseTypes Fixed definition test 4"] = (Fixed.PACKED_SIZE == 4)
 
@@ -2149,7 +1987,7 @@ else:
     result = True
 testResults["baseTypes F2Dot14 definition test 1"] = result
 
-testResults["baseTypes F2Dot14 definition test 2"] = (F2Dot14.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes F2Dot14 definition test 2"] = (F2Dot14.TYPE_CATEGORY == otTypeCategory.BASIC)
 testResults["baseTypes F2Dot14 definition test 3"] = (F2Dot14.PACKED_FORMAT == ">2s")
 testResults["baseTypes F2Dot14 definition test 4"] = (F2Dot14.PACKED_SIZE == 2)
 
@@ -2283,7 +2121,7 @@ else:
     result = True
 testResults["baseTypes Tag definition test 1"] = result
 
-testResults["baseTypes Tag definition test 2"] = (Tag.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL)
+testResults["baseTypes Tag definition test 2"] = (Tag.TYPE_CATEGORY == otTypeCategory.BASIC)
 testResults["baseTypes Tag definition test 3"] = (Tag.PACKED_FORMAT == ">4s")
 testResults["baseTypes Tag definition test 4"] = (Tag.PACKED_SIZE == 4)
 
@@ -2368,6 +2206,6 @@ numTestResults = len(testResults)
 numFailures = list(testResults.values()).count(False)
 numSkipped = len(skippedTests)
 
-assert numTestResults == 343
+assert numTestResults == 331
 
 printTestResultSummary("Tests for ot_baseTypes", testResults, skippedTests)

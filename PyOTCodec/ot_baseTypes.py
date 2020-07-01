@@ -1,5 +1,5 @@
 from collections import OrderedDict
-from enum import Enum
+from enum import Enum, auto
 from io import BytesIO
 import math
 import re
@@ -10,30 +10,23 @@ class OTCodecError(Exception): pass
 
 
 class otTypeCategory(Enum):
-    BASIC = 0 
-        # BASIC: a defined sub-class of int (e.g., int8).
+    BASIC = auto()
+        # BASIC: a defined sub-class of int (e.g., int8), str (Tag) or float 
+        # (Fixed, F2Dot14).
         #
         # Characteristics:
-        #  - has PACKED_FORMAT and PACKED_SIZE "static" members
-        #  - does not have FIELDS, ARRAYS or SUBTABLES members
-        #  - has a constructor function that takes unpacked value directly,
-        #    and that value is an instance of the base class
-        #  - has a tryReadFromBytesIO static method
-
-    BASIC_OT_SPECIAL = 1
-        # BASIC_OT_SPECIAL: Tag, Fixed, F2Dot14, uint24. Type is not directly
-        # supported by struct module, and so unpacked values require some
-        # reinterpretation.
-        #
-        # Characteristics:
-        #  - has a base type str (Tag), float (Fixed, F2Dot24) or int (uint24)
         #  - has PACKED_FORMAT and PACKED_SIZE "static" members
         #  - does not have FIELDS, ARRAYS or SUBTABLES members
         #  - has a constructor function that takes unpacked value directly
-        #  - constructor might or might NOT accept the base type
         #  - has a tryReadFromBytesIO static method
+        #
+        # For most BASIC classes, such as int8, the type is supported in
+        # struct.unpack. Tag, uint24, Fixed and Float are not supported
+        # directly by struct.unpack, and so values must be unpacked and the
+        # reinterpreted. The constructors for these classes accept the raw
+        # unpacked values, but might not support the base type.
 
-    FIXED_LENGTH_BASIC_STRUCT = 2
+    FIXED_LENGTH_BASIC_STRUCT = auto()
         # FIXED_LENGTH_BASIC_STRUCT: a struct that has two or more members of BASIC 
         # or BASIC_OT_SPECIAL types. These can be read without requiring recursion.
         #
@@ -46,7 +39,7 @@ class otTypeCategory(Enum):
         #  - has constructor that takes arguments as per FIELDs
         #  - constructor does not take unpacked values directly
 
-    FIXED_LENGTH_COMPLEX_STRUCT = 3
+    FIXED_LENGTH_COMPLEX_STRUCT = auto()
         # FIXED_LENGTH_COMPLEX_STRUCT: a struct that has members of BASIC,
         # BASIC_OT_SPECIAL, FIXED_LENGTH_BASIC_STRUCT or FIXED_LENGTH_COMPLEX_STRUCT
         # types. Reading requires recursion to parse the embedded structs.
@@ -61,7 +54,7 @@ class otTypeCategory(Enum):
         #  - has constructor that takes arguments as per FIELDs
         #  - constructor does not take unpacked values directly
 
-    VAR_LENGTH_STRUCT = 4
+    VAR_LENGTH_STRUCT = auto()
         # VAR_LENGTH_STRUCT: a struct that has a header with members of the 
         # above types and also has one or more variable-length arrays of 
         # FIXED_LENGTH_BASIC_STRUCT or FIXED_LENGTH_COMPLEX_STRUCT
@@ -82,7 +75,7 @@ class otTypeCategory(Enum):
         #    ALL_FIELD_NAMES (header, then arrays)
         #  - constructor does not take unpacked values directly
 
-    VAR_LENGTH_STRUCT_WITH_SUBTABLES = 5
+    VAR_LENGTH_STRUCT_WITH_SUBTABLES = auto()
         # VAR_LENGTH_STRUCT_WITH_SUBTABLES: a struct that has a header with
         # members of types BASIC to FIXED_LENGTH_COMPLEX_STRUCT, that may
         # have one or more record arrays (as for VAR_LENGTH_STRUCT), and
@@ -100,7 +93,7 @@ class otTypeCategory(Enum):
         #    ALL_FIELD_NAMES (header, then arrays, then subtables)
         #  - constructor does not take unpacked values directly
 
-    VERSIONED_TABLE = 6
+    VERSIONED_TABLE = auto()
         # VERSIONED_TABLE: Table that starts with a version field (or fields) 
         # and that has alternate formats according to the version.
         #
@@ -227,17 +220,6 @@ def assertIsWellDefinedOTType(className):
         assert (className.PACKED_SIZE == struct.calcsize(className.PACKED_FORMAT))
 
     if className.TYPE_CATEGORY == otTypeCategory.BASIC:
-        assert int in className.__mro__
-
-    if className.TYPE_CATEGORY == otTypeCategory.BASIC_OT_SPECIAL:
-        assert (int in className.__mro__
-                or str in className.__mro__
-                or float in className.__mro__)
-
-    if className.TYPE_CATEGORY in (
-            otTypeCategory.BASIC,
-            otTypeCategory.BASIC_OT_SPECIAL
-            ):
         assert not hasattr(className, 'FIELDS')
         assert hasattr(className, 'tryReadFromBytesIO')
         assert callable(className.tryReadFromBytesIO)
@@ -255,8 +237,7 @@ def assertIsWellDefinedOTType(className):
 
     if className.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT:
         for type_ in className.FIELDS.values():
-            assert type_.TYPE_CATEGORY in (
-                otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL)
+            assert type_.TYPE_CATEGORY == otTypeCategory.BASIC
 
     if className.TYPE_CATEGORY in (
             otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT,
@@ -265,7 +246,7 @@ def assertIsWellDefinedOTType(className):
             ):
         for type_ in className.FIELDS.values():
             assert type_.TYPE_CATEGORY in (
-                otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL,
+                otTypeCategory.BASIC,
                 otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
                 otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
                 )
@@ -273,7 +254,6 @@ def assertIsWellDefinedOTType(className):
 
     if className.TYPE_CATEGORY in (
             otTypeCategory.BASIC,
-            otTypeCategory.BASIC_OT_SPECIAL,
             otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
             otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT
             ):
@@ -362,7 +342,7 @@ def assertIsWellDefinedOTType(className):
 def isBasicType(class_):
     if not hasattr(class_, 'TYPE_CATEGORY'):
         return False
-    if class_.TYPE_CATEGORY in (otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL):
+    if class_.TYPE_CATEGORY in (otTypeCategory.BASIC, ):
         return True
     else:
         return False
@@ -598,12 +578,12 @@ class uint64(int):
 
 
 #-------------------------------------------------------------
-#  otTypeCategory.BASIC_OT_SPECIAL types
+#  Special BASIC types: uint24, Tag, Fixed, F2Dot14
 #-------------------------------------------------------------
 
 class uint24(int):
 
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">3s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
@@ -631,7 +611,7 @@ class uint24(int):
 
 class Fixed(float):
 
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">4s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
@@ -710,7 +690,7 @@ class Fixed(float):
 
 class F2Dot14(float):
 
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">2s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     
@@ -795,7 +775,7 @@ class F2Dot14(float):
 
 class Tag(str):
 
-    TYPE_CATEGORY = otTypeCategory.BASIC_OT_SPECIAL
+    TYPE_CATEGORY = otTypeCategory.BASIC
     PACKED_FORMAT = ">4s"
     PACKED_SIZE = struct.calcsize(PACKED_FORMAT)
     

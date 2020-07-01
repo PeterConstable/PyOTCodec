@@ -66,7 +66,7 @@ def getCombinedFieldTypes(obj):
     then fields for subtables or subtable arrays.
     """
     assert hasattr(obj, 'TYPE_CATEGORY')
-    assert not obj.TYPE_CATEGORY in (otTypeCategory.BASIC, otTypeCategory.BASIC_OT_SPECIAL)
+    assert not obj.TYPE_CATEGORY == otTypeCategory.BASIC
     
     types = []
     for t in obj.FIELDS.values():
@@ -145,11 +145,12 @@ def tryReadFixedLengthStructFieldsFromBuffer(buffer, className):
     else:
         bufferIO = BytesIO(buffer)
         for field, type_ in className.FIELDS.items():
-            if (type_.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
-                or type_.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
+            if type_.TYPE_CATEGORY in (
+                otTypeCategory.FIXED_LENGTH_BASIC_STRUCT,
+                otTypeCategory.FIXED_LENGTH_COMPLEX_STRUCT):
                 fieldBuffer = bufferIO.read(type_.PACKED_SIZE)
                 fieldValue = tryReadFixedLengthStructFromBuffer(fieldBuffer, type_)
-            else:
+            else: # BASIC, BASIC_OT_SPECIAL
                 fieldValue = type_.tryReadFromBytesIO(bufferIO)
             allFields[field] = fieldValue
 
