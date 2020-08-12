@@ -1055,7 +1055,7 @@ testResults["BaseGlyphV1Record definition test"] = result
 testResults["BaseGlyphV1Record constants test 1"] = (BaseGlyphV1Record.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT)
 testResults["BaseGlyphV1Record constants test 2"] = (BaseGlyphV1Record.PACKED_FORMAT == ">HL")
 testResults["BaseGlyphV1Record constants test 3"] = (BaseGlyphV1Record.PACKED_SIZE == 6)
-testResults["BaseGlyphV1Record constants test 4"] = (list(BaseGlyphV1Record.FIELDS.keys()) == ["glyphID", "layersV1Offset"])
+testResults["BaseGlyphV1Record constants test 4"] = (list(BaseGlyphV1Record.FIELDS.keys()) == ["glyphID", "layerListOffset"])
 testResults["BaseGlyphV1Record constants test 5"] = (list(BaseGlyphV1Record.FIELDS.values()) == [uint16, Offset32])
 
 try:
@@ -1077,7 +1077,7 @@ x = BaseGlyphV1Record(uint16(2), Offset32(17))
 result = (type(x) == BaseGlyphV1Record)
 for f in BaseGlyphV1Record.FIELDS:
     result &= hasattr(x, f)
-result &= (x.glyphID == 2 and x.layersV1Offset == 17)
+result &= (x.glyphID == 2 and x.layerListOffset == 17)
 testResults["BaseGlyphV1Record constructor test 3"] = result
 
 buffer = b'\x00\x02\x00\x00\x00\x11'
@@ -1085,7 +1085,7 @@ x = tryReadFixedLengthStructFromBuffer(buffer, BaseGlyphV1Record)
 result = (type(x) == BaseGlyphV1Record)
 for f in BaseGlyphV1Record.FIELDS:
     result &= hasattr(x, f)
-result &= (x.glyphID == 2 and x.layersV1Offset == 17)
+result &= (x.glyphID == 2 and x.layerListOffset == 17)
 testResults["BaseGlyphV1Record tryReadFixedLengthStructFromBuffer test"] = result
 
 
@@ -1141,24 +1141,24 @@ testResults["LayerV1Record tryReadFixedLengthStructFromBuffer test"] = result
 
 
 #-------------------------------------------------------------
-# tests for LayersV1
+# tests for LayerList
 #-------------------------------------------------------------
 
 try:
-    assertIsWellDefinedOTType(LayersV1)
+    assertIsWellDefinedOTType(LayerList)
 except:
     result = False
 else:
     result = True
-testResults["LayersV1 definition test"] = result
+testResults["LayerList definition test"] = result
 
-testResults["LayersV1 constants test 1"] = (LayersV1.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES)
-testResults["LayersV1 constants test 2"] = (LayersV1.PACKED_FORMAT == ">L")
-testResults["LayersV1 constants test 3"] = (LayersV1.PACKED_SIZE == 4)
-testResults["LayersV1 constants test 4"] = (list(LayersV1.FIELDS.keys()) == ["numLayerV1Records"])
-testResults["LayersV1 constants test 5"] = (list(LayersV1.FIELDS.values()) == [uint32])
-testResults["LayersV1 constants test 6"] = (LayersV1.ALL_FIELD_NAMES == ["numLayerV1Records", "layerV1Records", "paintTables"])
-testResults["LayersV1 constants test 7"] = getCombinedFieldTypes(LayersV1) == [uint32, list, list]
+testResults["LayerList constants test 1"] = (LayerList.TYPE_CATEGORY == otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES)
+testResults["LayerList constants test 2"] = (LayerList.PACKED_FORMAT == ">L")
+testResults["LayerList constants test 3"] = (LayerList.PACKED_SIZE == 4)
+testResults["LayerList constants test 4"] = (list(LayerList.FIELDS.keys()) == ["numLayerV1Records"])
+testResults["LayerList constants test 5"] = (list(LayerList.FIELDS.values()) == [uint32])
+testResults["LayerList constants test 6"] = (LayerList.ALL_FIELD_NAMES == ["numLayerV1Records", "layerV1Records", "paintTables"])
+testResults["LayerList constants test 7"] = getCombinedFieldTypes(LayerList) == [uint32, list, list]
 
 # constructor args
 
@@ -1169,40 +1169,40 @@ buffer = (b'\x00\x01' b'\x01\x03' b'\x30\x00\x00\xa0\x00\xa1')
 y = tryReadFixedLengthStructFromBuffer(buffer, PaintFormat1)
 
 try:
-    z = LayersV1(uint16(1), [x])
+    z = LayerList(uint16(1), [x])
 except TypeError:
     result = True
 else:
     result = False
-testResults["LayersV1 constructor test 1"] = result
+testResults["LayerList constructor test 1"] = result
 
 try:
-    z = LayersV1(1, [x], [y])
+    z = LayerList(1, [x], [y])
 except TypeError:
     result = True
 else:
     result = False
-testResults["LayersV1 constructor test 2"] = result
+testResults["LayerList constructor test 2"] = result
 
 try:
-    z = LayersV1(uint16(1), x, [y])
+    z = LayerList(uint16(1), x, [y])
 except TypeError:
     result = True
 else:
     result = False
-testResults["LayersV1 constructor test 3"] = result
+testResults["LayerList constructor test 3"] = result
 
 try:
-    z = LayersV1(uint16(1), [x], y)
+    z = LayerList(uint16(1), [x], y)
 except TypeError:
     result = True
 else:
     result = False
-testResults["LayersV1 constructor test 4"] = result
+testResults["LayerList constructor test 4"] = result
 
 # good args
-z = LayersV1(uint32(1), [x], [y])
-result = type(z) == LayersV1
+z = LayerList(uint32(1), [x], [y])
+result = type(z) == LayerList
 for n in z.ALL_FIELD_NAMES:
     result &= hasattr(z, n)
 result &= (type(z.numLayerV1Records) == uint32 and type(z.layerV1Records) == list and type(z.paintTables) == list)
@@ -1215,14 +1215,14 @@ result &= x.glyphID == 1 and x.paintOffset == 17
 y = z.paintTables[0]
 result &= y.format == 1 and y.color.paletteIndex == 259
 result &= y.color.alpha.scalar == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
-testResults["LayersV1 constructor test 5"] = result
+testResults["LayerList constructor test 5"] = result
 
 
 buffer = (b'\x00\x00\x00\x01'
             b'\x00\x01\x00\x00\x00\x0a'
             b'\x00\x01' b'\x01\x03' b'\x30\x00\x00\xa0\x00\xa1')
-x = tryReadStructWithSubtablesFromBuffer(buffer, LayersV1)
-result = type(x) == LayersV1
+x = tryReadStructWithSubtablesFromBuffer(buffer, LayerList)
+result = type(x) == LayerList
 for n in x.ALL_FIELD_NAMES:
     result &= hasattr(x, n)
 result &= (type(x.numLayerV1Records) == uint32 and type(x.layerV1Records) == list and type(x.paintTables) == list)
@@ -1235,7 +1235,7 @@ result &= y.glyphID == 1 and y.paintOffset == 10
 y = x.paintTables[0]
 result &= y.format == 1 and y.color.paletteIndex == 259
 result &= y.color.alpha.scalar == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
-testResults["LayersV1 tryReadStructWithSubtablesFromBuffer test "] = result
+testResults["LayerList tryReadStructWithSubtablesFromBuffer test "] = result
 
 
 
@@ -1244,7 +1244,7 @@ testResults["LayersV1 tryReadStructWithSubtablesFromBuffer test "] = result
 #-------------------------------------------------------------
 
 try:
-    assertIsWellDefinedOTType(LayersV1)
+    assertIsWellDefinedOTType(BaseGlyphV1List)
 except:
     result = False
 else:
@@ -1267,7 +1267,7 @@ x = tryReadFixedLengthStructFromBuffer(buffer, LayerV1Record)
 buffer = (b'\x00\x01' b'\x01\x03' b'\x30\x00\x00\xa0\x00\xa1')
 y = tryReadFixedLengthStructFromBuffer(buffer, PaintFormat1)
 
-z = LayersV1(uint32(1), [x], [y])
+z = LayerList(uint32(1), [x], [y])
 
 buffer = b'\x00\x02\x00\x00\x00\x11'
 x = tryReadFixedLengthStructFromBuffer(buffer, BaseGlyphV1Record)
@@ -1312,10 +1312,10 @@ for n in z.ALL_FIELD_NAMES:
 result &= (type(z.numBaseGlyphV1Records) == uint32 and type(z.baseGlyphV1Records) == list and type(z.layerV1Tables) == list)
 result &= z.numBaseGlyphV1Records == 1
 result &= len(z.baseGlyphV1Records) == 1 and type(z.baseGlyphV1Records[0]) == BaseGlyphV1Record
-result &= len(z.layerV1Tables) == 1 and type(z.layerV1Tables[0]) == LayersV1
+result &= len(z.layerV1Tables) == 1 and type(z.layerV1Tables[0]) == LayerList
 
 x = z.baseGlyphV1Records[0]
-result &= x.glyphID == 2 and x.layersV1Offset == 17
+result &= x.glyphID == 2 and x.layerListOffset == 17
 
 x = z.layerV1Tables[0]
 result &= x.numLayerV1Records == 1
@@ -1340,10 +1340,10 @@ for n in x.ALL_FIELD_NAMES:
 result &= (type(x.numBaseGlyphV1Records) == uint32 and type(x.baseGlyphV1Records) == list and type(x.layerV1Tables) == list)
 result &= x.numBaseGlyphV1Records == 1
 result &= len(x.baseGlyphV1Records) == 1 and type(x.baseGlyphV1Records[0]) == BaseGlyphV1Record
-result &= len(x.layerV1Tables) == 1 and type(x.layerV1Tables[0]) == LayersV1
+result &= len(x.layerV1Tables) == 1 and type(x.layerV1Tables[0]) == LayerList
 
 y = x.baseGlyphV1Records[0]
-result &= y.glyphID == 2 and y.layersV1Offset == 10
+result &= y.glyphID == 2 and y.layerListOffset == 10
 
 y = x.layerV1Tables[0]
 result &= y.numLayerV1Records == 1
@@ -1529,10 +1529,10 @@ result &= len(x.baseGlyphV1Records) == 6 and len(x.layerV1Tables) == 6
 
 y = x.baseGlyphV1Records[1]
 result &= y.glyphID == 8
-result &= y.layersV1Offset == 414
+result &= y.layerListOffset == 414
 y = x.baseGlyphV1Records[3]
 result &= y.glyphID == 10
-result &= y.layersV1Offset == 1084
+result &= y.layerListOffset == 1084
 
 y = x.layerV1Tables[0]
 result &= y.numLayerV1Records == 10

@@ -214,7 +214,7 @@ class LayerV1Record(structBaseClass):
 # End of class LayerV1Record
 
 
-class LayersV1(structBaseClass):
+class LayerList(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.VAR_LENGTH_STRUCT_WITH_SUBTABLES
     FIELDS = OrderedDict([
         ("numLayerV1Records", uint32)
@@ -248,11 +248,11 @@ class BaseGlyphV1Record(structBaseClass):
     TYPE_CATEGORY = otTypeCategory.FIXED_LENGTH_BASIC_STRUCT
     FIELDS = OrderedDict([
         ("glyphID", uint16),
-        ("layersV1Offset", Offset32)
+        ("layerListOffset", Offset32)
         ])
     
     def __repr__(self):
-        return {'glyphID': self.glyphID, 'layersV1Offset': self.layersV1Offset}.__repr__()
+        return {'glyphID': self.glyphID, 'layerListOffset': self.layerListOffset}.__repr__()
 # End of class BaseGlyphV1Record
 
 
@@ -271,10 +271,10 @@ class BaseGlyphV1List(structBaseClass):
         ]
     SUBTABLES = [
         {"field": "layerV1Tables", 
-         "type": LayersV1, 
+         "type": LayerList, 
          "count": "numBaseGlyphV1Records", 
          "offset": {"parentField": "baseGlyphV1Records",
-                    "recordField": "layersV1Offset"}
+                    "recordField": "layerListOffset"}
         }
         ]
 
