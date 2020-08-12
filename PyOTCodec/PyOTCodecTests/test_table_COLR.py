@@ -28,7 +28,7 @@ testResults["VarFixed definition test"] = result
 testResults["VarFixed constants test 1"] = (VarFixed.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT)
 testResults["VarFixed constants test 2"] = (VarFixed.PACKED_FORMAT == (Fixed.PACKED_FORMAT + "HH"))
 testResults["VarFixed constants test 3"] = (VarFixed.PACKED_SIZE == 8)
-testResults["VarFixed constants test 4"] = (list(VarFixed.FIELDS.keys()) == ["scalar", "varOuterIndex", "varInnerIndex"])
+testResults["VarFixed constants test 4"] = (list(VarFixed.FIELDS.keys()) == ["value", "varOuterIndex", "varInnerIndex"])
 testResults["VarFixed constants test 5"] = (list(VarFixed.FIELDS.values()) == [Fixed, uint16, uint16])
 
 # constructor args
@@ -48,18 +48,18 @@ else:
 testResults["VarFixed constructor test 2"] = result
 
 x = VarFixed(Fixed.createFixedFromUint32(0x48000),uint16(1), uint16(3))
-result = (type(x.scalar) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
-result &= (x.scalar == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+result = (type(x.value) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.value == 4.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
 testResults["VarFixed constructor test 3"] = result
 
-result = x.__repr__() == "{'scalar': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
+result = x.__repr__() == "{'value': 4.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
 testResults["VarFixed __repr__ test"] = result
 
 buffer = b'\x00\x03\x80\x00\x00\xa0\x00\xa1\xf0\xf0'
 x = tryReadFixedLengthStructFromBuffer(buffer, VarFixed)
 result = type(x) == VarFixed
-result &= (type(x.scalar) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
-result &= (x.scalar == 3.5 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+result &= (type(x.value) == Fixed and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.value == 3.5 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
 testResults["VarFixed tryReadFixedLengthStructFromBuffer test"] = result
 
 
@@ -79,7 +79,7 @@ testResults["VarF2Dot14 definition test"] = result
 testResults["VarF2Dot14 constants test 1"] = (VarF2Dot14.TYPE_CATEGORY == otTypeCategory.FIXED_LENGTH_BASIC_STRUCT)
 testResults["VarF2Dot14 constants test 2"] = (VarF2Dot14.PACKED_FORMAT == (F2Dot14.PACKED_FORMAT + "HH"))
 testResults["VarF2Dot14 constants test 3"] = (VarF2Dot14.PACKED_SIZE == 6)
-testResults["VarF2Dot14 constants test 4"] = (list(VarF2Dot14.FIELDS.keys()) == ["scalar", "varOuterIndex", "varInnerIndex"])
+testResults["VarF2Dot14 constants test 4"] = (list(VarF2Dot14.FIELDS.keys()) == ["value", "varOuterIndex", "varInnerIndex"])
 testResults["VarF2Dot14 constants test 5"] = (list(VarF2Dot14.FIELDS.values()) == [F2Dot14, uint16, uint16])
 
 # constructor args
@@ -99,17 +99,17 @@ else:
 testResults["VarF2Dot14 constructor test 2"] = result
 
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x6000), uint16(1), uint16(3))
-testResults["VarF2Dot14 constructor test 3"] = (type(x.scalar) == F2Dot14 and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
-testResults["VarF2Dot14 constructor test 4"] = (x.scalar == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
+testResults["VarF2Dot14 constructor test 3"] = (type(x.value) == F2Dot14 and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+testResults["VarF2Dot14 constructor test 4"] = (x.value == 1.5 and x.varOuterIndex == 1 and x.varInnerIndex == 3)
 
-result = x.__repr__() == "{'scalar': 1.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
+result = x.__repr__() == "{'value': 1.5, 'varOuterIndex': 1, 'varInnerIndex': 3}"
 testResults["VarF2Dot14 __repr__ test"] = result
 
 buffer = b'\x60\x00\x00\xa0\x00\xa1\xf0\xf0'
 x = tryReadFixedLengthStructFromBuffer(buffer, VarF2Dot14)
 result = type(x) == VarF2Dot14
-result &= (type(x.scalar) == F2Dot14 and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
-result &= (x.scalar == 1.5 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
+result &= (type(x.value) == F2Dot14 and type(x.varOuterIndex) == uint16 and type(x.varInnerIndex) == uint16)
+result &= (x.value == 1.5 and x.varOuterIndex == 160 and x.varInnerIndex == 161)
 testResults["VarF2Dot14 tryReadFixedLengthStructFromBuffer test"] = result
 
 
@@ -250,10 +250,10 @@ testResults["Affine2x2 constructor test 2"] = result
 y = Affine2x2(x, x, x, x)
 result = (type(y) == Affine2x2 and type(y.xx) == VarFixed and type(y.xy) == VarFixed and type(y.yx) == VarFixed and type(y.yy) == VarFixed)
 testResults["Affine2x2 constructor test 3"] = result
-result = (y.xx.scalar._rawBytes == b'\x00\01\x80\x00' and y.xx.varOuterIndex == 2 and y.xx.varInnerIndex == 17)
+result = (y.xx.value._rawBytes == b'\x00\01\x80\x00' and y.xx.varOuterIndex == 2 and y.xx.varInnerIndex == 17)
 testResults["Affine2x2 constructor test 4"] = result
 
-result = (y.__repr__() == "{'xx': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'xy': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yx': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yy': {'scalar': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}}")
+result = (y.__repr__() == "{'xx': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'xy': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yx': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}, 'yy': {'value': 1.5, 'varOuterIndex': 2, 'varInnerIndex': 17}}")
 testResults["Affine2x2 __repr__ test"] = result
 
 buffer = (b'\x01\x00\x50\x00\x00\xa0\x00\xb0'
@@ -265,13 +265,13 @@ x = tryReadFixedLengthStructFromBuffer(buffer, Affine2x2)
 result = type(x) == Affine2x2
 result &= (type(x.xx) == VarFixed and type(x.xy) == VarFixed and type(x.yx) == VarFixed and type (x.yy) == VarFixed)
 y = x.xx
-result &= (y.scalar == 256.3125 and y.varOuterIndex == 160 and y.varInnerIndex == 176)
+result &= (y.value == 256.3125 and y.varOuterIndex == 160 and y.varInnerIndex == 176)
 y = x.xy
-result &= (y.scalar == 257.3125 and y.varOuterIndex == 161 and y.varInnerIndex == 177)
+result &= (y.value == 257.3125 and y.varOuterIndex == 161 and y.varInnerIndex == 177)
 y = x.yx
-result &= (y.scalar == 258.3125 and y.varOuterIndex == 162 and y.varInnerIndex == 178)
+result &= (y.value == 258.3125 and y.varOuterIndex == 162 and y.varInnerIndex == 178)
 y = x.yy
-result &= (y.scalar == 259.3125 and y.varOuterIndex == 163 and y.varInnerIndex == 179)
+result &= (y.value == 259.3125 and y.varOuterIndex == 163 and y.varInnerIndex == 179)
 testResults["Affine2x2 tryReadFixedLengthStructFromBuffer test"] = result
 
 
@@ -340,18 +340,18 @@ testResults["ColorIndex constructor test 5"] = result
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), uint16(1), uint16(3))
 y = ColorIndex(uint16(24), x)
 testResults["ColorIndex constructor test 6"] = (type(y.paletteIndex) == uint16 and type(y.alpha) == VarF2Dot14)
-testResults["ColorIndex test constructor 7"] = (y.paletteIndex == 24 and y.alpha.scalar == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+testResults["ColorIndex test constructor 7"] = (y.paletteIndex == 24 and y.alpha.value == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
 
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), uint16(1), uint16(3))
 y = ColorIndex(uint16(24), x)
-result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'scalar': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
+result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'value': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
 testResults["ColorIndex __repr__ test"] = result
 
 buffer = b'\x01\x03\x30\x00\x00\xa0\x00\xa1\xf0\xf0'
 x = tryReadFixedLengthStructFromBuffer(buffer, ColorIndex)
 result = type(x) == ColorIndex
 result &= (type(x.paletteIndex) == uint16 and type(x.alpha) == VarF2Dot14)
-result &= (x.paletteIndex == 259 and x.alpha.scalar == 0.75 and x.alpha.varOuterIndex == 160 and x.alpha.varInnerIndex == 161)
+result &= (x.paletteIndex == 259 and x.alpha.value == 0.75 and x.alpha.varOuterIndex == 160 and x.alpha.varInnerIndex == 161)
 testResults["ColorIndex tryReadFixedLengthStructFromBuffer test"] = result
 
 
@@ -423,18 +423,18 @@ y = ColorIndex(uint16(24), x)
 x = VarF2Dot14(F2Dot14.createF2Dot14FromUint16(0x3000), uint16(0), uint16(4))
 z = ColorStop(x, y)
 testResults["ColorStop constructor test 6"] = (type(z.stopOffset) == VarF2Dot14 and type(z.color) == ColorIndex)
-testResults["ColorStop constructor test 7"] = (z.stopOffset.scalar == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
-testResults["ColorStop constructor test 8"] = (z.color.paletteIndex == 24 and z.color.alpha.scalar == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+testResults["ColorStop constructor test 7"] = (z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 0 and z.stopOffset.varInnerIndex == 4)
+testResults["ColorStop constructor test 8"] = (z.color.paletteIndex == 24 and z.color.alpha.value == 0.25 and z.color.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
 
-result = z.__repr__() == "{'stopOffset': {'scalar': 0.75, 'varOuterIndex': 0, 'varInnerIndex': 4}, 'color': {'paletteIndex': 24, 'alpha': {'scalar': 0.25, 'varOuterIndex': 1, 'varInnerIndex': 3}}}"
+result = z.__repr__() == "{'stopOffset': {'value': 0.75, 'varOuterIndex': 0, 'varInnerIndex': 4}, 'color': {'paletteIndex': 24, 'alpha': {'value': 0.25, 'varOuterIndex': 1, 'varInnerIndex': 3}}}"
 testResults["ColorStop __repr__ test"] = result
 
 buffer = b'\x30\x00\x00\xa0\x00\xa1\x00\x11\x30\x00\x00\xb0\x00\xb1\xf0\xf0'
 x = tryReadFixedLengthStructFromBuffer(buffer, ColorStop)
 result = type(x) == ColorStop
 result &= (type(x.stopOffset) == VarF2Dot14 and type(x.color) == ColorIndex)
-result &= (x.stopOffset.scalar == 0.75 and x.stopOffset.varOuterIndex == 160 and x.stopOffset.varInnerIndex == 161)
-result &= (x.color.paletteIndex == 17 and x.color.alpha.scalar == 0.75
+result &= (x.stopOffset.value == 0.75 and x.stopOffset.varOuterIndex == 160 and x.stopOffset.varInnerIndex == 161)
+result &= (x.color.paletteIndex == 17 and x.color.alpha.value == 0.75
            and x.color.alpha.varOuterIndex == 176 and x.color.alpha.varInnerIndex == 177)
 testResults["ColorStop tryReadFixedLengthStructFromBuffer test"] = result
 
@@ -501,8 +501,8 @@ result = (type(y) == ColorLine and type(y.extend) == uint16 and type(y.numStops)
 result &= y.extend == 1 and y.numStops == 2
 result &= len(y.colorStops) == 2 and type(y.colorStops[0]) == ColorStop
 z = y.colorStops[0]
-result &= z.stopOffset.scalar == 0.75 and z.stopOffset.varOuterIndex == 160 and z.stopOffset.varInnerIndex == 161
-result &= (z.color.paletteIndex == 17 and z.color.alpha.scalar == 0.75 
+result &= z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 160 and z.stopOffset.varInnerIndex == 161
+result &= (z.color.paletteIndex == 17 and z.color.alpha.value == 0.75 
            and z.color.alpha.varOuterIndex == 176 and z.color.alpha.varInnerIndex == 177)
 testResults["ColorLine constructor test 5"] = result
 
@@ -516,8 +516,8 @@ result = (type(y) == ColorLine and type(y.extend) == uint16 and type(y.numStops)
 result &= y.extend == 1 and y.numStops == 2
 result &= len(y.colorStops) == 2 and type(y.colorStops[0]) == ColorStop
 z = y.colorStops[0]
-result &= z.stopOffset.scalar == 0.75 and z.stopOffset.varOuterIndex == 160 and z.stopOffset.varInnerIndex == 161
-result &= (z.color.paletteIndex == 17 and z.color.alpha.scalar == 0.75 
+result &= z.stopOffset.value == 0.75 and z.stopOffset.varOuterIndex == 160 and z.stopOffset.varInnerIndex == 161
+result &= (z.color.paletteIndex == 17 and z.color.alpha.value == 0.75 
            and z.color.alpha.varOuterIndex == 176 and z.color.alpha.varInnerIndex == 177)
 testResults["ColorLine tryReadFixedLengthStructFromBuffer test 1"] = result
 
@@ -532,12 +532,12 @@ x = tryReadVarLengthStructFromBuffer(buffer, ColorLine)
 result = (x.extend == 0 and x.numStops == 2)
 
 y = x.colorStops[0]
-result &= (y.stopOffset.scalar == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
-result &= (y.color.paletteIndex == 21 and y.color.alpha.scalar._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
+result &= (y.stopOffset.value == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
+result &= (y.color.paletteIndex == 21 and y.color.alpha.value._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
 
 y = x.colorStops[1]
-result &= (y.stopOffset.scalar == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
-result &= (y.color.paletteIndex == 0x142 and y.color.alpha.scalar._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
+result &= (y.stopOffset.value == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
+result &= (y.color.paletteIndex == 0x142 and y.color.alpha.value._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
 
 testResults["ColorLine tryReadFixedLengthStructFromBuffer test 2"] = result
 
@@ -601,10 +601,10 @@ z = PaintFormat1(uint16(1), y)
 
 result = (type(z.format) == uint16 and type(z.color) == ColorIndex)
 y = z.color
-result &= (y.paletteIndex == 24 and y.alpha.scalar == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
+result &= (y.paletteIndex == 24 and y.alpha.value == 0.75 and y.alpha.varOuterIndex == 1 and y.alpha.varInnerIndex == 3)
 testResults["PaintFormat1 test constructor 5"] = result
 
-result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'scalar': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
+result = y.__repr__() == "{'paletteIndex': 24, 'alpha': {'value': 0.75, 'varOuterIndex': 1, 'varInnerIndex': 3}}"
 testResults["PaintFormat1 __repr__ test"] = result
 
 buffer = (b'\x00\x01'
@@ -615,7 +615,7 @@ result = type(x) == PaintFormat1
 result &= (type(x.format) == uint16 and type(x.color) == ColorIndex)
 result &= x.format == 1
 y = x.color
-result &= (y.paletteIndex == 259 and y.alpha.scalar == 0.75 and y.alpha.varOuterIndex == 160 and y.alpha.varInnerIndex == 161)
+result &= (y.paletteIndex == 259 and y.alpha.value == 0.75 and y.alpha.varOuterIndex == 160 and y.alpha.varInnerIndex == 161)
 testResults["PaintFormat1 tryReadFixedLengthStructFromBuffer test"] = result
 
 
@@ -704,12 +704,12 @@ x = z.colorLine
 result &= (x.extend == 0 and x.numStops == 2)
 
 y = x.colorStops[0]
-result &= (y.stopOffset.scalar == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
-result &= (y.color.paletteIndex == 21 and y.color.alpha.scalar._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
+result &= (y.stopOffset.value == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
+result &= (y.color.paletteIndex == 21 and y.color.alpha.value._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
 
 y = x.colorStops[1]
-result &= (y.stopOffset.scalar == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
-result &= (y.color.paletteIndex == 0x142 and y.color.alpha.scalar._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
+result &= (y.stopOffset.value == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
+result &= (y.color.paletteIndex == 0x142 and y.color.alpha.value._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
 
 testResults["PaintFormat2 constructor test 5"] = result
 
@@ -742,12 +742,12 @@ y = x.colorLine
 result = (y.extend == 0 and y.numStops == 2)
 
 z = y.colorStops[0]
-result &= (z.stopOffset.scalar == 0.25 and z.stopOffset.varOuterIndex == 2 and z.stopOffset.varInnerIndex == 0x300)
-result &= (z.color.paletteIndex == 21 and z.color.alpha.scalar._rawBytes == b'\x01\x00' and z.color.alpha.varOuterIndex == 3 and z.color.alpha.varInnerIndex == 7)
+result &= (z.stopOffset.value == 0.25 and z.stopOffset.varOuterIndex == 2 and z.stopOffset.varInnerIndex == 0x300)
+result &= (z.color.paletteIndex == 21 and z.color.alpha.value._rawBytes == b'\x01\x00' and z.color.alpha.varOuterIndex == 3 and z.color.alpha.varInnerIndex == 7)
 
 z = y.colorStops[1]
-result &= (z.stopOffset.scalar == 0.875 and z.stopOffset.varOuterIndex == 0x121 and z.stopOffset.varInnerIndex == 0xc2)
-result &= (z.color.paletteIndex == 0x142 and z.color.alpha.scalar._rawBytes == b'\x00\xff' and z.color.alpha.varOuterIndex == 0xd34 and z.color.alpha.varInnerIndex == 0x2122)
+result &= (z.stopOffset.value == 0.875 and z.stopOffset.varOuterIndex == 0x121 and z.stopOffset.varInnerIndex == 0xc2)
+result &= (z.color.paletteIndex == 0x142 and z.color.alpha.value._rawBytes == b'\x00\xff' and z.color.alpha.varOuterIndex == 0xd34 and z.color.alpha.varInnerIndex == 0x2122)
 
 testResults["PaintFormat2 tryReadVarLengthStructWithSubtablesFromBuffer test "] = result
 
@@ -864,22 +864,22 @@ x = z.colorLine
 result &= (x.extend == 0 and x.numStops == 2)
 
 y = x.colorStops[0]
-result &= (y.stopOffset.scalar == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
-result &= (y.color.paletteIndex == 21 and y.color.alpha.scalar._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
+result &= (y.stopOffset.value == 0.25 and y.stopOffset.varOuterIndex == 2 and y.stopOffset.varInnerIndex == 0x300)
+result &= (y.color.paletteIndex == 21 and y.color.alpha.value._rawBytes == b'\x01\x00' and y.color.alpha.varOuterIndex == 3 and y.color.alpha.varInnerIndex == 7)
 
 y = x.colorStops[1]
-result &= (y.stopOffset.scalar == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
-result &= (y.color.paletteIndex == 0x142 and y.color.alpha.scalar._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
+result &= (y.stopOffset.value == 0.875 and y.stopOffset.varOuterIndex == 0x121 and y.stopOffset.varInnerIndex == 0xc2)
+result &= (y.color.paletteIndex == 0x142 and y.color.alpha.value._rawBytes == b'\x00\xff' and y.color.alpha.varOuterIndex == 0xd34 and y.color.alpha.varInnerIndex == 0x2122)
 
 x = z.transform
 y = x.xx
-result &= (y.scalar == 256.3125 and y.varOuterIndex == 160 and y.varInnerIndex == 176)
+result &= (y.value == 256.3125 and y.varOuterIndex == 160 and y.varInnerIndex == 176)
 y = x.xy
-result &= (y.scalar == 257.3125 and y.varOuterIndex == 161 and y.varInnerIndex == 177)
+result &= (y.value == 257.3125 and y.varOuterIndex == 161 and y.varInnerIndex == 177)
 y = x.yx
-result &= (y.scalar == 258.3125 and y.varOuterIndex == 162 and y.varInnerIndex == 178)
+result &= (y.value == 258.3125 and y.varOuterIndex == 162 and y.varInnerIndex == 178)
 y = x.yy
-result &= (y.scalar == 259.3125 and y.varOuterIndex == 163 and y.varInnerIndex == 179)
+result &= (y.value == 259.3125 and y.varOuterIndex == 163 and y.varInnerIndex == 179)
 
 testResults["PaintFormat3 constructor test 8"] = result
 
@@ -917,22 +917,22 @@ y = x.colorLine
 result = (y.extend == 0 and y.numStops == 2)
 
 z = y.colorStops[0]
-result &= (z.stopOffset.scalar == 0.25 and z.stopOffset.varOuterIndex == 2 and z.stopOffset.varInnerIndex == 0x300)
-result &= (z.color.paletteIndex == 21 and z.color.alpha.scalar._rawBytes == b'\x01\x00' and z.color.alpha.varOuterIndex == 3 and z.color.alpha.varInnerIndex == 7)
+result &= (z.stopOffset.value == 0.25 and z.stopOffset.varOuterIndex == 2 and z.stopOffset.varInnerIndex == 0x300)
+result &= (z.color.paletteIndex == 21 and z.color.alpha.value._rawBytes == b'\x01\x00' and z.color.alpha.varOuterIndex == 3 and z.color.alpha.varInnerIndex == 7)
 
 z = y.colorStops[1]
-result &= (z.stopOffset.scalar == 0.875 and z.stopOffset.varOuterIndex == 0x121 and z.stopOffset.varInnerIndex == 0xc2)
-result &= (z.color.paletteIndex == 0x142 and z.color.alpha.scalar._rawBytes == b'\x00\xff' and z.color.alpha.varOuterIndex == 0xd34 and z.color.alpha.varInnerIndex == 0x2122)
+result &= (z.stopOffset.value == 0.875 and z.stopOffset.varOuterIndex == 0x121 and z.stopOffset.varInnerIndex == 0xc2)
+result &= (z.color.paletteIndex == 0x142 and z.color.alpha.value._rawBytes == b'\x00\xff' and z.color.alpha.varOuterIndex == 0xd34 and z.color.alpha.varInnerIndex == 0x2122)
 
 y = x.transform
 z = y.xx
-result &= (z.scalar == 256.3125 and z.varOuterIndex == 160 and z.varInnerIndex == 176)
+result &= (z.value == 256.3125 and z.varOuterIndex == 160 and z.varInnerIndex == 176)
 z = y.xy
-result &= (z.scalar == 257.3125 and z.varOuterIndex == 161 and z.varInnerIndex == 177)
+result &= (z.value == 257.3125 and z.varOuterIndex == 161 and z.varInnerIndex == 177)
 z = y.yx
-result &= (z.scalar == 258.3125 and z.varOuterIndex == 162 and z.varInnerIndex == 178)
+result &= (z.value == 258.3125 and z.varOuterIndex == 162 and z.varInnerIndex == 178)
 z = y.yy
-result &= (z.scalar == 259.3125 and z.varOuterIndex == 163 and z.varInnerIndex == 179)
+result &= (z.value == 259.3125 and z.varOuterIndex == 163 and z.varInnerIndex == 179)
 
 testResults["PaintFormat3 tryReadVarLengthStructWithSubtablesFromBuffer test "] = result
 
@@ -1214,7 +1214,7 @@ x = z.layerV1Records[0]
 result &= x.glyphID == 1 and x.paintOffset == 17
 y = z.paintTables[0]
 result &= y.format == 1 and y.color.paletteIndex == 259
-result &= y.color.alpha.scalar == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
+result &= y.color.alpha.value == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
 testResults["LayerList constructor test 5"] = result
 
 
@@ -1234,7 +1234,7 @@ y = x.layerV1Records[0]
 result &= y.glyphID == 1 and y.paintOffset == 10
 y = x.paintTables[0]
 result &= y.format == 1 and y.color.paletteIndex == 259
-result &= y.color.alpha.scalar == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
+result &= y.color.alpha.value == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
 testResults["LayerList tryReadStructWithSubtablesFromBuffer test "] = result
 
 
@@ -1323,7 +1323,7 @@ y = x.layerV1Records[0]
 result &= y.glyphID == 1 and y.paintOffset == 17
 y = x.paintTables[0]
 result &= y.format == 1 and y.color.paletteIndex == 259
-result &= y.color.alpha.scalar == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
+result &= y.color.alpha.value == 0.75 and y.color.alpha.varOuterIndex == 160 and y.color.alpha.varInnerIndex == 161
 
 testResults["BaseGlyphV1List constructor test 5"] = result
 
@@ -1352,7 +1352,7 @@ z = y.layerV1Records[0]
 result &= z.glyphID == 1 and z.paintOffset == 10
 z = y.paintTables[0]
 result &= z.format == 1 and z.color.paletteIndex == 259
-result &= z.color.alpha.scalar == 0.75 and z.color.alpha.varOuterIndex == 160 and z.color.alpha.varInnerIndex == 161
+result &= z.color.alpha.value == 0.75 and z.color.alpha.varOuterIndex == 160 and z.color.alpha.varInnerIndex == 161
 
 testResults["BaseGlyphV1List tryReadStructWithSubtablesFromBuffer test "] = result
 
